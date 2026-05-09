@@ -1,169 +1,306 @@
-// Statens sats for kjøregodtgjørelse (kan endres)
-const kmRate = 4.90;
+/**
+ * REISEREGNING KALKULATOR
+ * Basert på Statens Satser (2024)
+ */
 
-// Referanser til HTML-elementer
-const mileageTableBody = document.querySelector('#mileageTable tbody');
-const expenseTableBody = document.querySelector('#expenseTable tbody');
-const btnAddMileage = document.getElementById('btnAddMileage');
-const btnAddExpense = document.getElementById('btnAddExpense');
+// --- 1. KONSTANTER & SATSER ---
+const RATES = {
+    km: 4.90,               // Standard kilometergodtgjørelse
+    passenger: 1.00,        // Tillegg per passasjer per km
+    diet: {
+        under6h: 0,
+        between6and12h: 400, // Dagdiett 6-12 timer
+        over12h: 658,        // Dagdiett over 12 timer uten overnatting
+        hotel: 940,          // Døgndiett med hotellovernatting
+        boarding: 400,       // Døgndiett pensjonat/hybel
+        private: 434         // Døgndiett privat overnatting
+    }
+};
 
-// --- Hjelpefunksjoner for tabellrader ---
+// Formaterer tall til pen norsk valuta (eks: 1 250,00 kr)
+const currencyFormatter = new Intl.NumberFormat('no-NO', {
+    style: 'currency',
+    currency: 'NOK'
+});
 
-function createMileageRow() {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="date"></td>
-        <td><input type="text" placeholder="F.eks. Oslo - Hamar t/r"></td>
-        <td><input type="number" class="km-input" value="0" min="0" oninput="calculateRow(this)"></td>
-        <td><input type="number" class="mileage-amount" value="0.00" readonly></td>
-        <td class="no-print" style="text-align: center;">
-            <button type="button" class="btn btn-remove" onclick="removeRow(this)">X</button>
-        </td>
-    `;
-    return tr;
+// Hjelpefunksjon for å få dagens dato på formatet YYYY-MM-DD
+function getTodayDateString() {
+    return new Date().toISOString().split('T')[0];
 }
 
-function createExpenseRow() {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="date"></td>
-        <td><input type="text" placeholder="Beskrivelse av utlegg"></td>
-        <td><input type="text" placeholder="Vedlegg nr"></td>
-        <td><input type="number" class="expense-amount" value="0" min="0" oninput="updateTotals()"></td>
-        <td class="no-print" style="text-align: center;">
-            <button type="button" class="btn btn-remove" onclick="removeRow(this)">X</button>
-        </td>
-    `;
-    return tr;
-}
-
-// Legg til rader ved oppstart
+// --- 2. INITIALISERING ---
 document.addEventListener('DOMContentLoaded', () => {
-    mileageTableBody.appendChild(createMileageRow());
-    expenseTableBody.appendChild(createExpenseRow());
+    // Sett inn nåværende år automatisk
+    document.getElementById('current-year').innerText = new Date().getFullYear();
+
+    // Legg til en tom rad i hver tabell for å starte
+    addMileageRow();
+    addExpenseRow();
     
-    // Sett dagens dato på signaturfeltet automatisk
-    document.getElementById('datoSignatur').valueAsDate = new Date();
+    // Sett opp signatur-canvas
+    initCanvas();
     
-    // Start signaturbrettet
-    initSignaturePad();
+    // Global event listener for sanntidsoppdatering
+    // Fanger opp 'input' (tastetrykk) og 'change' (dropdowns/datoer)
+    const form = document.getElementById('expense-form');
+    form.addEventListener('input', calculateAll);
+    form.addEventListener('change', calculateAll);
 });
 
-// Knappetrykk for å legge til flere rader
-btnAddMileage.addEventListener('click', () => {
-    mileageTableBody.appendChild(createMileageRow());
-});
 
-btnAddExpense.addEventListener('click', () => {
-    expenseTableBody.appendChild(createExpenseRow());
-});
+// --- 3. DYNAMISKE RADER (KJØREBOK OG UTLEGG) ---
 
-// Fjern en rad
+function addMileageRow() {
+    const tbody = document.getElementById('mileage-body');
+    const row = document.createElement('tr');
+    
+    row.innerHTML = `
+        <td><input type="date" class="recalc-trigger" value="${getTodayDateString()}"></td>
+        <td><input type="text" placeholder="Fra..."></td>
+        <td><input type="text" placeholder="Til..."></td>
+        <td><input type="number" class="km-input recalc-trigger" value="0" min="0" step="0.1"></td>
+        <td style="text-align: center;"><input type="checkbox" class="pass-check recalc-trigger" style="width:20px; height:20px; cursor:pointer;"></td>
+        <td><input type="number" class="toll-input recalc-trigger" value="0" min="0" step="1"></td>
+        <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function addExpenseRow() {
+    const tbody = document.getElementById('expenses-body');
+    const row = document.createElement('tr');
+    
+    row.innerHTML = `
+        <td><input type="date" class="recalc-trigger" value="${getTodayDateString()}"></td>
+        <td><input type="text" placeholder="Hva gjelder utlegget?"></td>
+        <td><input type="number" class="exp-amount recalc-trigger" value="0" min="0" step="0.01"></td>
+        <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
 function removeRow(btn) {
-    btn.closest('tr').remove();
-    updateTotals();
+    const row = btn.closest('tr');
+    row.remove();
+    calculateAll(); // Oppdaterer summene umiddelbart etter sletting
 }
 
-// --- Beregninger ---
 
-function calculateRow(inputElement) {
-    // Finn ut hvor mange km som er skrevet inn
-    let km = parseFloat(inputElement.value);
-    if (isNaN(km) || km < 0) km = 0;
-    
-    // Finn riktig beløp-felt på samme rad og oppdater det
-    const row = inputElement.closest('tr');
-    const amountField = row.querySelector('.mileage-amount');
-    
-    const calculatedAmount = km * kmRate;
-    amountField.value = calculatedAmount.toFixed(2);
-    
-    // Oppdater totalen i bunnen
-    updateTotals();
-}
+// --- 4. HOVEDKALKULATOR ---
 
-function updateTotals() {
+function calculateAll() {
     let totalMileage = 0;
-    let totalExpense = 0;
-
-    // Summer alle kilometer-beløp
-    document.querySelectorAll('.mileage-amount').forEach(field => {
-        let val = parseFloat(field.value);
-        if (!isNaN(val)) totalMileage += val;
+    let totalOther = 0;
+    
+    // A. Kjøregodtgjørelse
+    const mileageRows = document.querySelectorAll('#mileage-body tr');
+    mileageRows.forEach(row => {
+        const km = parseFloat(row.querySelector('.km-input').value) || 0;
+        const hasPass = row.querySelector('.pass-check').checked;
+        const toll = parseFloat(row.querySelector('.toll-input').value) || 0;
+        
+        const currentRate = hasPass ? (RATES.km + RATES.passenger) : RATES.km;
+        totalMileage += (km * currentRate) + toll;
     });
 
-    // Summer alle utlegg-beløp
-    document.querySelectorAll('.expense-amount').forEach(field => {
-        let val = parseFloat(field.value);
-        if (!isNaN(val)) totalExpense += val;
+    // B. Utlegg
+    const expenseInputs = document.querySelectorAll('.exp-amount');
+    expenseInputs.forEach(input => {
+        totalOther += parseFloat(input.value) || 0;
     });
 
-    let grandTotal = totalMileage + totalExpense;
+    // C. Diett
+    const dietResult = calculateDiet();
+    const totalDiet = dietResult.amount;
+    
+    // Oppdater info-boksen for diett
+    document.getElementById('diet-summary').innerHTML = `<span class="icon">ℹ️</span> ${dietResult.text}`;
 
-    // Oppdater HTML
-    document.getElementById('sumMileage').innerText = totalMileage.toFixed(2) + ' kr';
-    document.getElementById('sumExpense').innerText = totalExpense.toFixed(2) + ' kr';
-    document.getElementById('sumTotal').innerText = grandTotal.toFixed(2) + ' kr';
+    // D. Oppdater UI
+    const grandTotal = totalMileage + totalDiet + totalOther;
+    
+    document.getElementById('total-mileage').innerText = currencyFormatter.format(totalMileage);
+    document.getElementById('total-diet').innerText = currencyFormatter.format(totalDiet);
+    document.getElementById('total-other').innerText = currencyFormatter.format(totalOther);
+    document.getElementById('grand-total').innerText = currencyFormatter.format(grandTotal);
+
+    // Sett data-attributt for print (PDF)
+    document.querySelector('.app-container').setAttribute('data-print-total', currencyFormatter.format(grandTotal));
 }
 
-// --- Signaturbrett ---
-
-function initSignaturePad() {
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    const btnClear = document.getElementById('btnClearSig');
+function calculateDiet() {
+    const startInput = document.getElementById('departure-date').value;
+    const endInput = document.getElementById('return-date').value;
+    const accType = document.getElementById('accommodation-type').value;
     
-    let isDrawing = false;
+    if (!startInput || !endInput) {
+        return { amount: 0, text: "Sett inn både avreise- og hjemkomstdato for å beregne diett automatisk." };
+    }
+
+    const start = new Date(startInput);
+    const end = new Date(endInput);
     
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
-
-    function getMousePos(canvas, evt) {
-        const rect = canvas.getBoundingClientRect();
-        // Støtter både mus og touch
-        const clientX = evt.clientX || (evt.touches && evt.touches[0].clientX);
-        const clientY = evt.clientY || (evt.touches && evt.touches[0].clientY);
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+        return { amount: 0, text: "Hjemkomst må være etter avreise for gyldig beregning." };
     }
 
-    function startDraw(e) {
-        isDrawing = true;
-        const pos = getMousePos(canvas, e);
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        e.preventDefault(); // Forhindrer scrolling på mobil når man tegner
+    // Finn tid i timer
+    const diffMs = end - start;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    let baseAmount = 0;
+    let daysDescription = "";
+
+    // Logikk: Uten overnatting (Dagdiett) vs Med overnatting (Døgndiett)
+    if (accType === 'none') {
+        if (diffHours < 6) {
+            baseAmount = 0;
+            daysDescription = "Under 6 timer (ingen diett).";
+        } else if (diffHours >= 6 && diffHours <= 12) {
+            baseAmount = RATES.diet.between6and12h;
+            daysDescription = "Dagdiett 6-12 timer.";
+        } else {
+            baseAmount = RATES.diet.over12h;
+            daysDescription = "Dagdiett over 12 timer.";
+        }
+    } else {
+        // Med overnatting: Beregnes per hele døgn (24t). Overskytende timer > 6t gir en ekstra dag.
+        const fullDays = Math.floor(diffHours / 24);
+        const remainderHours = diffHours % 24;
+        
+        let dailyRate = 0;
+        if (accType === 'hotel') dailyRate = RATES.diet.hotel;
+        else if (accType === 'boarding') dailyRate = RATES.diet.boarding;
+        else if (accType === 'private') dailyRate = RATES.diet.private;
+
+        // Ett fullt døgn kreves normalt for å utløse døgndiett, men vi sjekker for sikkerhets skyld
+        let chargeableDays = fullDays;
+        
+        // Statens satser: Mer enn 6 timer inn i et nytt døgn gir full sats for det nye døgnet
+        if (remainderHours > 6) {
+            chargeableDays += 1;
+        } else if (fullDays === 0 && diffHours > 0) {
+            // Unntakstilfelle: Valgt overnatting, men reisen varte under 24 timer totalt
+            chargeableDays = 1; 
+        }
+
+        baseAmount = chargeableDays * dailyRate;
+        daysDescription = `${chargeableDays} døgn/dager med overnattingsdiett.`;
     }
 
-    function draw(e) {
-        if (!isDrawing) return;
-        const pos = getMousePos(canvas, e);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        e.preventDefault();
-    }
-
-    function endDraw() {
-        isDrawing = false;
-        ctx.closePath();
-    }
-
-    // Mus-events
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', endDraw);
-    canvas.addEventListener('mouseout', endDraw);
-
-    // Touch-events for mobil/nettbrett
-    canvas.addEventListener('touchstart', startDraw, {passive: false});
-    canvas.addEventListener('touchmove', draw, {passive: false});
-    canvas.addEventListener('touchend', endDraw);
-
-    // Tøm-knapp
-    btnClear.addEventListener('click', () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Beregn måltidstrekk
+    let deductionPercent = 0;
+    document.querySelectorAll('.meal-check:checked').forEach(cb => {
+        deductionPercent += parseFloat(cb.dataset.percent);
     });
+
+    // Måltidstrekk gjelder for total diett (forenklet for denne kalkulatoren)
+    const deductionAmount = baseAmount * deductionPercent;
+    const finalAmount = Math.max(0, baseAmount - deductionAmount);
+
+    let textOut = `<strong>Reisetid:</strong> ${diffHours.toFixed(1)} timer. ${daysDescription} <br><strong>Grunnlag:</strong> ${currencyFormatter.format(baseAmount)}.`;
+    if (deductionAmount > 0) {
+        textOut += ` <strong>Trekk for måltider:</strong> -${currencyFormatter.format(deductionAmount)}.`;
+    }
+
+    return { amount: finalAmount, text: textOut };
+}
+
+
+// --- 5. SIGNATURMODUL (CANVAS & BILDEOPPLASTING) ---
+
+let canvas, ctx;
+let drawing = false;
+
+function initCanvas() {
+    canvas = document.getElementById('sig-canvas');
+    ctx = canvas.getContext('2d');
+    
+    // Mus-events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // Touch-events for mobil/nettbrett
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Hindrer scrolling mens man tegner
+        startDrawing(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        draw(e.touches[0]);
+    });
+}
+
+function startDrawing(e) {
+    drawing = true;
+    draw(e); // Lager en prikk selv om man bare trykker og slipper
+}
+
+function stopDrawing() {
+    drawing = false;
+    ctx.beginPath(); // Starter ny linje for neste strøk
+}
+
+function draw(e) {
+    if (!drawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a'; // Mørk blå/svart blekk-farge
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function switchTab(tab) {
+    const drawTab = document.getElementById('draw-tab');
+    const uploadTab = document.getElementById('upload-tab');
+    const btns = document.querySelectorAll('.tab-btn');
+
+    if (tab === 'draw') {
+        drawTab.style.display = 'block';
+        uploadTab.style.display = 'none';
+        btns[0].classList.add('active');
+        btns[1].classList.remove('active');
+    } else {
+        drawTab.style.display = 'none';
+        uploadTab.style.display = 'block';
+        btns[0].classList.remove('active');
+        btns[1].classList.add('active');
+    }
+}
+
+function handleSignatureUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const container = document.getElementById('sig-preview-container');
+            container.innerHTML = `<img src="${e.target.result}" style="max-height:100px; margin-top:15px; border-bottom: 1px solid #000; padding-bottom: 5px;">`;
+            // Skjuler opplastingsboksen etter at bilde er valgt for ryddigere UI
+            document.querySelector('.upload-box').style.display = 'none';
+            container.innerHTML += `<br><button type="button" class="btn btn-text btn-small no-print" style="margin-top:10px" onclick="resetUpload()">Fjern bilde</button>`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function resetUpload() {
+    document.getElementById('sig-preview-container').innerHTML = '';
+    document.getElementById('sig-upload').value = '';
+    document.querySelector('.upload-box').style.display = 'block';
 }
