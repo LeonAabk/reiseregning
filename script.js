@@ -117,7 +117,7 @@ function validateForm() {
     return true;
 }
 
-// --- LAGRING OG LASTING AV REISEREGNINGER ---
+// --- 2. LAGRING OG LASTING AV REISEREGNINGER ---
 
 // Hjelpefunksjon for å samle all form data
 function collectFormData() {
@@ -208,6 +208,7 @@ function loadExpenseReport(index) {
             loadFormData(data);
             showError('Reiseregning lastet!', null);
             setTimeout(() => hideErrors(), 2000);
+            closeModal();
         }
     } catch (error) {
         showError('Feil ved lasting av reiseregning.');
@@ -327,6 +328,7 @@ function showSavedReports() {
             </div>
         `;
         
+        document.body.classList.add('modal-open');
         document.body.appendChild(modal);
         modal.style.display = 'flex';
         
@@ -338,10 +340,13 @@ function showSavedReports() {
 
 // Lukk modal
 function closeModal() {
-    const modal = document.getElementById('saved-reports-modal');
-    if (modal) {
-        modal.remove();
-    }
+    const previewModal = document.getElementById('preview-modal');
+    const savedModal = document.getElementById('saved-reports-modal');
+    
+    if (previewModal) previewModal.remove();
+    if (savedModal) savedModal.remove();
+    
+    document.body.classList.remove('modal-open');
 }
 
 // Slett en lagret rapport
@@ -351,6 +356,7 @@ function deleteReport(index) {
             const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
             reports.splice(index, 1);
             localStorage.setItem('expenseReports', JSON.stringify(reports));
+            closeModal();
             showSavedReports(); // Oppdater listen
         } catch (error) {
             showError('Feil ved sletting av reiseregning.');
@@ -421,7 +427,7 @@ function previewExpenseReport() {
         generatePreviewModal();
         previewBtn.innerHTML = originalText;
         previewBtn.disabled = false;
-    }, 800); // Simuler litt loading tid for bedre UX
+    }, 800);
 }
 
 function generatePreviewModal() {
@@ -495,7 +501,6 @@ function generatePreviewModal() {
             </div>
             <div class="modal-body" id="preview-content">
                 <div class="expense-report-document">
-                    <!-- Header -->
                     <div class="document-header">
                         <div class="company-info">
                             <h1>Eksempelbedrift AS</h1>
@@ -507,7 +512,6 @@ function generatePreviewModal() {
                         </div>
                     </div>
 
-                    <!-- Ansatt informasjon -->
                     <div class="employee-section">
                         <h3>Ansattinformasjon</h3>
                         <div class="info-grid">
@@ -534,7 +538,6 @@ function generatePreviewModal() {
                         </div>
                     </div>
 
-                    <!-- Reiseinformasjon -->
                     <div class="travel-section">
                         <h3>Reiseinformasjon</h3>
                         <div class="info-grid">
@@ -560,7 +563,6 @@ function generatePreviewModal() {
                         </div>
                     </div>
 
-                    <!-- Kjøregodtgjørelse -->
                     ${data.mileage.length > 0 ? `
                     <div class="mileage-section">
                         <h3>Kjøregodtgjørelse (Egen bil)</h3>
@@ -603,7 +605,6 @@ function generatePreviewModal() {
                     </div>
                     ` : ''}
 
-                    <!-- Utlegg -->
                     ${data.expenses.length > 0 ? `
                     <div class="expenses-section">
                         <h3>Andre utlegg</h3>
@@ -634,7 +635,6 @@ function generatePreviewModal() {
                     </div>
                     ` : ''}
 
-                    <!-- Diett -->
                     <div class="diet-section">
                         <h3>Diettgodtgjørelse</h3>
                         <div class="diet-summary">
@@ -646,7 +646,6 @@ function generatePreviewModal() {
                         </div>
                     </div>
 
-                    <!-- Sammendrag -->
                     <div class="summary-section">
                         <h3>Sammendrag</h3>
                         <div class="summary-grid">
@@ -669,7 +668,6 @@ function generatePreviewModal() {
                         </div>
                     </div>
 
-                    <!-- Signatur -->
                     <div class="signature-section">
                         <h3>Signatur og bekreftelse</h3>
                         <div class="signature-area">
@@ -690,11 +688,11 @@ function generatePreviewModal() {
         </div>
     `;
 
+    document.body.classList.add('modal-open');
     document.body.appendChild(modal);
     modal.style.display = 'flex';
 }
 
-// Eksporter forhåndsvisning som PDF
 function exportPreviewAsPDF() {
     const previewContent = document.getElementById('preview-content');
     if (!previewContent) {
@@ -702,30 +700,13 @@ function exportPreviewAsPDF() {
         return;
     }
 
-    // Skjul modal handling knapper for PDF
     const modalActions = document.querySelector('.modal-actions');
     if (modalActions) modalActions.style.display = 'none';
 
-    // Bruk browserens print funksjonalitet for PDF
     window.print();
 
-    // Vis knappene igjen
     if (modalActions) modalActions.style.display = 'flex';
-
-    // Legg til en tom rad i hver tabell for å starte
-    addMileageRow();
-    addExpenseRow();
-    
-    // Sett opp signatur-canvas
-    initCanvas();
-    
-    // Global event listener for sanntidsoppdatering
-    // Fanger opp 'input' (tastetrykk) og 'change' (dropdowns/datoer)
-    const form = document.getElementById('expense-form');
-    form.addEventListener('input', calculateAll);
-    form.addEventListener('change', calculateAll);
-});
-
+}
 
 // --- 3. DYNAMISKE RADER (KJØREBOK OG UTLEGG) ---
 
@@ -893,6 +874,7 @@ let drawing = false;
 
 function initCanvas() {
     canvas = document.getElementById('sig-canvas');
+    if (!canvas) return;
     ctx = canvas.getContext('2d');
     
     // Mus-events
@@ -942,7 +924,9 @@ function draw(e) {
 }
 
 function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 function switchTab(tab) {
@@ -981,5 +965,19 @@ function handleSignatureUpload(event) {
 function resetUpload() {
     document.getElementById('sig-preview-container').innerHTML = '';
     document.getElementById('sig-upload').value = '';
-    document.querySelector('.upload-box').style.display = 'block';
+    const uploadBox = document.querySelector('.upload-box');
+    if (uploadBox) uploadBox.style.display = 'block';
 }
+
+// --- INITIALISERING ---
+document.addEventListener('DOMContentLoaded', () => {
+    addMileageRow();
+    addExpenseRow();
+    initCanvas();
+    
+    const form = document.getElementById('expense-form');
+    if (form) {
+        form.addEventListener('input', calculateAll);
+        form.addEventListener('change', calculateAll);
+    }
+});
