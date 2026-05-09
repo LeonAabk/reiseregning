@@ -3,6 +3,8 @@
  * Basert på Statens Satser (2024)
  */
 
+console.log('Script loaded successfully');
+
 // --- 1. KONSTANTER & SATSER ---
 const RATES = {
     km: 4.90,               // Standard kilometergodtgjørelse
