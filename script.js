@@ -403,10 +403,312 @@ function importFromJSON(event) {
     }
 }
 
-// --- 2. INITIALISERING ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Sett inn nåværende år automatisk
-    document.getElementById('current-year').innerText = new Date().getFullYear();
+// Forhåndsvis ferdig reiseregning
+function previewExpenseReport() {
+    if (!validateForm()) {
+        return;
+    }
+
+    // Vis loading state
+    const previewBtn = document.querySelector('button[onclick="previewExpenseReport()"]');
+    const originalText = previewBtn.innerHTML;
+    previewBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg> Genererer...';
+    previewBtn.disabled = true;
+
+    setTimeout(() => {
+        generatePreviewModal();
+        previewBtn.innerHTML = originalText;
+        previewBtn.disabled = false;
+    }, 800); // Simuler litt loading tid for bedre UX
+}
+
+function generatePreviewModal() {
+    const data = collectFormData();
+    const currentYear = new Date().getFullYear();
+
+    // Beregn totaler
+    let totalMileage = 0;
+    let totalOther = 0;
+
+    // Kjøregodtgjørelse
+    data.mileage.forEach(item => {
+        const currentRate = item.passenger ? (RATES.km + RATES.passenger) : RATES.km;
+        totalMileage += (item.km * currentRate) + item.toll;
+    });
+
+    // Utlegg
+    data.expenses.forEach(item => {
+        totalOther += item.amount;
+    });
+
+    // Diett
+    const dietResult = calculateDiet();
+    const totalDiet = dietResult.amount;
+    const grandTotal = totalMileage + totalDiet + totalOther;
+
+    // Formater datoer
+    const formatDateTime = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleString('no-NO', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('no-NO');
+    };
+
+    // Hent signatur
+    const signatureCanvas = document.getElementById('sig-canvas');
+    const signatureDataUrl = signatureCanvas.toDataURL();
+    const uploadedSignature = document.querySelector('#sig-preview-container img');
+    const signatureSrc = uploadedSignature ? uploadedSignature.src : signatureDataUrl;
+
+    // Opprett modal med profesjonell layout
+    const modal = document.createElement('div');
+    modal.id = 'preview-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content preview-modal-content">
+            <div class="modal-header">
+                <h2>Forhåndsvisning - Reiseregning</h2>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline btn-small" onclick="exportPreviewAsPDF()" aria-label="Eksporter forhåndsvisning som PDF">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>
+                        Eksporter PDF
+                    </button>
+                    <button type="button" class="btn btn-outline btn-small" onclick="window.print()" aria-label="Skriv ut forhåndsvisning">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Skriv ut
+                    </button>
+                    <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" id="preview-content">
+                <div class="expense-report-document">
+                    <!-- Header -->
+                    <div class="document-header">
+                        <div class="company-info">
+                            <h1>Eksempelbedrift AS</h1>
+                            <p>År: ${currentYear}</p>
+                        </div>
+                        <div class="document-title">
+                            <h2>REISEREGNING</h2>
+                            <p class="document-number">Ref: ${data.personalInfo.id || 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Ansatt informasjon -->
+                    <div class="employee-section">
+                        <h3>Ansattinformasjon</h3>
+                        <div class="info-grid">
+                            <div class="info-row">
+                                <span class="label">Navn:</span>
+                                <span class="value">${data.personalInfo.name || ''}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Ansattnummer:</span>
+                                <span class="value">${data.personalInfo.id || ''}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Avdeling:</span>
+                                <span class="value">${data.personalInfo.department || ''}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Stilling:</span>
+                                <span class="value">${data.personalInfo.position || ''}</span>
+                            </div>
+                            <div class="info-row full-width">
+                                <span class="label">Privatadresse:</span>
+                                <span class="value">${data.personalInfo.address || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reiseinformasjon -->
+                    <div class="travel-section">
+                        <h3>Reiseinformasjon</h3>
+                        <div class="info-grid">
+                            <div class="info-row full-width">
+                                <span class="label">Formål med reisen:</span>
+                                <span class="value">${data.travelInfo.purpose || ''}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Avreise:</span>
+                                <span class="value">${formatDateTime(data.travelInfo.departure)}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Hjemkomst:</span>
+                                <span class="value">${formatDateTime(data.travelInfo.return)}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Overnatting:</span>
+                                <span class="value">${data.travelInfo.accommodation === 'none' ? 'Ingen overnatting' :
+                                    data.travelInfo.accommodation === 'hotel' ? 'Hotell' :
+                                    data.travelInfo.accommodation === 'boarding' ? 'Pensjonat/Hybel m/kjøkken' :
+                                    data.travelInfo.accommodation === 'private' ? 'Privat' : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kjøregodtgjørelse -->
+                    ${data.mileage.length > 0 ? `
+                    <div class="mileage-section">
+                        <h3>Kjøregodtgjørelse (Egen bil)</h3>
+                        <table class="expense-table">
+                            <thead>
+                                <tr>
+                                    <th>Dato</th>
+                                    <th>Fra</th>
+                                    <th>Til</th>
+                                    <th>Km</th>
+                                    <th>Passasjer</th>
+                                    <th>Bompenger</th>
+                                    <th>Beløp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.mileage.map(item => {
+                                    const rate = item.passenger ? (RATES.km + RATES.passenger) : RATES.km;
+                                    const amount = (item.km * rate) + item.toll;
+                                    return `
+                                        <tr>
+                                            <td>${formatDate(item.date)}</td>
+                                            <td>${item.from}</td>
+                                            <td>${item.to}</td>
+                                            <td>${item.km}</td>
+                                            <td>${item.passenger ? 'Ja' : 'Nei'}</td>
+                                            <td>${currencyFormatter.format(item.toll)}</td>
+                                            <td>${currencyFormatter.format(amount)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="total-label">Sum kjøregodtgjørelse:</td>
+                                    <td class="total-value">${currencyFormatter.format(totalMileage)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    <!-- Utlegg -->
+                    ${data.expenses.length > 0 ? `
+                    <div class="expenses-section">
+                        <h3>Andre utlegg</h3>
+                        <table class="expense-table">
+                            <thead>
+                                <tr>
+                                    <th>Dato</th>
+                                    <th>Beskrivelse</th>
+                                    <th>Beløp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.expenses.map(item => `
+                                    <tr>
+                                        <td>${formatDate(item.date)}</td>
+                                        <td>${item.description}</td>
+                                        <td>${currencyFormatter.format(item.amount)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2" class="total-label">Sum utlegg:</td>
+                                    <td class="total-value">${currencyFormatter.format(totalOther)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    <!-- Diett -->
+                    <div class="diet-section">
+                        <h3>Diettgodtgjørelse</h3>
+                        <div class="diet-summary">
+                            ${dietResult.text}
+                        </div>
+                        <div class="diet-total">
+                            <span class="total-label">Sum diett:</span>
+                            <span class="total-value">${currencyFormatter.format(totalDiet)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Sammendrag -->
+                    <div class="summary-section">
+                        <h3>Sammendrag</h3>
+                        <div class="summary-grid">
+                            <div class="summary-row">
+                                <span class="label">Kjøregodtgjørelse:</span>
+                                <span class="value">${currencyFormatter.format(totalMileage)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">Diett:</span>
+                                <span class="value">${currencyFormatter.format(totalDiet)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">Utlegg:</span>
+                                <span class="value">${currencyFormatter.format(totalOther)}</span>
+                            </div>
+                            <div class="summary-row grand-total">
+                                <span class="label">Sum å utbetale:</span>
+                                <span class="value">${currencyFormatter.format(grandTotal)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signatur -->
+                    <div class="signature-section">
+                        <h3>Signatur og bekreftelse</h3>
+                        <div class="signature-area">
+                            <div class="signature-content">
+                                <p>Sted og dato: ${document.getElementById('final-date-place').value || ''}</p>
+                                <div class="signature-preview">
+                                    ${signatureSrc ? `<img src="${signatureSrc}" alt="Signatur" style="max-height: 80px; border-bottom: 1px solid #000; margin-top: 10px;">` : ''}
+                                </div>
+                                <div class="signature-line">
+                                    <span>_______________________________</span>
+                                    <p>${data.personalInfo.name || ''}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Eksporter forhåndsvisning som PDF
+function exportPreviewAsPDF() {
+    const previewContent = document.getElementById('preview-content');
+    if (!previewContent) {
+        showError('Kunne ikke finne forhåndsvisningsinnhold.');
+        return;
+    }
+
+    // Skjul modal handling knapper for PDF
+    const modalActions = document.querySelector('.modal-actions');
+    if (modalActions) modalActions.style.display = 'none';
+
+    // Bruk browserens print funksjonalitet for PDF
+    window.print();
+
+    // Vis knappene igjen
+    if (modalActions) modalActions.style.display = 'flex';
 
     // Legg til en tom rad i hver tabell for å starte
     addMileageRow();
