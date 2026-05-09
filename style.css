@@ -1,301 +1,72 @@
 :root {
-    --primary-color: #1e293b;
-    --primary-hover: #334155;
-    --accent-color: #3b82f6;
-    --accent-hover: #2563eb;
-    --success-color: #10b981;
-    --success-hover: #059669;
-    --danger-color: #ef4444;
-    --danger-hover: #dc2626;
-    --warning-color: #f59e0b;
-    --warning-hover: #d97706;
-    --bg-color: #f8fafc;
-    --bg-secondary: #f1f5f9;
-    --card-bg: #ffffff;
-    --border-color: #e2e8f0;
-    --border-light: #f1f5f9;
-    --input-border: #cbd5e1;
-    --input-focus: #3b82f6;
-    --text-main: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-    --text-light: #94a3b8;
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --radius-sm: 4px;
-    --radius: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --transition-fast: all 0.15s ease-in-out;
-    --transition: all 0.2s ease-in-out;
-    --transition-slow: all 0.3s ease-in-out;
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    --primary-color: #1e293b; --accent-color: #3b82f6; --success-color: #10b981;
+    --danger-color: #ef4444; --bg-color: #f8fafc; --border-color: #e2e8f0;
 }
 
-* { 
-    box-sizing: border-box; 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-}
-
-body { 
-    background: var(--bg-color); 
-    background-image:
-        radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-    color: var(--text-main); 
-    line-height: 1.6; 
-    margin: 0; 
-    padding: 24px 16px 140px 16px; 
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "kern" 1, "liga" 1;
-}
-
+* { box-sizing: border-box; font-family: sans-serif; }
+body { background: var(--bg-color); margin: 0; padding: 20px 20px 160px 20px; color: #334155; }
 body.modal-open { overflow: hidden; }
 
-.app-container { max-width: 1000px; margin: 0 auto; position: relative; }
+.app-container { max-width: 1000px; margin: 0 auto; }
 
-/* Header */
-.main-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; padding: 32px 24px; background: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); position: relative; overflow: hidden; }
-.main-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-accent); }
-.header-content h1 { font-size: 2.25rem; font-weight: 800; margin: 0 0 8px 0; color: var(--primary-color); letter-spacing: -0.025em; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.meta-info { display: flex; gap: 16px; align-items: center; }
-.meta-info p { margin: 0; color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
-.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* Kort og Layout */
+.card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); margin: -25px -25px 20px -25px; padding: 15px 25px; background: #f1f5f9; border-radius: 10px 10px 0 0; }
+h1, h2, h3 { color: var(--primary-color); margin-top: 0; }
 
-/* Dropdown */
-.dropdown { position: relative; }
-.dropdown-toggle { cursor: pointer; }
-.dropdown-menu { position: absolute; top: 100%; right: 0; background: white; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: var(--shadow-md); min-width: 160px; z-index: 100; display: none; margin-top: 4px; }
-.dropdown:hover .dropdown-menu { display: block; }
-.dropdown-menu button, .dropdown-menu label { display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer; font-size: 0.9rem; color: var(--text-main); transition: var(--transition); }
-.dropdown-menu button:hover, .dropdown-menu label:hover { background: #f8fafc; }
+/* Skjemaelementer */
+.grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+.form-group { display: flex; flex-direction: column; }
+label { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
+input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; }
 
-/* Cards & Layout */
-.card { background: var(--card-bg); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-light); transition: var(--transition); position: relative; animation: fadeInUp 0.6s ease-out; }
-.card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-
-.card-header { display: flex; justify-content: space-between; align-items: center; margin: -32px -32px 24px -32px; padding: 24px 32px 20px 32px; background: var(--bg-secondary); border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--border-color); }
-.card-header h2 { margin: 0; border: none; padding: 0; }
-h2 { font-size: 1.375rem; color: var(--primary-color); margin-top: 0; margin-bottom: 20px; font-weight: 700; letter-spacing: -0.025em; }
-.section-subtitle { font-weight: 600; margin-bottom: 10px; }
-.grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px; }
-
-/* Forms */
-.form-group { display: flex; flex-direction: column; gap: 8px; }
-.form-group.full-width { margin-bottom: 24px; }
-label { font-size: 0.875rem; font-weight: 600; color: var(--text-main); letter-spacing: 0.025em; text-transform: uppercase; }
-
-input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], select { padding: 12px 16px; border: 2px solid var(--input-border); border-radius: var(--radius); font-size: 1rem; transition: var(--transition-fast); background-color: var(--card-bg); color: var(--text-main); font-family: inherit; }
-input:focus, select:focus { outline: none; border-color: var(--input-focus); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); transform: translateY(-1px); }
-
-/* Checkboxes */
-.checkbox-group { display: flex; gap: 20px; flex-wrap: wrap; }
-.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; }
-.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-color); }
-
-/* Info Box & Errors */
-.info-box { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); padding: 20px; border-radius: var(--radius); border-left: 4px solid var(--accent-color); margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; font-weight: 500; color: var(--text-main); backdrop-filter: blur(10px); }
-.error-container { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; display: none; }
-.error-message { color: var(--danger-color); font-weight: 600; display: flex; align-items: flex-start; gap: 12px; }
-
-/* Modal */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); animation: fadeInUp 0.3s ease-out; }
-.modal-content { background: white; border-radius: 8px; max-width: 600px; width: 90%; max-height: 85vh; overflow: hidden; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; animation: slideInRight 0.4s ease-out; }
-.preview-modal-content { max-width: 900px; width: 95%; max-height: 90vh; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); background: var(--gradient-primary); color: white; }
-.modal-header h2, .modal-header h3 { margin: 0; color: white; }
-.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: white; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
-.modal-close:hover { opacity: 1; }
-.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-.modal-actions { display: flex; gap: 8px; align-items: center; }
-
-/* Tables */
-.table-responsive { overflow-x: auto; }
+/* Tabeller */
 table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-th { background: #f8fafc; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-td input { width: 100%; }
+th { text-align: left; font-size: 0.8rem; color: #64748b; padding: 10px; border-bottom: 2px solid var(--border-color); }
+td { padding: 5px; border-bottom: 1px solid var(--border-color); }
+td input { width: 100%; border: none; background: #f8fafc; }
 
-/* Buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: var(--transition-fast); text-decoration: none; position: relative; overflow: hidden; }
-.btn-primary { background: var(--gradient-accent); color: white; border-color: var(--accent-color); }
-.btn-outline { background: transparent; color: var(--accent-color); border-color: var(--accent-color); }
-.btn-outline:hover { background: var(--accent-color); color: white; }
-.btn-success { background: var(--success-color); color: white; border-color: var(--success-color); }
-.btn-text { background: transparent; color: var(--text-muted); padding: 8px 12px; border: none; }
-.btn-small { padding: 8px 16px; font-size: 0.8125rem; }
+/* Knapper */
+.btn { padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+.btn-primary { background: var(--accent-color); color: white; }
+.btn-outline { border: 1px solid var(--accent-color); color: var(--accent-color); background: transparent; }
+.btn-success { background: var(--success-color); color: white; }
+.btn-text { background: transparent; padding: 5px; }
 
-/* Sticky Summary */
-.sticky-summary { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--gradient-primary); color: white; padding: 24px 16px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15); z-index: 100; backdrop-filter: blur(10px); }
-.totals-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: center; }
-.total-item { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius); }
-.total-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.9; margin-bottom: 4px; font-weight: 600; }
-.total-value { font-size: 1.5rem; font-weight: 800; }
-.grand-total-box .total-value { font-size: 2rem; color: #fbbf24; }
+/* Sticky-meny i bunnen */
+.sticky-summary { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary-color); color: white; padding: 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.2); z-index: 100; }
+.totals-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-around; flex-wrap: wrap; }
+.total-item { text-align: center; }
+.total-label { display: block; font-size: 0.7rem; opacity: 0.8; }
+.total-value { font-size: 1.4rem; font-weight: bold; }
+#grand-total { color: #fbbf24; }
 
-/* Signatur */
-.signature-area { margin-top: 24px; position: relative; }
-.date-place-row { max-width: 320px; margin-bottom: 24px; }
-#sig-canvas { border: 2px dashed var(--input-border); border-radius: var(--radius); background: var(--bg-secondary); cursor: crosshair; width: 100%; max-width: 500px; }
-.upload-box { border: 2px dashed var(--border-color); padding: 30px; text-align: center; border-radius: 8px; max-width: 500px; background: var(--bg-secondary); cursor: pointer; }
-.canvas-controls { margin-top: 16px; text-align: center; }
-.tab-container { display: flex; gap: 8px; margin-bottom: 20px; background: var(--bg-secondary); padding: 4px; border-radius: var(--radius); width: fit-content; }
-.tab-btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; }
-.tab-btn.active { background: var(--card-bg); color: var(--accent-color); box-shadow: var(--shadow-xs); }
+/* Modal / Forhåndsvisning */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+.modal-content { background: white; width: 100%; max-width: 900px; max-height: 95vh; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+.modal-header { padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+.modal-body { padding: 40px; overflow-y: auto; flex: 1; }
 
-/* Skreddersydd design for Forhåndsvisningen / PDF dokumentet */
-.expense-report-document { font-family: 'Times New Roman', serif; line-height: 1.4; color: var(--text-main); }
-.document-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid var(--primary-color); }
-.company-info h1 { font-size: 2.5rem; margin: 0 0 5px 0; color: var(--primary-color); font-weight: bold; }
-.company-info p { margin: 0; font-size: 1.1rem; color: var(--text-secondary); }
-.document-title { text-align: right; }
-.document-title h2 { font-size: 2rem; margin: 0 0 10px 0; color: var(--primary-color); font-weight: bold; }
-.document-number { font-size: 1rem; color: var(--text-secondary); font-weight: normal; }
+/* Dokument-styling inne i modal */
+.expense-report-document { color: black; font-family: serif; }
+.document-header { display: flex; justify-content: space-between; border-bottom: 2px solid black; margin-bottom: 20px; }
+.expense-table th { background: #f1f5f9; color: black; border: 1px solid #000; }
+.expense-table td { border: 1px solid #000; padding: 8px; }
+.summary-row { margin-top: 20px; font-size: 1.2rem; border-top: 2px solid black; padding-top: 10px; display: flex; justify-content: space-between; }
+.sig-box { height: 80px; border-bottom: 1px solid black; margin: 10px 0; width: 250px; }
 
-.employee-section, .travel-section, .diet-section, .summary-section, .signature-section { margin-bottom: 30px; page-break-inside: avoid; }
-.employee-section h3, .travel-section h3, .mileage-section h3, .expenses-section h3, .diet-section h3, .summary-section h3, .signature-section h3 { font-size: 1.3rem; color: var(--primary-color); margin: 0 0 15px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; font-weight: bold; }
-
-.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.info-row { display: flex; margin-bottom: 8px; }
-.info-row.full-width { grid-column: 1 / -1; }
-.label { font-weight: bold; min-width: 140px; color: var(--text-secondary); font-size: 0.95rem; }
-.value { color: var(--text-main); flex: 1; }
-
-.expense-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; border: 1px solid var(--border-color); }
-.expense-table th, .expense-table td { padding: 8px 12px; text-align: left; border: 1px solid var(--border-color); }
-.expense-table th { background: var(--bg-secondary); font-weight: bold; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; }
-.expense-table tfoot { font-weight: bold; }
-.total-label { font-weight: bold; color: var(--primary-color); }
-.total-value { font-weight: bold; color: var(--success-color); text-align: right; }
-
-.diet-summary { background: var(--bg-secondary); padding: 15px; border-radius: var(--radius); margin-bottom: 15px; font-size: 0.95rem; line-height: 1.5; }
-.diet-total { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--border-color); font-weight: bold; }
-
-.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
-.summary-row.grand-total { border-bottom: 2px solid var(--primary-color); font-size: 1.1rem; font-weight: bold; color: var(--primary-color); }
-
-.signature-content { margin-top: 20px; }
-.signature-preview { margin: 15px 0; }
-.signature-line { margin-top: 40px; text-align: center; }
-.signature-line span { display: inline-block; border-bottom: 1px solid var(--text-main); width: 300px; padding-bottom: 5px; }
-.signature-line p { margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-secondary); }
-
-/* Animations & Mobile */
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-@media (max-width: 768px) {
-    .header-actions { flex-direction: column; align-items: stretch; gap: 12px; }
-    .btn { width: 100%; justify-content: center; }
-    .totals-grid { grid-template-columns: 1fr; gap: 12px; }
-    .total-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .total-item:nth-child(3), .total-item:nth-child(4) { border-bottom: none; }
-    .main-header { flex-direction: column; align-items: stretch; gap: 15px; }
-    .header-content { text-align: center; }
-    .modal-content { width: 95%; margin: 20px; }
-}
-
-/* ------------------------------------------------------------------
-   OPTIMALISERING FOR UTSKRIFT / PDF (A4-TILPASSET)
-   ------------------------------------------------------------------ */
+/* --- UTSKRIFT / PDF-LOGIKK (A4) --- */
 @media print {
-    @page { 
-        size: A4; 
-        margin: 1.2cm; /* Definerer sikkerhetsmargin slik at alt passer i rammen */
-    }
+    @page { size: A4; margin: 1.5cm; }
+    html, body { height: auto !important; overflow: visible !important; }
+    .no-print, .sticky-summary, .modal-header, .btn { display: none !important; }
     
-    body { 
-        background: white !important; 
-        color: black !important; 
-        font-size: 10pt !important; /* Liten reduksjon av font for å hindre tekst som renner ut */
-    }
-    
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        box-sizing: border-box !important;
-    }
+    body.modal-open .app-container { display: none !important; }
+    body.modal-open .modal-overlay { position: static !important; display: block !important; background: white !important; }
+    body.modal-open .modal-content { width: 100% !important; max-height: none !important; border: none !important; }
+    body.modal-open .modal-body { overflow: visible !important; padding: 0 !important; }
 
-    /* 1. SKJULER DEN MØRKEGRÅ MODAL-BOKSEN + KNAPPER PÅ TOPPEN */
-    .no-print, .btn, .sticky-summary, .tab-container, .canvas-controls, .modal-actions, .modal-close, .modal-header { 
-        display: none !important; 
-    }
-    
-    /* 2. TILPASSER DOKUMENTET FOR UBEGRENSET ARK-HØYDE OG A4-BREDDE */
-    body.modal-open {
-        height: auto !important;
-        overflow: visible !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    body.modal-open .app-container {
-        display: none !important;
-    }
-
-    body.modal-open .modal-overlay {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        display: block !important;
-        background: white !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    body.modal-open .modal-content {
-        box-shadow: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        border: none !important;
-    }
-
-    body.modal-open .modal-body {
-        overflow: visible !important;
-        max-height: none !important;
-        padding: 0 !important;
-        width: 100% !important;
-    }
-
-    .expense-report-document {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* 3. LÅSER TABELLBREDDEN SLIK AT DEN IKKE KUTTES PÅ HØYRE SIDE */
-    .expense-table {
-        width: 100% !important;
-        max-width: 100% !important;
-        table-layout: fixed !important; /* Dette er trikset som holder tabellen innenfor A4-arket */
-        word-wrap: break-word !important;
-    }
-
-    /* Skalerer ned padding i tabellen og sikrer at tekst brytes pent */
-    .expense-table th, .expense-table td {
-        padding: 5px !important;
-        font-size: 9pt !important;
-        overflow-wrap: break-word !important;
-        word-break: break-word !important;
-    }
-
-    /* Skalerer ned de aller største overskriftene ørlite grann i print */
-    .company-info h1 { font-size: 1.8rem !important; }
-    .document-title h2 { font-size: 1.6rem !important; }
-
-    /* Forhindrer stygge sidebrytninger midt inni informasjonsbokser */
-    .employee-section, .travel-section, .mileage-section, .expenses-section, .diet-section, .summary-section, .signature-section {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        margin-bottom: 20px !important;
-    }
-} 
+    .expense-table { page-break-inside: auto; }
+    .expense-table tr { page-break-inside: avoid; page-break-after: auto; }
+    .employee-section, .travel-section, .signature-section { page-break-inside: avoid; }
+}

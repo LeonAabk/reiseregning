@@ -7,48 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <script src="script.js"></script>
     <div class="app-container">
-        <header class="main-header">
-            <div class="header-content">
-                <h1>Reiseregning</h1>
-                <div class="meta-info">
-                    <p>År: <span id="current-year">2024</span></p>
-                    <p>Firma: <strong>Eksempelbedrift AS</strong></p>
-                </div>
-            </div>
+        <header class="main-header card">
+            <h1>Reiseregning 2024</h1>
             <div class="header-actions">
-                <button type="button" class="btn btn-outline no-print" onclick="saveExpenseReport()" aria-label="Lagre reiseregning">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17,21 17,13 7,13 7,21"></polyline><polyline points="7,3 7,8 15,8"></polyline></svg>
-                    Lagre
-                </button>
-                <button type="button" class="btn btn-outline no-print" onclick="showSavedReports()" aria-label="Vis tidligere reiseregninger">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>
-                    Tidligere
-                </button>
-                <div class="dropdown no-print">
-                    <button type="button" class="btn btn-outline dropdown-toggle" aria-label="Eksporter eller importer reiseregning" aria-haspopup="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7,10 12,15 17,10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Eksporter
-                    </button>
-                    <div class="dropdown-menu" role="menu">
-                        <button type="button" onclick="exportAsJSON()" role="menuitem">Eksporter som JSON</button>
-                        <label for="import-json" style="margin: 0; cursor: pointer;" role="menuitem">Importer fra JSON</label>
-                        <input type="file" id="import-json" accept=".json" onchange="importFromJSON(event)" style="display: none;" aria-label="Velg JSON-fil for import">
-                    </div>
-                </div>
-                <button type="button" class="btn btn-outline no-print" onclick="resetForm()" aria-label="Nullstill hele skjemaet">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-                    Nullstill
-                </button>
-                <button type="button" class="btn btn-success no-print" onclick="previewExpenseReport()" aria-label="Forhåndsvis ferdig reiseregning">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z"></path></svg>
-                    Forhåndsvis
-                </button>
-                <button type="button" onclick="window.print()" class="btn btn-primary no-print" id="print-btn" aria-label="Skriv ut eller lagre som PDF">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: bottom;" aria-hidden="true"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                    Lagre som PDF / Skriv ut
-                </button>
+                <button type="button" class="btn btn-outline" onclick="saveExpenseReport()">Lagre</button>
+                <button type="button" class="btn btn-outline" onclick="exportAsJSON()">Eksporter</button>
+                <button type="button" class="btn btn-success" onclick="previewExpenseReport()">Forhåndsvis PDF</button>
             </div>
         </header>
 
@@ -56,181 +21,79 @@
             <section class="card">
                 <h2>1. Personopplysninger</h2>
                 <div class="grid-row">
-                    <div class="form-group">
-                        <label for="emp-name">Fullt navn</label>
-                        <input type="text" id="emp-name" placeholder="F.eks. Kari Nordmann" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="emp-id">Ansattnummer</label>
-                        <input type="text" id="emp-id" placeholder="0000">
-                    </div>
-                    <div class="form-group">
-                        <label for="emp-dept">Avdeling</label>
-                        <input type="text" id="emp-dept" placeholder="Salg">
-                    </div>
+                    <div class="form-group"><label>Navn</label><input type="text" id="emp-name" required></div>
+                    <div class="form-group"><label>Ansattnr</label><input type="text" id="emp-id"></div>
+                    <div class="form-group"><label>Avdeling</label><input type="text" id="emp-dept"></div>
                 </div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label for="emp-pos">Stilling</label>
-                        <input type="text" id="emp-pos" placeholder="Salgssjef">
-                    </div>
-                    <div class="form-group">
-                        <label for="emp-addr">Privatadresse</label>
-                        <input type="text" id="emp-addr" placeholder="Storgata 1, 0000 Oslo">
-                    </div>
-                </div>
+                <div class="form-group"><label>Adresse</label><input type="text" id="emp-addr"></div>
             </section>
 
             <section class="card">
-                <h2>2. Om reisen</h2>
-                <div class="form-group full-width">
-                    <label for="travel-purpose">Formål med reisen</label>
-                    <input type="text" id="travel-purpose" placeholder="F.eks. Kundemøte og prosjektoppstart">
-                </div>
+                <h2>2. Reiseinformasjon</h2>
+                <div class="form-group" style="margin-bottom:15px;"><label>Formål</label><input type="text" id="travel-purpose" required></div>
                 <div class="grid-row">
-                    <div class="form-group">
-                        <label for="departure-date">Avreise (Dato og tid)</label>
-                        <input type="datetime-local" id="departure-date" class="recalc-trigger">
-                    </div>
-                    <div class="form-group">
-                        <label for="return-date">Hjemkomst (Dato og tid)</label>
-                        <input type="datetime-local" id="return-date" class="recalc-trigger">
-                    </div>
-                    <div class="form-group">
-                        <label for="accommodation-type">Overnatting</label>
-                        <select id="accommodation-type" class="recalc-trigger">
-                            <option value="none">Ingen overnatting</option>
+                    <div class="form-group"><label>Avreise</label><input type="datetime-local" id="departure-date"></div>
+                    <div class="form-group"><label>Hjemkomst</label><input type="datetime-local" id="return-date"></div>
+                    <div class="form-group"><label>Overnatting</label>
+                        <select id="accommodation-type">
+                            <option value="none">Ingen</option>
                             <option value="hotel">Hotell</option>
-                            <option value="boarding">Pensjonat/Hybel m/kjøkken</option>
+                            <option value="boarding">Hybel m/kjøkken</option>
                             <option value="private">Privat</option>
                         </select>
                     </div>
                 </div>
-            </section>
-
-            <section class="card">
-                <h2>3. Diettgodtgjørelse</h2>
-                <div id="diet-summary" class="info-box">
-                    <span class="icon">ℹ️</span> Sett inn dato og klokkeslett ovenfor for å beregne diett automatisk.
-                </div>
-                <div class="meal-deductions">
-                    <p class="section-subtitle">Måltidstrekk per dag (Kryss av dersom måltidet var dekket av arbeidsgiver/kunde):</p>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="meal-check recalc-trigger" data-percent="0.20"> 
-                            <span>Frokost (20%)</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="meal-check recalc-trigger" data-percent="0.30"> 
-                            <span>Lunsj (30%)</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="meal-check recalc-trigger" data-percent="0.50"> 
-                            <span>Middag (50%)</span>
-                        </label>
-                    </div>
+                <div id="diet-summary" class="info-box" style="margin-top:15px; padding:10px; background:#f1f5f9; border-radius:5px;"></div>
+                <div class="checkbox-group" style="margin-top:10px; display:flex; gap:15px;">
+                    <label><input type="checkbox" class="meal-check" data-percent="0.2"> Frokost</label>
+                    <label><input type="checkbox" class="meal-check" data-percent="0.3"> Lunsj</label>
+                    <label><input type="checkbox" class="meal-check" data-percent="0.5"> Middag</label>
                 </div>
             </section>
 
             <section class="card">
                 <div class="card-header">
-                    <h2>4. Kjøregodtgjørelse (Egen bil)</h2>
-                    <button type="button" class="btn btn-outline no-print" onclick="addMileageRow()">+ Ny strekning</button>
+                    <h2>3. Kjøregodtgjørelse</h2>
+                    <button type="button" class="btn btn-outline btn-small" onclick="addMileageRow()">+ Ny rad</button>
                 </div>
-                <div class="table-responsive">
-                    <table id="mileage-table">
-                        <thead>
-                            <tr>
-                                <th>Dato</th>
-                                <th>Fra (adresse/sted)</th>
-                                <th>Til (adresse/sted)</th>
-                                <th>Km</th>
-                                <th>Passasjer?</th>
-                                <th>Bompenger o.l.</th>
-                                <th class="no-print" style="width: 80px;">Handling</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mileage-body">
-                            </tbody>
-                    </table>
-                </div>
+                <table id="mileage-table">
+                    <thead><tr><th>Dato</th><th>Fra</th><th>Til</th><th>Km</th><th>Pass.</th><th>Bom</th><th class="no-print"></th></tr></thead>
+                    <tbody id="mileage-body"></tbody>
+                </table>
             </section>
 
             <section class="card">
                 <div class="card-header">
-                    <h2>5. Andre utlegg</h2>
-                    <button type="button" class="btn btn-outline no-print" onclick="addExpenseRow()">+ Nytt utlegg</button>
+                    <h2>4. Andre utlegg</h2>
+                    <button type="button" class="btn btn-outline btn-small" onclick="addExpenseRow()">+ Ny rad</button>
                 </div>
-                <p class="text-muted no-print" style="margin-top:-10px; margin-bottom:15px; font-size: 0.85rem;">Husk å legge ved originale kvitteringer for alle utlegg.</p>
-                <div class="table-responsive">
-                    <table id="expenses-table">
-                        <thead>
-                            <tr>
-                                <th>Dato</th>
-                                <th>Beskrivelse (F.eks. Flybillett, Taxi)</th>
-                                <th>Beløp (NOK)</th>
-                                <th class="no-print" style="width: 80px;">Handling</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenses-body">
-                            </tbody>
-                    </table>
-                </div>
+                <table>
+                    <thead><tr><th>Dato</th><th>Beskrivelse</th><th>Beløp</th><th class="no-print"></th></tr></thead>
+                    <tbody id="expenses-body"></tbody>
+                </table>
             </section>
 
-            <section class="card signature-section">
-                <h2>6. Signatur og bekreftelse</h2>
-                <div class="date-place-row">
-                    <div class="form-group">
-                        <label for="final-date-place">Sted og Dato</label>
-                        <input type="text" id="final-date-place" placeholder="F.eks. Oslo, 15.08.2024">
-                    </div>
+            <section class="card">
+                <h2>5. Signatur</h2>
+                <div class="form-group" style="max-width:300px; margin-bottom:15px;"><label>Sted og dato</label><input type="text" id="final-date-place"></div>
+                <div class="tab-container no-print">
+                    <button type="button" class="tab-btn active" onclick="switchTab('draw')">Tegn</button>
+                    <button type="button" class="tab-btn" onclick="switchTab('upload')">Last opp</button>
                 </div>
-
-                <div class="signature-area">
-                    <div class="tab-container no-print">
-                        <button type="button" class="tab-btn active" onclick="switchTab('draw')">Tegn signatur</button>
-                        <button type="button" class="tab-btn" onclick="switchTab('upload')">Last opp bilde</button>
-                    </div>
-
-                    <div id="draw-tab" class="sig-content">
-                        <canvas id="sig-canvas" width="500" height="150"></canvas>
-                        <div class="canvas-controls no-print">
-                            <button type="button" class="btn btn-text btn-small" onclick="clearCanvas()">Tøm signaturfelt</button>
-                        </div>
-                    </div>
-
-                    <div id="upload-tab" class="sig-content" style="display:none;">
-                        <div class="upload-box">
-                            <input type="file" id="sig-upload" accept="image/*" onchange="handleSignatureUpload(event)">
-                            <p class="text-muted">Klikk for å velge fil, eller dra bildet hit</p>
-                        </div>
-                        <div id="sig-preview-container"></div>
-                    </div>
-                </div>
+                <div id="draw-tab"><canvas id="sig-canvas" width="500" height="150" style="border:1px solid #ccc; background:#fff; cursor:crosshair;"></canvas><br><button type="button" onclick="clearCanvas()" class="btn btn-text">Tøm</button></div>
+                <div id="upload-tab" style="display:none;"><input type="file" onchange="handleSignatureUpload(event)"><div id="sig-preview-container"></div></div>
             </section>
         </form>
 
-        <div class="sticky-summary">
+        <div class="sticky-summary no-print">
             <div class="totals-grid">
-                <div class="total-item">
-                    <span class="total-label">Kjøregodtgjørelse</span>
-                    <span class="total-value" id="total-mileage">0,00 kr</span>
-                </div>
-                <div class="total-item">
-                    <span class="total-label">Diett</span>
-                    <span class="total-value" id="total-diet">0,00 kr</span>
-                </div>
-                <div class="total-item">
-                    <span class="total-label">Utlegg</span>
-                    <span class="total-value" id="total-other">0,00 kr</span>
-                </div>
-                <div class="total-item grand-total-box">
-                    <span class="total-label text-highlight">Sum å utbetale</span>
-                    <span class="total-value text-highlight" id="grand-total">0,00 kr</span>
-                </div>
+                <div class="total-item"><span class="total-label">Kjøring</span><span id="total-mileage" class="total-value">0 kr</span></div>
+                <div class="total-item"><span class="total-label">Diett</span><span id="total-diet" class="total-value">0 kr</span></div>
+                <div class="total-item"><span class="total-label">Utlegg</span><span id="total-other" class="total-value">0 kr</span></div>
+                <div class="total-item"><span class="total-label">Sum</span><span id="grand-total" class="total-value">0 kr</span></div>
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
