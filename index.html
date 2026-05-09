@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profesjonell Reiseregning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-top">
+            <h1>Reiseregning</h1>
+            <div class="header-meta">
+                <div class="form-group">
+                    <label for="year">År:</label>
+                    <input type="number" id="year" value="2026">
+                </div>
+            </div>
+        </div>
+        <div class="form-group company-group">
+            <label for="virksomhet">Virksomhet:</label>
+            <input type="text" id="virksomhet" placeholder="Firmanavn AS">
+        </div>
+    </header>
+
+    <section class="card personal-info">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="navn">Navn:</label>
+                <input type="text" id="navn" placeholder="Fornavn Etternavn">
+            </div>
+            <div class="form-group">
+                <label for="stilling">Stilling:</label>
+                <input type="text" id="stilling" placeholder="Din stillingstittel">
+            </div>
+            <div class="form-group full-width">
+                <label for="adresse">Adresse:</label>
+                <input type="text" id="adresse" placeholder="Gateadresse, Postnr Sted">
+            </div>
+            <div class="form-group full-width">
+                <label for="formal">Formål med reisen:</label>
+                <input type="text" id="formal" placeholder="Beskriv formålet med reisen">
+            </div>
+            <div class="form-group">
+                <label for="avreise">Avreise (Dato/Tid):</label>
+                <input type="datetime-local" id="avreise">
+            </div>
+            <div class="form-group">
+                <label for="hjemkomst">Hjemkomst (Dato/Tid):</label>
+                <input type="datetime-local" id="hjemkomst">
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Kjøregodtgjørelse</h2>
+        <div class="table-responsive">
+            <table id="mileageTable">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Reiserute (Fra - Til)</th>
+                        <th width="100">Km</th>
+                        <th width="120">Beløp (kr)</th>
+                        <th class="no-print" width="50"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS setter inn rader her -->
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-secondary no-print" onclick="addMileageRow()">+ Legg til kjøring</button>
+    </section>
+
+    <section class="card">
+        <h2>Utlegg og Diett</h2>
+        <div class="table-responsive">
+            <table id="expenseTable">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Beskrivelse</th>
+                        <th width="100">Vedlegg nr.</th>
+                        <th width="120">Beløp (kr)</th>
+                        <th class="no-print" width="50"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS setter inn rader her -->
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-secondary no-print" onclick="addExpenseRow()">+ Legg til utlegg</button>
+    </section>
+
+    <section class="card summary-section">
+        <h2>Oppsummering</h2>
+        <div class="summary-container">
+            <div class="summary-details">
+                <div class="summary-item">
+                    <span>Total kjøregodtgjørelse:</span>
+                    <strong id="sumMileage">0,00 kr</strong>
+                </div>
+                <div class="summary-item">
+                    <span>Totale utlegg:</span>
+                    <strong id="sumExpense">0,00 kr</strong>
+                </div>
+                <div class="summary-item total-highlight">
+                    <span>Totalt å utbetale:</span>
+                    <strong id="sumTotal">0,00 kr</strong>
+                </div>
+            </div>
+            <div class="summary-fields">
+                <div class="form-group">
+                    <label for="signDate">Dato:</label>
+                    <input type="date" id="signDate">
+                </div>
+                <div class="form-group">
+                    <label for="sted">Sted:</label>
+                    <input type="text" id="sted" placeholder="Sted">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card signature-card">
+        <label>Arbeidstakers signatur</label>
+        <div class="signature-container">
+            <canvas id="signaturePad" width="600" height="150"></canvas>
+            <div class="signature-actions no-print">
+                <button type="button" class="btn btn-outline" onclick="clearSignature()">Tøm signatur</button>
+                <div class="upload-wrapper">
+                    <span>eller last opp bilde:</span>
+                    <input type="file" id="sigUpload" accept="image/*">
+                </div>
+            </div>
+        </div>
+        <p class="signature-label">Arbeidstaker</p>
+    </section>
+
+    <div class="actions-footer no-print">
+        <button type="button" class="btn btn-primary" onclick="window.print()">Skriv ut / Lagre som PDF</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
