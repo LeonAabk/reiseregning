@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reiseregning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="document-container">
+    <div class="header">
+        <h1>Reiseregning</h1>
+        <div class="header-right">
+            <label for="year">År:</label>
+            <input type="number" id="year" value="2026">
+        </div>
+    </div>
+
+    <!-- Generell Informasjon -->
+    <fieldset>
+        <legend>Person- og reiseinformasjon</legend>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="virksomhet">Virksomhet / Firmanavn:</label>
+                <input type="text" id="virksomhet" placeholder="F.eks. Firmanavn AS">
+            </div>
+        </div>
+        <div class="form-row two-col">
+            <div class="form-group">
+                <label for="navn">Navn:</label>
+                <input type="text" id="navn" placeholder="Fornavn Etternavn">
+            </div>
+            <div class="form-group">
+                <label for="stilling">Stilling:</label>
+                <input type="text" id="stilling" placeholder="Din stilling">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="adresse">Adresse (Gate, Postnr, Sted):</label>
+                <input type="text" id="adresse" placeholder="Gateveien 1, 1234 Sted">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="formal">Formål med reisen:</label>
+                <input type="text" id="formal" placeholder="Beskriv hvorfor reisen ble foretatt">
+            </div>
+        </div>
+        <div class="form-row two-col">
+            <div class="form-group">
+                <label for="avreise">Avreise (Dato og tid):</label>
+                <input type="datetime-local" id="avreise">
+            </div>
+            <div class="form-group">
+                <label for="hjemkomst">Hjemkomst (Dato og tid):</label>
+                <input type="datetime-local" id="hjemkomst">
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Kjøregodtgjørelse -->
+    <fieldset>
+        <legend>Kjøregodtgjørelse</legend>
+        <table id="mileageTable" class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Dato</th>
+                    <th style="width: 50%;">Reiserute (Fra - Til)</th>
+                    <th style="width: 15%;">Antall km</th>
+                    <th style="width: 15%;">Beløp (kr)</th>
+                    <th style="width: 5%;" class="no-print"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rader legges til her av JavaScript -->
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-add no-print" id="btnAddMileage">+ Legg til ny kjøring</button>
+    </fieldset>
+
+    <!-- Utlegg og Diett -->
+    <fieldset>
+        <legend>Utlegg og Diett</legend>
+        <table id="expenseTable" class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Dato</th>
+                    <th style="width: 50%;">Beskrivelse av utlegg</th>
+                    <th style="width: 15%;">Vedlegg nr.</th>
+                    <th style="width: 15%;">Beløp (kr)</th>
+                    <th style="width: 5%;" class="no-print"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rader legges til her av JavaScript -->
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-add no-print" id="btnAddExpense">+ Legg til nytt utlegg</button>
+    </fieldset>
+
+    <!-- Oppsummering og Signatur -->
+    <div class="bottom-section">
+        <div class="signature-area">
+            <div class="form-row two-col">
+                <div class="form-group">
+                    <label for="sted">Sted:</label>
+                    <input type="text" id="sted" placeholder="F.eks. Hamar">
+                </div>
+                <div class="form-group">
+                    <label for="datoSignatur">Dato:</label>
+                    <input type="date" id="datoSignatur">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Signatur (Arbeidstaker):</label>
+                <div class="signature-box">
+                    <canvas id="signaturePad" width="400" height="150"></canvas>
+                </div>
+                <div class="signature-buttons no-print">
+                    <button type="button" class="btn btn-clear" id="btnClearSig">Tøm signaturfelt</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-area">
+            <h3>Oppsummering</h3>
+            <table class="summary-table">
+                <tr>
+                    <td>Kjøregodtgjørelse:</td>
+                    <td id="sumMileage" class="amount">0.00 kr</td>
+                </tr>
+                <tr>
+                    <td>Utlegg og Diett:</td>
+                    <td id="sumExpense" class="amount">0.00 kr</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Totalt å utbetale:</td>
+                    <td id="sumTotal" class="amount">0.00 kr</td>
+                </tr>
+            </table>
+            
+            <button type="button" class="btn btn-print no-print" onclick="window.print()">Skriv ut / Lagre som PDF</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

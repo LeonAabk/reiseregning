@@ -1,306 +1,260 @@
-:root {
-    --primary: #1e293b;
-    --accent: #2563eb;
-    --bg: #f1f5f9;
-    --card: #ffffff;
-    --border: #e2e8f0;
-    --text: #334155;
-    --text-light: #64748b;
-    --danger: #ef4444;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/* Grunnleggende oppsett */
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    padding: 40px 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #e9ecef; /* Lys grå bakgrunn for å ramme inn skjemaet */
+    color: #000;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.5;
 }
 
-.container {
-    max-width: 1000px;
+/* Skjema-containeren (ser ut som et A4-ark) */
+.document-container {
+    max-width: 900px;
     margin: 0 auto;
+    background-color: #fff;
+    padding: 40px;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-header {
-    background: var(--primary);
-    color: white;
-    padding: 30px;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.header-top {
+/* Overskrift */
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
     margin-bottom: 20px;
 }
 
-header h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    letter-spacing: -0.025em;
+.header h1 {
+    margin: 0;
+    font-size: 28px;
 }
 
-.company-group {
-    max-width: 400px;
+.header-right label {
+    font-weight: bold;
+    margin-right: 5px;
 }
 
-header label {
-    color: #cbd5e1;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 5px;
-    display: block;
+.header-right input {
+    width: 80px;
+    padding: 5px;
+    font-size: 16px;
 }
 
-header input {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    width: 100%;
+/* Grupperinger / Bokser for felter */
+fieldset {
+    border: 1px solid #999;
+    padding: 20px;
+    margin-bottom: 25px;
+    background-color: #fafafa; /* Veldig svak grå for kontrast */
 }
 
-.card {
-    background: var(--card);
-    padding: 30px;
-    margin-bottom: 20px;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+legend {
+    font-weight: bold;
+    font-size: 18px;
+    background: #fff;
+    padding: 0 10px;
+    border: 1px solid #999;
 }
 
-.personal-info {
-    border-radius: 0;
-    margin-top: -20px;
-    padding-top: 50px;
+/* Skjemafelter */
+.form-row {
+    margin-bottom: 15px;
 }
 
-h2 {
-    font-size: 1.25rem;
-    color: var(--primary);
-    margin-bottom: 20px;
-    border-left: 4px solid var(--accent);
-    padding-left: 15px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+.two-col {
+    display: flex;
     gap: 20px;
 }
 
-.full-width {
-    grid-column: 1 / -1;
-}
-
 .form-group {
+    flex: 1;
     display: flex;
     flex-direction: column;
 }
 
 label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
 }
 
 input[type="text"],
 input[type="number"],
-input[type="datetime-local"],
-input[type="date"] {
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s;
+input[type="date"],
+input[type="datetime-local"] {
+    padding: 8px;
+    border: 1px solid #666;
+    border-radius: 3px;
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
 }
 
 input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: 2px solid #0056b3;
+    border-color: #0056b3;
 }
 
-.table-responsive {
-    overflow-x: auto;
-    margin-bottom: 15px;
-}
-
-table {
+/* Tabeller */
+.data-table {
     width: 100%;
     border-collapse: collapse;
+    margin-bottom: 10px;
+    background-color: #fff;
 }
 
-th {
-    text-align: left;
-    background: #f8fafc;
-    padding: 12px;
-    font-size: 0.85rem;
-    color: var(--text-light);
-    border-bottom: 2px solid var(--border);
-}
-
-td {
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-}
-
-td input {
-    width: 100%;
-    border: none;
+.data-table th, .data-table td {
+    border: 1px solid #666;
     padding: 8px;
-    background: transparent;
+    text-align: left;
 }
 
-td input:hover {
-    background: #f8fafc;
+.data-table th {
+    background-color: #e9ecef;
+    font-size: 14px;
 }
 
-.btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: 0.2s;
-    font-size: 0.95rem;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: white;
+/* Inputfelter inni tabellene */
+.data-table td input {
     width: 100%;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    border: 1px solid transparent; /* Skjult border til de får fokus */
+    box-sizing: border-box;
+    background-color: transparent;
+    padding: 6px;
 }
 
-.btn-primary:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
+.data-table td input:focus {
+    border: 1px solid #0056b3;
+    background-color: #fff;
 }
 
-.btn-secondary {
-    background: #f1f5f9;
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-    background: #e2e8f0;
-}
-
-.btn-outline {
-    background: white;
-    border: 1px solid var(--border);
-    color: var(--text-light);
-    padding: 8px 16px;
-}
-
-.btn-remove {
-    background: none;
-    color: var(--danger);
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.summary-container {
+/* Oppsummering og bunnseksjon */
+.bottom-section {
     display: flex;
     justify-content: space-between;
     gap: 40px;
-}
-
-.summary-details {
-    flex: 1;
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--border);
-}
-
-.total-highlight {
-    margin-top: 10px;
-    padding-top: 15px;
-    border-top: 2px solid var(--accent);
-    color: var(--accent);
-    font-size: 1.2rem;
-}
-
-.summary-fields {
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.signature-container {
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    margin-top: 10px;
-    background: #fafafa;
-    position: relative;
-}
-
-#signaturePad {
-    display: block;
-    width: 100%;
-    height: 150px;
-    cursor: crosshair;
-}
-
-.signature-actions {
-    padding: 15px;
-    background: #fff;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.upload-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--text-light);
-}
-
-.signature-label {
-    text-align: center;
-    font-weight: bold;
-    margin-top: 10px;
-    border-top: 1px solid #000;
-    width: 200px;
-    padding-top: 5px;
-}
-
-.actions-footer {
     margin-top: 30px;
 }
 
+.signature-area {
+    flex: 1;
+}
+
+.summary-area {
+    width: 350px;
+    background-color: #fafafa;
+    border: 1px solid #999;
+    padding: 20px;
+}
+
+.summary-area h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.summary-table td {
+    padding: 8px 0;
+    font-size: 16px;
+}
+
+.summary-table .amount {
+    text-align: right;
+    font-weight: bold;
+}
+
+.total-row td {
+    border-top: 2px solid #000;
+    font-size: 18px;
+    padding-top: 10px;
+}
+
+/* Signaturbrett */
+.signature-box {
+    border: 1px solid #666;
+    background-color: #fff;
+    margin-bottom: 10px;
+}
+
+canvas {
+    display: block;
+    cursor: crosshair;
+}
+
+/* Knapper */
+.btn {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #333;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.btn:hover {
+    background-color: #e2e6ea;
+}
+
+.btn-remove {
+    background-color: #ffcccc;
+    border-color: #ff9999;
+    color: #990000;
+    padding: 6px 10px;
+}
+
+.btn-remove:hover {
+    background-color: #ff9999;
+}
+
+.btn-print {
+    width: 100%;
+    background-color: #0056b3;
+    color: white;
+    border-color: #004085;
+    font-size: 16px;
+    padding: 12px;
+}
+
+.btn-print:hover {
+    background-color: #004085;
+}
+
+/* Utskriftsregler (Når man lagrer som PDF) */
 @media print {
-    body { background: white; padding: 0; }
-    .container { max-width: 100%; }
-    header { background: white; color: black; box-shadow: none; border-bottom: 2px solid black; }
-    header input { color: black; border: none; border-bottom: 1px solid #ccc; }
-    .card { box-shadow: none; border: none; padding: 15px 0; }
-    .no-print { display: none !important; }
-    input { border: none !important; padding: 2px !important; }
-    .signature-container { border: 1px solid #ccc; }
-    .summary-details { background: white; border: 1px solid #eee; }
+    body {
+        background-color: #fff;
+        padding: 0;
+    }
+    .document-container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+    }
+    .no-print {
+        display: none !important;
+    }
+    fieldset {
+        background-color: #fff;
+    }
+    input {
+        border: none !important;
+        background-color: transparent !important;
+    }
+    /* Sørg for at tabellgrenser vises på utskrift */
+    .data-table th, .data-table td {
+        border: 1px solid #000;
+    }
 }

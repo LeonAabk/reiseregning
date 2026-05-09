@@ -1,48 +1,64 @@
+// Statens sats for kjøregodtgjørelse (kan endres)
 const kmRate = 4.90;
 
-// Referanser til tabeller
+// Referanser til HTML-elementer
 const mileageTableBody = document.querySelector('#mileageTable tbody');
 const expenseTableBody = document.querySelector('#expenseTable tbody');
+const btnAddMileage = document.getElementById('btnAddMileage');
+const btnAddExpense = document.getElementById('btnAddExpense');
 
-// Initialisering
+// --- Hjelpefunksjoner for tabellrader ---
+
+function createMileageRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="date"></td>
+        <td><input type="text" placeholder="F.eks. Oslo - Hamar t/r"></td>
+        <td><input type="number" class="km-input" value="0" min="0" oninput="calculateRow(this)"></td>
+        <td><input type="number" class="mileage-amount" value="0.00" readonly></td>
+        <td class="no-print" style="text-align: center;">
+            <button type="button" class="btn btn-remove" onclick="removeRow(this)">X</button>
+        </td>
+    `;
+    return tr;
+}
+
+function createExpenseRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="date"></td>
+        <td><input type="text" placeholder="Beskrivelse av utlegg"></td>
+        <td><input type="text" placeholder="Vedlegg nr"></td>
+        <td><input type="number" class="expense-amount" value="0" min="0" oninput="updateTotals()"></td>
+        <td class="no-print" style="text-align: center;">
+            <button type="button" class="btn btn-remove" onclick="removeRow(this)">X</button>
+        </td>
+    `;
+    return tr;
+}
+
+// Legg til rader ved oppstart
 document.addEventListener('DOMContentLoaded', () => {
-    addMileageRow();
-    addExpenseRow();
+    mileageTableBody.appendChild(createMileageRow());
+    expenseTableBody.appendChild(createExpenseRow());
     
-    // Sett dagens dato
-    document.getElementById('signDate').valueAsDate = new Date();
+    // Sett dagens dato på signaturfeltet automatisk
+    document.getElementById('datoSignatur').valueAsDate = new Date();
     
-    initSignature();
+    // Start signaturbrettet
+    initSignaturePad();
 });
 
-// --- Radehåndtering ---
+// Knappetrykk for å legge til flere rader
+btnAddMileage.addEventListener('click', () => {
+    mileageTableBody.appendChild(createMileageRow());
+});
 
-function addMileageRow() {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="date"></td>
-        <td><input type="text" placeholder="F.eks Oslo - Bergen"></td>
-        <td><input type="number" class="km-input" value="0" oninput="updateMileageAmount(this)"></td>
-        <td><input type="number" class="mileage-amount" value="0.00" readonly></td>
-        <td class="no-print"><button class="btn-remove" onclick="removeRow(this)">×</button></td>
-    `;
-    mileageTableBody.appendChild(tr);
-    updateTotals();
-}
+btnAddExpense.addEventListener('click', () => {
+    expenseTableBody.appendChild(createExpenseRow());
+});
 
-function addExpenseRow() {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="date"></td>
-        <td><input type="text" placeholder="Hotell, Diett, etc."></td>
-        <td><input type="text" placeholder="-"></td>
-        <td><input type="number" class="expense-amount" value="0" oninput="updateTotals()"></td>
-        <td class="no-print"><button class="btn-remove" onclick="removeRow(this)">×</button></td>
-    `;
-    expenseTableBody.appendChild(tr);
-    updateTotals();
-}
-
+// Fjern en rad
 function removeRow(btn) {
     btn.closest('tr').remove();
     updateTotals();
@@ -50,112 +66,104 @@ function removeRow(btn) {
 
 // --- Beregninger ---
 
-function updateMileageAmount(input) {
-    const km = parseFloat(input.value) || 0;
-    const tr = input.closest('tr');
-    const amountInput = tr.querySelector('.mileage-amount');
-    amountInput.value = (km * kmRate).toFixed(2);
+function calculateRow(inputElement) {
+    // Finn ut hvor mange km som er skrevet inn
+    let km = parseFloat(inputElement.value);
+    if (isNaN(km) || km < 0) km = 0;
+    
+    // Finn riktig beløp-felt på samme rad og oppdater det
+    const row = inputElement.closest('tr');
+    const amountField = row.querySelector('.mileage-amount');
+    
+    const calculatedAmount = km * kmRate;
+    amountField.value = calculatedAmount.toFixed(2);
+    
+    // Oppdater totalen i bunnen
     updateTotals();
 }
 
 function updateTotals() {
     let totalMileage = 0;
-    document.querySelectorAll('.mileage-amount').forEach(el => {
-        totalMileage += parseFloat(el.value) || 0;
-    });
-
     let totalExpense = 0;
-    document.querySelectorAll('.expense-amount').forEach(el => {
-        totalExpense += parseFloat(el.value) || 0;
+
+    // Summer alle kilometer-beløp
+    document.querySelectorAll('.mileage-amount').forEach(field => {
+        let val = parseFloat(field.value);
+        if (!isNaN(val)) totalMileage += val;
     });
 
-    const grandTotal = totalMileage + totalExpense;
+    // Summer alle utlegg-beløp
+    document.querySelectorAll('.expense-amount').forEach(field => {
+        let val = parseFloat(field.value);
+        if (!isNaN(val)) totalExpense += val;
+    });
 
-    document.getElementById('sumMileage').innerText = totalMileage.toLocaleString('no-NO', { minimumFractionDigits: 2 }) + ' kr';
-    document.getElementById('sumExpense').innerText = totalExpense.toLocaleString('no-NO', { minimumFractionDigits: 2 }) + ' kr';
-    document.getElementById('sumTotal').innerText = grandTotal.toLocaleString('no-NO', { minimumFractionDigits: 2 }) + ' kr';
+    let grandTotal = totalMileage + totalExpense;
+
+    // Oppdater HTML
+    document.getElementById('sumMileage').innerText = totalMileage.toFixed(2) + ' kr';
+    document.getElementById('sumExpense').innerText = totalExpense.toFixed(2) + ' kr';
+    document.getElementById('sumTotal').innerText = grandTotal.toFixed(2) + ' kr';
 }
 
 // --- Signaturbrett ---
 
-function initSignature() {
+function initSignaturePad() {
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
-    let drawing = false;
-
-    // Fix for high DPI
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = canvas.offsetWidth * ratio;
-    canvas.height = canvas.offsetHeight * ratio;
-    ctx.scale(ratio, ratio);
-
+    const btnClear = document.getElementById('btnClearSig');
+    
+    let isDrawing = false;
+    
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#000';
 
-    function getPos(e) {
+    function getMousePos(canvas, evt) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        // Støtter både mus og touch
+        const clientX = evt.clientX || (evt.touches && evt.touches[0].clientX);
+        const clientY = evt.clientY || (evt.touches && evt.touches[0].clientY);
         return {
             x: clientX - rect.left,
             y: clientY - rect.top
         };
     }
 
-    function startDrawing(e) {
-        drawing = true;
-        const pos = getPos(e);
+    function startDraw(e) {
+        isDrawing = true;
+        const pos = getMousePos(canvas, e);
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
+        e.preventDefault(); // Forhindrer scrolling på mobil når man tegner
     }
 
     function draw(e) {
-        if (!drawing) return;
-        e.preventDefault();
-        const pos = getPos(e);
+        if (!isDrawing) return;
+        const pos = getMousePos(canvas, e);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
+        e.preventDefault();
     }
 
-    function stopDrawing() {
-        drawing = false;
+    function endDraw() {
+        isDrawing = false;
+        ctx.closePath();
     }
 
-    canvas.addEventListener('mousedown', startDrawing);
+    // Mus-events
+    canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', draw);
-    window.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseout', endDraw);
 
-    canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDrawing);
+    // Touch-events for mobil/nettbrett
+    canvas.addEventListener('touchstart', startDraw, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', endDraw);
+
+    // Tøm-knapp
+    btnClear.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
 }
-
-function clearSignature() {
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// Opplasting av bilde som signatur
-document.getElementById('sigUpload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.getElementById('signaturePad');
-                const ctx = canvas.getContext('2d');
-                clearSignature();
-                // Tegn bildet sentrert
-                const hRatio = canvas.width / img.width;
-                const vRatio = canvas.height / img.height;
-                const ratio  = Math.min(hRatio, vRatio) * 0.5; // skala ned litt
-                ctx.drawImage(img, 0, 0, img.width, img.height, 10, 10, img.width*ratio, img.height*ratio);
-            }
-            img.src = event.target.result;
-        }
-        reader.readAsDataURL(file);
-    }
-});
