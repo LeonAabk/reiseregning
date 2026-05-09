@@ -55,7 +55,6 @@ body {
     font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* Hindre scrolling av bakgrunn når forhåndsvisning er åpen */
 body.modal-open { overflow: hidden; }
 
 .app-container { max-width: 1000px; margin: 0 auto; position: relative; }
@@ -79,11 +78,6 @@ body.modal-open { overflow: hidden; }
 /* Cards & Layout */
 .card { background: var(--card-bg); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-light); transition: var(--transition); position: relative; animation: fadeInUp 0.6s ease-out; }
 .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.card:nth-child(2) { animation-delay: 0.1s; }
-.card:nth-child(3) { animation-delay: 0.2s; }
-.card:nth-child(4) { animation-delay: 0.3s; }
-.card:nth-child(5) { animation-delay: 0.4s; }
-.card:nth-child(6) { animation-delay: 0.5s; }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin: -32px -32px 24px -32px; padding: 24px 32px 20px 32px; background: var(--bg-secondary); border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--border-color); }
 .card-header h2 { margin: 0; border: none; padding: 0; }
@@ -97,29 +91,22 @@ h2 { font-size: 1.375rem; color: var(--primary-color); margin-top: 0; margin-bot
 label { font-size: 0.875rem; font-weight: 600; color: var(--text-main); letter-spacing: 0.025em; text-transform: uppercase; }
 
 input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], select { padding: 12px 16px; border: 2px solid var(--input-border); border-radius: var(--radius); font-size: 1rem; transition: var(--transition-fast); background-color: var(--card-bg); color: var(--text-main); font-family: inherit; }
-input:focus, select:focus { outline: none; border-color: var(--input-focus); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); transform: translateY(-1px); animation: slideInRight 0.2s ease-out; }
-input:hover, select:hover { border-color: var(--input-focus); }
+input:focus, select:focus { outline: none; border-color: var(--input-focus); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); transform: translateY(-1px); }
 
 /* Checkboxes */
 .checkbox-group { display: flex; gap: 20px; flex-wrap: wrap; }
 .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; }
 .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-color); }
 
-/* Info Box */
-.info-box { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); padding: 20px; border-radius: var(--radius); border-left: 4px solid var(--accent-color); margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; font-weight: 500; color: var(--text-main); backdrop-filter: blur(10px); border: 1px solid rgba(59, 130, 246, 0.2); position: relative; overflow: hidden; }
-.info-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent); transition: left 0.7s ease; }
-.info-box:hover::before { left: 100%; }
-.info-box .icon { font-size: 1.25rem; opacity: 0.8; }
-
-/* Error Messages */
-.error-container { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; display: none; backdrop-filter: blur(10px); }
+/* Info Box & Errors */
+.info-box { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); padding: 20px; border-radius: var(--radius); border-left: 4px solid var(--accent-color); margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; font-weight: 500; color: var(--text-main); backdrop-filter: blur(10px); }
+.error-container { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; display: none; }
 .error-message { color: var(--danger-color); font-weight: 600; display: flex; align-items: flex-start; gap: 12px; }
 
 /* Modal */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); animation: fadeInUp 0.3s ease-out; }
 .modal-content { background: white; border-radius: 8px; max-width: 600px; width: 90%; max-height: 85vh; overflow: hidden; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; animation: slideInRight 0.4s ease-out; }
 .preview-modal-content { max-width: 900px; width: 95%; max-height: 90vh; }
-
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); background: var(--gradient-primary); color: white; }
 .modal-header h2, .modal-header h3 { margin: 0; color: white; }
 .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: white; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
@@ -127,65 +114,39 @@ input:hover, select:hover { border-color: var(--input-focus); }
 .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 .modal-actions { display: flex; gap: 8px; align-items: center; }
 
-.reports-list { display: flex; flex-direction: column; gap: 10px; }
-.report-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: var(--transition); }
-.report-item:hover { background: #f8fafc; border-color: var(--accent-color); }
-.report-info { flex: 1; }
-.report-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-
 /* Tables */
 .table-responsive { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
 th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
 th { background: #f8fafc; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 td input { width: 100%; }
-.expense-table tr { transition: var(--transition); }
-.expense-table tr:hover { background: rgba(59, 130, 246, 0.05); }
 
 /* Buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: var(--transition-fast); text-decoration: none; white-space: nowrap; position: relative; overflow: hidden; transform: translateZ(0); }
-.btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255, 255, 255, 0.3); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
-.btn:active::after { width: 300px; height: 300px; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
-.btn:disabled:hover { transform: none !important; }
-
-.btn-primary { background: var(--gradient-accent); color: white; border-color: var(--accent-color); box-shadow: var(--shadow-sm); }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: var(--transition-fast); text-decoration: none; position: relative; overflow: hidden; }
+.btn-primary { background: var(--gradient-accent); color: white; border-color: var(--accent-color); }
 .btn-outline { background: transparent; color: var(--accent-color); border-color: var(--accent-color); }
-.btn-outline:hover { background: var(--accent-color); color: white; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn-outline:hover { background: var(--accent-color); color: white; }
 .btn-success { background: var(--success-color); color: white; border-color: var(--success-color); }
-.btn-success:hover { background: var(--success-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-.btn-danger { background: var(--danger-color); color: white; border-color: var(--danger-color); }
 .btn-text { background: transparent; color: var(--text-muted); padding: 8px 12px; border: none; }
-.btn-text:hover { color: var(--text-main); background: var(--bg-secondary); }
 .btn-small { padding: 8px 16px; font-size: 0.8125rem; }
 
 /* Sticky Summary */
-.sticky-summary { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--gradient-primary); color: white; padding: 24px 16px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15); z-index: 100; backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.1); animation: fadeInUp 0.8s ease-out; }
+.sticky-summary { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--gradient-primary); color: white; padding: 24px 16px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15); z-index: 100; backdrop-filter: blur(10px); }
 .totals-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: center; }
-.total-item { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); transition: var(--transition); position: relative; overflow: hidden; }
-.total-item::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); transition: left 0.5s ease; }
-.total-item:hover::before { left: 100%; }
-.total-item:last-child { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); }
+.total-item { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius); }
 .total-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.9; margin-bottom: 4px; font-weight: 600; }
-.total-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em; }
-.text-highlight { color: #fbbf24; }
-.grand-total-box .total-value { font-size: 2rem; color: #fbbf24; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+.total-value { font-size: 1.5rem; font-weight: 800; }
+.grand-total-box .total-value { font-size: 2rem; color: #fbbf24; }
 
 /* Signatur */
 .signature-area { margin-top: 24px; position: relative; }
-.signature-area::before { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent); border-radius: var(--radius-lg); z-index: -1; opacity: 0; transition: opacity 0.3s ease; }
-.signature-area:hover::before { opacity: 1; }
 .date-place-row { max-width: 320px; margin-bottom: 24px; }
-#sig-canvas { border: 2px dashed var(--input-border); border-radius: var(--radius); background: var(--bg-secondary); cursor: crosshair; width: 100%; max-width: 500px; transition: var(--transition); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); }
-#sig-canvas:hover { border-color: var(--accent-color); background: rgba(59, 130, 246, 0.02); }
-.upload-box { border: 2px dashed var(--border-color); padding: 30px; text-align: center; border-radius: 8px; max-width: 500px; background: var(--bg-secondary); transition: var(--transition); cursor: pointer; }
-.upload-box:hover { border-color: var(--accent-color); background: rgba(59, 130, 246, 0.02); }
+#sig-canvas { border: 2px dashed var(--input-border); border-radius: var(--radius); background: var(--bg-secondary); cursor: crosshair; width: 100%; max-width: 500px; }
+.upload-box { border: 2px dashed var(--border-color); padding: 30px; text-align: center; border-radius: 8px; max-width: 500px; background: var(--bg-secondary); cursor: pointer; }
 .canvas-controls { margin-top: 16px; text-align: center; }
 .tab-container { display: flex; gap: 8px; margin-bottom: 20px; background: var(--bg-secondary); padding: 4px; border-radius: var(--radius); width: fit-content; }
-.tab-btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: var(--transition-fast); font-size: 0.875rem; }
+.tab-btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; }
 .tab-btn.active { background: var(--card-bg); color: var(--accent-color); box-shadow: var(--shadow-xs); }
-.tab-btn:hover:not(.active) { color: var(--text-main); background: rgba(255, 255, 255, 0.5); }
 
 /* Skreddersydd design for Forhåndsvisningen / PDF dokumentet */
 .expense-report-document { font-family: 'Times New Roman', serif; line-height: 1.4; color: var(--text-main); }
@@ -225,82 +186,67 @@ td input { width: 100%; }
 .signature-line span { display: inline-block; border-bottom: 1px solid var(--text-main); width: 300px; padding-bottom: 5px; }
 .signature-line p { margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-secondary); }
 
-/* Animations */
+/* Animations & Mobile */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* Responsive & Mobile */
 @media (max-width: 768px) {
     .header-actions { flex-direction: column; align-items: stretch; gap: 12px; }
     .btn { width: 100%; justify-content: center; }
     .totals-grid { grid-template-columns: 1fr; gap: 12px; }
-    .total-item { padding: 12px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .total-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .total-item:nth-child(3), .total-item:nth-child(4) { border-bottom: none; }
-    .total-value { font-size: 1.25rem; }
-    .grand-total-box .total-value { font-size: 1.75rem; }
     .main-header { flex-direction: column; align-items: stretch; gap: 15px; }
     .header-content { text-align: center; }
-    .dropdown-menu { min-width: 140px; }
     .modal-content { width: 95%; margin: 20px; }
-    .signature-area { flex-direction: column; }
-    .tab-container { order: -1; }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-color: #0f172a;
-        --bg-secondary: #1e293b;
-        --card-bg: #334155;
-        --text-main: #f1f5f9;
-        --text-secondary: #cbd5e1;
-        --border-color: #475569;
-    }
-}
-
-/* OPTIMALISERING FOR UTSKRIFT / PDF */
+/* ------------------------------------------------------------------
+   OPTIMALISERING FOR UTSKRIFT / PDF (A4-TILPASSET)
+   ------------------------------------------------------------------ */
 @media print {
-    @page { margin: 1.5cm; }
+    @page { 
+        size: A4; 
+        margin: 1.2cm; /* Definerer sikkerhetsmargin slik at alt passer i rammen */
+    }
     
-    body { background: white !important; color: black !important; font-size: 11pt !important; }
+    body { 
+        background: white !important; 
+        color: black !important; 
+        font-size: 10pt !important; /* Liten reduksjon av font for å hindre tekst som renner ut */
+    }
     
-    /* Tving farger til å bli med i PDF (Viktig for tabeller og headere) */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        box-sizing: border-box !important;
     }
 
-    /* Skjuler alle knapper og menyer under utskrift */
-    .no-print, .btn, .sticky-summary, .tab-container, .canvas-controls, .modal-actions, .modal-close { 
+    /* 1. SKJULER DEN MØRKEGRÅ MODAL-BOKSEN + KNAPPER PÅ TOPPEN */
+    .no-print, .btn, .sticky-summary, .tab-container, .canvas-controls, .modal-actions, .modal-close, .modal-header { 
         display: none !important; 
     }
     
-    /* A) HVIS MAN BARE SKRIVER UT SELVE NETTSIDEN (Ikke forhåndsvisning) */
-    body:not(.modal-open) .app-container { max-width: 100%; }
-    body:not(.modal-open) .card { box-shadow: none; border: none; padding: 0 0 20px 0; margin-bottom: 20px; page-break-inside: avoid; }
-    body:not(.modal-open) input, body:not(.modal-open) select { border: none !important; border-bottom: 1px solid #ccc !important; }
-
-    /* B) KRITISK FIKS: NÅR FORHÅNDSVISNINGEN ER ÅPEN */
-    /* Hindrer scrolling-restriksjoner fra å kutte PDF-en etter 1 side */
+    /* 2. TILPASSER DOKUMENTET FOR UBEGRENSET ARK-HØYDE OG A4-BREDDE */
     body.modal-open {
         height: auto !important;
         overflow: visible !important;
         padding: 0 !important;
+        margin: 0 !important;
     }
     
-    /* Skjuler nettsiden i bakgrunnen totalt slik at den ikke blander seg med utskriften */
     body.modal-open .app-container {
         display: none !important;
     }
 
-    /* Omgjør modal-overlegget fra å være en sentrert "skjerm-boks" til et flytende dokument */
     body.modal-open .modal-overlay {
-        position: relative !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
         display: block !important;
         background: white !important;
-        align-items: stretch !important;
-        min-height: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     body.modal-open .modal-content {
@@ -308,7 +254,7 @@ td input { width: 100%; }
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
-        max-width: none !important;
+        max-width: 100% !important;
         border: none !important;
     }
 
@@ -316,11 +262,40 @@ td input { width: 100%; }
         overflow: visible !important;
         max-height: none !important;
         padding: 0 !important;
+        width: 100% !important;
     }
 
-    /* Sikrer pene sidebrytninger inne i dokumentet slik at ikke en rad kuttes midt i en tabell */
+    .expense-report-document {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 3. LÅSER TABELLBREDDEN SLIK AT DEN IKKE KUTTES PÅ HØYRE SIDE */
+    .expense-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: fixed !important; /* Dette er trikset som holder tabellen innenfor A4-arket */
+        word-wrap: break-word !important;
+    }
+
+    /* Skalerer ned padding i tabellen og sikrer at tekst brytes pent */
+    .expense-table th, .expense-table td {
+        padding: 5px !important;
+        font-size: 9pt !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+
+    /* Skalerer ned de aller største overskriftene ørlite grann i print */
+    .company-info h1 { font-size: 1.8rem !important; }
+    .document-title h2 { font-size: 1.6rem !important; }
+
+    /* Forhindrer stygge sidebrytninger midt inni informasjonsbokser */
     .employee-section, .travel-section, .mileage-section, .expenses-section, .diet-section, .summary-section, .signature-section {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+        margin-bottom: 20px !important;
     }
-}
+} 
