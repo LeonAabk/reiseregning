@@ -16,10 +16,35 @@
                     <p>Firma: <strong>Eksempelbedrift AS</strong></p>
                 </div>
             </div>
-            <button type="button" onclick="window.print()" class="btn btn-primary no-print" id="print-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: bottom;"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                Lagre som PDF / Skriv ut
-            </button>
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline no-print" onclick="saveExpenseReport()" aria-label="Lagre reiseregning">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17,21 17,13 7,13 7,21"></polyline><polyline points="7,3 7,8 15,8"></polyline></svg>
+                    Lagre
+                </button>
+                <button type="button" class="btn btn-outline no-print" onclick="showSavedReports()" aria-label="Vis tidligere reiseregninger">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>
+                    Tidligere
+                </button>
+                <div class="dropdown no-print">
+                    <button type="button" class="btn btn-outline dropdown-toggle" aria-label="Eksporter eller importer reiseregning" aria-haspopup="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7,10 12,15 17,10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Eksporter
+                    </button>
+                    <div class="dropdown-menu" role="menu">
+                        <button type="button" onclick="exportAsJSON()" role="menuitem">Eksporter som JSON</button>
+                        <label for="import-json" style="margin: 0; cursor: pointer;" role="menuitem">Importer fra JSON</label>
+                        <input type="file" id="import-json" accept=".json" onchange="importFromJSON(event)" style="display: none;" aria-label="Velg JSON-fil for import">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline no-print" onclick="resetForm()" aria-label="Nullstill hele skjemaet">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: bottom;" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+                    Nullstill
+                </button>
+                <button type="button" onclick="window.print()" class="btn btn-primary no-print" id="print-btn" aria-label="Skriv ut eller lagre som PDF">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: bottom;" aria-hidden="true"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Lagre som PDF / Skriv ut
+                </button>
+            </div>
         </header>
 
         <form id="expense-form">

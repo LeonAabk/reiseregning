@@ -28,6 +28,381 @@ function getTodayDateString() {
     return new Date().toISOString().split('T')[0];
 }
 
+// Konfigurasjon for validering
+const VALIDATION_RULES = {
+    required: ['emp-name', 'travel-purpose', 'departure-date', 'return-date'],
+    numeric: ['km-input', 'toll-input', 'exp-amount'],
+    minValues: {
+        'km-input': 0,
+        'toll-input': 0,
+        'exp-amount': 0
+    }
+};
+
+// Hjelpefunksjon for å vise feilmeldinger
+function showError(message, elementId = null) {
+    const errorDiv = document.getElementById('error-messages');
+    if (!errorDiv) {
+        const newErrorDiv = document.createElement('div');
+        newErrorDiv.id = 'error-messages';
+        newErrorDiv.className = 'error-container';
+        document.querySelector('.app-container').insertBefore(newErrorDiv, document.querySelector('form'));
+    }
+    
+    const errorContainer = document.getElementById('error-messages');
+    errorContainer.innerHTML = `<div class="error-message"><span class="icon">⚠️</span> ${message}</div>`;
+    errorContainer.style.display = 'block';
+    
+    // Scroll til feilmeldingen
+    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Fjern feilmeldingen etter 5 sekunder
+    setTimeout(() => {
+        errorContainer.style.display = 'none';
+    }, 5000);
+}
+
+// Hjelpefunksjon for å skjule feilmeldinger
+function hideErrors() {
+    const errorDiv = document.getElementById('error-messages');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+}
+
+// Valideringsfunksjon
+function validateForm() {
+    hideErrors();
+    
+    // Sjekk obligatoriske felt
+    for (const fieldId of VALIDATION_RULES.required) {
+        const element = document.getElementById(fieldId);
+        if (!element.value.trim()) {
+            showError(`Feltet "${element.previousElementSibling.textContent}" er obligatorisk.`);
+            element.focus();
+            return false;
+        }
+    }
+    
+    // Sjekk numeriske felt
+    for (const fieldId of VALIDATION_RULES.numeric) {
+        const elements = document.querySelectorAll(`.${fieldId}`);
+        elements.forEach(element => {
+            const value = parseFloat(element.value);
+            if (isNaN(value) || value < VALIDATION_RULES.minValues[fieldId]) {
+                showError(`Ugyldig verdi i feltet. Verdi må være et tall større enn eller lik ${VALIDATION_RULES.minValues[fieldId]}.`);
+                element.focus();
+                return false;
+            }
+        });
+    }
+    
+    // Sjekk datoer
+    const startDate = new Date(document.getElementById('departure-date').value);
+    const endDate = new Date(document.getElementById('return-date').value);
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        showError('Ugyldig dato format.');
+        return false;
+    }
+    
+    if (endDate <= startDate) {
+        showError('Hjemkomstdato må være etter avreisedato.');
+        document.getElementById('return-date').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// --- LAGRING OG LASTING AV REISEREGNINGER ---
+
+// Hjelpefunksjon for å samle all form data
+function collectFormData() {
+    const data = {
+        timestamp: new Date().toISOString(),
+        personalInfo: {
+            name: document.getElementById('emp-name').value,
+            id: document.getElementById('emp-id').value,
+            department: document.getElementById('emp-dept').value,
+            position: document.getElementById('emp-pos').value,
+            address: document.getElementById('emp-addr').value
+        },
+        travelInfo: {
+            purpose: document.getElementById('travel-purpose').value,
+            departure: document.getElementById('departure-date').value,
+            return: document.getElementById('return-date').value,
+            accommodation: document.getElementById('accommodation-type').value
+        },
+        mealDeductions: {
+            breakfast: document.querySelector('input[data-percent="0.20"]').checked,
+            lunch: document.querySelector('input[data-percent="0.30"]').checked,
+            dinner: document.querySelector('input[data-percent="0.50"]').checked
+        },
+        mileage: [],
+        expenses: []
+    };
+    
+    // Samle kjøregodtgjørelse data
+    const mileageRows = document.querySelectorAll('#mileage-body tr');
+    mileageRows.forEach(row => {
+        const cells = row.querySelectorAll('td input');
+        if (cells.length >= 5) {
+            data.mileage.push({
+                date: cells[0].value,
+                from: cells[1].value,
+                to: cells[2].value,
+                km: parseFloat(cells[3].value) || 0,
+                passenger: cells[4].checked,
+                toll: parseFloat(cells[5]?.value) || 0
+            });
+        }
+    });
+    
+    // Samle utlegg data
+    const expenseRows = document.querySelectorAll('#expenses-body tr');
+    expenseRows.forEach(row => {
+        const cells = row.querySelectorAll('td input');
+        if (cells.length >= 2) {
+            data.expenses.push({
+                date: cells[0].value,
+                description: cells[1].value,
+                amount: parseFloat(cells[2].value) || 0
+            });
+        }
+    });
+    
+    return data;
+}
+
+// Lagre reiseregning til localStorage
+function saveExpenseReport() {
+    if (!validateForm()) {
+        return false;
+    }
+    
+    try {
+        const data = collectFormData();
+        const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
+        reports.push(data);
+        localStorage.setItem('expenseReports', JSON.stringify(reports));
+        
+        showError('Reiseregning lagret!', null);
+        setTimeout(() => hideErrors(), 2000);
+        return true;
+    } catch (error) {
+        showError('Feil ved lagring av reiseregning.');
+        console.error('Save error:', error);
+        return false;
+    }
+}
+
+// Last en tidligere reiseregning
+function loadExpenseReport(index) {
+    try {
+        const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
+        if (index >= 0 && index < reports.length) {
+            const data = reports[index];
+            loadFormData(data);
+            showError('Reiseregning lastet!', null);
+            setTimeout(() => hideErrors(), 2000);
+        }
+    } catch (error) {
+        showError('Feil ved lasting av reiseregning.');
+        console.error('Load error:', error);
+    }
+}
+
+// Last data inn i skjemaet
+function loadFormData(data) {
+    // Personopplysninger
+    document.getElementById('emp-name').value = data.personalInfo?.name || '';
+    document.getElementById('emp-id').value = data.personalInfo?.id || '';
+    document.getElementById('emp-dept').value = data.personalInfo?.department || '';
+    document.getElementById('emp-pos').value = data.personalInfo?.position || '';
+    document.getElementById('emp-addr').value = data.personalInfo?.address || '';
+    
+    // Reiseinfo
+    document.getElementById('travel-purpose').value = data.travelInfo?.purpose || '';
+    document.getElementById('departure-date').value = data.travelInfo?.departure || '';
+    document.getElementById('return-date').value = data.travelInfo?.return || '';
+    document.getElementById('accommodation-type').value = data.travelInfo?.accommodation || 'none';
+    
+    // Måltidstrekk
+    const mealCheckboxes = document.querySelectorAll('.meal-check');
+    mealCheckboxes[0].checked = data.mealDeductions?.breakfast || false;
+    mealCheckboxes[1].checked = data.mealDeductions?.lunch || false;
+    mealCheckboxes[2].checked = data.mealDeductions?.dinner || false;
+    
+    // Fjern eksisterende rader
+    document.querySelectorAll('#mileage-body tr').forEach(row => row.remove());
+    document.querySelectorAll('#expenses-body tr').forEach(row => row.remove());
+    
+    // Legg til kjøregodtgjørelse rader
+    data.mileage?.forEach(item => {
+        addMileageRow();
+        const rows = document.querySelectorAll('#mileage-body tr');
+        const lastRow = rows[rows.length - 1];
+        const cells = lastRow.querySelectorAll('td input');
+        if (cells.length >= 5) {
+            cells[0].value = item.date;
+            cells[1].value = item.from;
+            cells[2].value = item.to;
+            cells[3].value = item.km;
+            cells[4].checked = item.passenger;
+            if (cells[5]) cells[5].value = item.toll;
+        }
+    });
+    
+    // Legg til utlegg rader
+    data.expenses?.forEach(item => {
+        addExpenseRow();
+        const rows = document.querySelectorAll('#expenses-body tr');
+        const lastRow = rows[rows.length - 1];
+        const cells = lastRow.querySelectorAll('td input');
+        if (cells.length >= 2) {
+            cells[0].value = item.date;
+            cells[1].value = item.description;
+            cells[2].value = item.amount;
+        }
+    });
+    
+    // Beregn på nytt
+    calculateAll();
+}
+
+// Nullstill skjemaet
+function resetForm() {
+    if (confirm('Er du sikker på at du vil nullstille hele skjemaet?')) {
+        document.getElementById('expense-form').reset();
+        document.querySelectorAll('#mileage-body tr').forEach(row => row.remove());
+        document.querySelectorAll('#expenses-body tr').forEach(row => row.remove());
+        addMileageRow();
+        addExpenseRow();
+        clearCanvas();
+        resetUpload();
+        calculateAll();
+        hideErrors();
+    }
+}
+
+// Vis lagrede reiseregninger
+function showSavedReports() {
+    try {
+        const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
+        
+        if (reports.length === 0) {
+            showError('Ingen lagrede reiseregninger funnet.');
+            return;
+        }
+        
+        // Opprett modal
+        const modal = document.createElement('div');
+        modal.id = 'saved-reports-modal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Tidligere reiseregninger</h3>
+                    <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="reports-list">
+                        ${reports.map((report, index) => `
+                            <div class="report-item" onclick="loadExpenseReport(${index})">
+                                <div class="report-info">
+                                    <strong>${report.personalInfo?.name || 'Ukjent'}</strong>
+                                    <div class="report-meta">
+                                        ${report.travelInfo?.purpose || 'Ingen formål'} • 
+                                        ${new Date(report.timestamp).toLocaleDateString('no-NO')}
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-text btn-small" onclick="deleteReport(${index}); event.stopPropagation();">Slett</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        
+    } catch (error) {
+        showError('Feil ved lasting av lagrede reiseregninger.');
+        console.error('Show saved reports error:', error);
+    }
+}
+
+// Lukk modal
+function closeModal() {
+    const modal = document.getElementById('saved-reports-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Slett en lagret rapport
+function deleteReport(index) {
+    if (confirm('Er du sikker på at du vil slette denne reiseregningen?')) {
+        try {
+            const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
+            reports.splice(index, 1);
+            localStorage.setItem('expenseReports', JSON.stringify(reports));
+            showSavedReports(); // Oppdater listen
+        } catch (error) {
+            showError('Feil ved sletting av reiseregning.');
+            console.error('Delete report error:', error);
+        }
+    }
+}
+
+// Eksporter reiseregning som JSON
+function exportAsJSON() {
+    if (!validateForm()) {
+        return;
+    }
+    
+    try {
+        const data = collectFormData();
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `reiseregning_${data.personalInfo.name || 'ukjent'}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showError('Reiseregning eksportert som JSON!', null);
+        setTimeout(() => hideErrors(), 2000);
+    } catch (error) {
+        showError('Feil ved eksport av reiseregning.');
+        console.error('Export error:', error);
+    }
+}
+
+// Importer reiseregning fra JSON
+function importFromJSON(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                loadFormData(data);
+                showError('Reiseregning importert!', null);
+                setTimeout(() => hideErrors(), 2000);
+            } catch (error) {
+                showError('Ugyldig JSON-fil.');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
 // --- 2. INITIALISERING ---
 document.addEventListener('DOMContentLoaded', () => {
     // Sett inn nåværende år automatisk
