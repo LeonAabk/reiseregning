@@ -89,14 +89,14 @@ function validateForm() {
     // Sjekk numeriske felt
     for (const fieldId of VALIDATION_RULES.numeric) {
         const elements = document.querySelectorAll(`.${fieldId}`);
-        elements.forEach(element => {
+        for(let element of elements) {
             const value = parseFloat(element.value);
             if (isNaN(value) || value < VALIDATION_RULES.minValues[fieldId]) {
-                showError(`Ugyldig verdi i feltet. Verdi må være et tall større enn eller lik ${VALIDATION_RULES.minValues[fieldId]}.`);
+                showError(`Ugyldig verdi i feltet. Verdi må være minst ${VALIDATION_RULES.minValues[fieldId]}.`);
                 element.focus();
                 return false;
             }
-        });
+        }
     }
     
     // Sjekk datoer
@@ -330,7 +330,6 @@ function showSavedReports() {
         
         document.body.classList.add('modal-open');
         document.body.appendChild(modal);
-        modal.style.display = 'flex';
         
     } catch (error) {
         showError('Feil ved lasting av lagrede reiseregninger.');
@@ -427,7 +426,7 @@ function previewExpenseReport() {
         generatePreviewModal();
         previewBtn.innerHTML = originalText;
         previewBtn.disabled = false;
-    }, 800);
+    }, 400); // Redusert ventetid
 }
 
 function generatePreviewModal() {
@@ -473,11 +472,15 @@ function generatePreviewModal() {
         return date.toLocaleDateString('no-NO');
     };
 
-    // Hent signatur
-    const signatureCanvas = document.getElementById('sig-canvas');
-    const signatureDataUrl = signatureCanvas.toDataURL();
+    // Smart henting av signatur (Forhindrer blank boks)
+    let signatureSrc = null;
     const uploadedSignature = document.querySelector('#sig-preview-container img');
-    const signatureSrc = uploadedSignature ? uploadedSignature.src : signatureDataUrl;
+    if (uploadedSignature) {
+        signatureSrc = uploadedSignature.src;
+    } else if (canvasHasContent) {
+        const signatureCanvas = document.getElementById('sig-canvas');
+        signatureSrc = signatureCanvas.toDataURL();
+    }
 
     // Opprett modal med profesjonell layout
     const modal = document.createElement('div');
@@ -490,11 +493,7 @@ function generatePreviewModal() {
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline btn-small" onclick="exportPreviewAsPDF()" aria-label="Eksporter forhåndsvisning som PDF">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>
-                        Eksporter PDF
-                    </button>
-                    <button type="button" class="btn btn-outline btn-small" onclick="window.print()" aria-label="Skriv ut forhåndsvisning">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                        Skriv ut
+                        Eksporter PDF / Skriv ut
                     </button>
                     <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
                 </div>
@@ -674,7 +673,7 @@ function generatePreviewModal() {
                             <div class="signature-content">
                                 <p>Sted og dato: ${document.getElementById('final-date-place').value || ''}</p>
                                 <div class="signature-preview">
-                                    ${signatureSrc ? `<img src="${signatureSrc}" alt="Signatur" style="max-height: 80px; border-bottom: 1px solid #000; margin-top: 10px;">` : ''}
+                                    ${signatureSrc ? `<img src="${signatureSrc}" alt="Signatur" style="max-height: 80px; border-bottom: 1px solid #000; margin-top: 10px;">` : '<div style="height:40px;"></div>'}
                                 </div>
                                 <div class="signature-line">
                                     <span>_______________________________</span>
@@ -690,22 +689,11 @@ function generatePreviewModal() {
 
     document.body.classList.add('modal-open');
     document.body.appendChild(modal);
-    modal.style.display = 'flex';
 }
 
+// Forenklet fordi CSS nå skjuler knapper automatisk!
 function exportPreviewAsPDF() {
-    const previewContent = document.getElementById('preview-content');
-    if (!previewContent) {
-        showError('Kunne ikke finne forhåndsvisningsinnhold.');
-        return;
-    }
-
-    const modalActions = document.querySelector('.modal-actions');
-    if (modalActions) modalActions.style.display = 'none';
-
     window.print();
-
-    if (modalActions) modalActions.style.display = 'flex';
 }
 
 // --- 3. DYNAMISKE RADER (KJØREBOK OG UTLEGG) ---
@@ -783,9 +771,6 @@ function calculateAll() {
     document.getElementById('total-diet').innerText = currencyFormatter.format(totalDiet);
     document.getElementById('total-other').innerText = currencyFormatter.format(totalOther);
     document.getElementById('grand-total').innerText = currencyFormatter.format(grandTotal);
-
-    // Sett data-attributt for print (PDF)
-    document.querySelector('.app-container').setAttribute('data-print-total', currencyFormatter.format(grandTotal));
 }
 
 function calculateDiet() {
@@ -871,6 +856,7 @@ function calculateDiet() {
 
 let canvas, ctx;
 let drawing = false;
+let canvasHasContent = false; // For å sjekke om signatur er tegnet
 
 function initCanvas() {
     canvas = document.getElementById('sig-canvas');
@@ -897,6 +883,7 @@ function initCanvas() {
 
 function startDrawing(e) {
     drawing = true;
+    canvasHasContent = true; // Registrerer at det tegnes
     draw(e); // Lager en prikk selv om man bare trykker og slipper
 }
 
@@ -926,6 +913,7 @@ function draw(e) {
 function clearCanvas() {
     if (ctx && canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvasHasContent = false; // Nullstiller status
     }
 }
 
