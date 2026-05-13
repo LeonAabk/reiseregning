@@ -55,6 +55,9 @@ td input { width: 100%; border: none; background: #f8fafc; }
 .summary-row { margin-top: 20px; font-size: 1.2rem; border-top: 2px solid black; padding-top: 10px; display: flex; justify-content: space-between; }
 .sig-box { height: 80px; border-bottom: 1px solid black; margin: 10px 0; width: 250px; }
 
+/* Legger til touch-action for bedre mobil-signering */
+#sig-canvas { touch-action: none; }
+
 /* --- UTSKRIFT / PDF-LOGIKK (A4) --- */
 @media print {
     /* 1. Sett A4 format og standard marger for selve arket */

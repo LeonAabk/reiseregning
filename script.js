@@ -3,7 +3,7 @@
  * Håndterer utregninger, lagring, signatur og PDF-generering.
  */
 
-// --- 1. KONSTANTER & STATENS SATSER (2024) ---
+// --- 1. KONSTANTER & STATENS SATSER ---
 const RATES = {
     km: 4.90,
     passenger: 1.00,
@@ -210,6 +210,10 @@ function previewExpenseReport() {
     const modal = document.createElement('div');
     modal.id = 'preview-modal';
     modal.className = 'modal-overlay';
+    
+    // Her settes firmanavnet inn, faller tilbake på "Ikke oppgitt firma" hvis tomt
+    const companyName = data.personalInfo.company || 'Ikke oppgitt firma';
+
     modal.innerHTML = `
         <div class="modal-content preview-modal-content">
             <div class="modal-header no-print">
@@ -223,7 +227,7 @@ function previewExpenseReport() {
                 <div class="expense-report-document">
                     <div class="document-header">
                         <div><h1>REISEREGNING</h1><p>År: 2026</p></div>
-                        <div style="text-align:right"><strong>Eksempelbedrift AS</strong><p>Ref: ${data.personalInfo.id || '-'}</p></div>
+                        <div style="text-align:right"><strong>${companyName}</strong><p>Ref: ${data.personalInfo.id || '-'}</p></div>
                     </div>
                     <div class="employee-section">
                         <h3>Ansattinformasjon</h3>
@@ -269,6 +273,7 @@ function closeModal() {
 function collectFormData() {
     return {
         personalInfo: {
+            company: document.getElementById('emp-company').value, // Lagrer firmanavn
             name: document.getElementById('emp-name').value,
             id: document.getElementById('emp-id').value,
             department: document.getElementById('emp-dept').value,
@@ -293,6 +298,7 @@ function collectFormData() {
 
 function savePersonalInfo() {
     const personalInfo = {
+        company: document.getElementById('emp-company').value, // Lagrer firmanavn
         name: document.getElementById('emp-name').value,
         id: document.getElementById('emp-id').value,
         department: document.getElementById('emp-dept').value,
@@ -306,6 +312,7 @@ function loadPersonalInfo() {
     const saved = localStorage.getItem('personalInfo');
     if (saved) {
         const info = JSON.parse(saved);
+        document.getElementById('emp-company').value = info.company || ''; // Henter opp firmanavn
         document.getElementById('emp-name').value = info.name || '';
         document.getElementById('emp-id').value = info.id || '';
         document.getElementById('emp-dept').value = info.department || '';
@@ -403,17 +410,18 @@ function loadTrip(folder, index) {
     const trip = reports[folder][index];
     if (!trip) return;
 
-    // Last inn personinfo
-    document.getElementById('emp-name').value = trip.personalInfo.name;
-    document.getElementById('emp-id').value = trip.personalInfo.id;
-    document.getElementById('emp-dept').value = trip.personalInfo.department;
-    document.getElementById('emp-addr').value = trip.personalInfo.address;
+    // Last inn personinfo inkludert firmanavn
+    document.getElementById('emp-company').value = trip.personalInfo.company || '';
+    document.getElementById('emp-name').value = trip.personalInfo.name || '';
+    document.getElementById('emp-id').value = trip.personalInfo.id || '';
+    document.getElementById('emp-dept').value = trip.personalInfo.department || '';
+    document.getElementById('emp-addr').value = trip.personalInfo.address || '';
 
     // Last inn reiseinfo
-    document.getElementById('travel-purpose').value = trip.travelInfo.purpose;
-    document.getElementById('departure-date').value = trip.travelInfo.departure;
-    document.getElementById('return-date').value = trip.travelInfo.return;
-    document.getElementById('accommodation-type').value = trip.travelInfo.accommodation;
+    document.getElementById('travel-purpose').value = trip.travelInfo.purpose || '';
+    document.getElementById('departure-date').value = trip.travelInfo.departure || '';
+    document.getElementById('return-date').value = trip.travelInfo.return || '';
+    document.getElementById('accommodation-type').value = trip.travelInfo.accommodation || 'none';
 
     // Last inn kjøring
     const mileageBody = document.getElementById('mileage-body');
