@@ -467,13 +467,6 @@ function deleteTrip(folder, index) {
     }
 }
 
-function exportAsJSON() {
-    const blob = new Blob([JSON.stringify(collectFormData(), null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "reiseregning.json";
-    a.click();
-}
 
 // Funksjoner for tabs og bildeopplasting
 function switchTab(tab) {
