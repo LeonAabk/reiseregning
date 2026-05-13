@@ -326,26 +326,74 @@ function saveExpenseReport() {
 }
 
 function showSavedReports() {
-    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    let reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    
+    // Håndter bakoverkompatibilitet: hvis det er en array, konverter til objekt
+    if (Array.isArray(reports)) {
+        const oldReports = reports;
+        reports = { 'Gamle reiser': oldReports };
+        localStorage.setItem('expenseReports', JSON.stringify(reports));
+    }
+    
     const modal = document.createElement('div');
     modal.id = 'saved-reports-modal';
     modal.className = 'modal-overlay';
-    let content = '<div class="modal-content"><div class="modal-header"><h2>Lagrede reiser</h2><button type="button" class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body">';
-
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    
+    const modalHeader = document.createElement('div');
+    modalHeader.className = 'modal-header';
+    modalHeader.innerHTML = '<h2>Lagrede reiser</h2>';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'modal-close';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = closeModal;
+    modalHeader.appendChild(closeBtn);
+    
+    const modalBody = document.createElement('div');
+    modalBody.className = 'modal-body';
+    
     if (Object.keys(reports).length === 0) {
-        content += '<p>Ingen lagrede reiser.</p>';
+        modalBody.innerHTML = '<p>Ingen lagrede reiser.</p>';
     } else {
         for (const [folder, trips] of Object.entries(reports)) {
-            content += `<h3>${folder} (${trips.length} reiser)</h3><ul>`;
+            const h3 = document.createElement('h3');
+            h3.textContent = `${folder} (${trips.length} reiser)`;
+            modalBody.appendChild(h3);
+            
+            const ul = document.createElement('ul');
             trips.forEach((trip, index) => {
+                const li = document.createElement('li');
                 const date = new Date(trip.timestamp).toLocaleDateString('no-NO');
-                content += `<li>${date} - ${trip.travelInfo.purpose} <button onclick="loadTrip('${folder}', ${index})">Last inn</button> <button onclick="deleteTrip('${folder}', ${index})">Slett</button></li>`;
+                li.textContent = `${date} - ${trip.travelInfo.purpose} `;
+                
+                const loadBtn = document.createElement('button');
+                loadBtn.textContent = 'Last inn';
+                loadBtn.dataset.folder = folder;
+                loadBtn.dataset.index = index;
+                loadBtn.onclick = () => loadTrip(folder, index);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Slett';
+                deleteBtn.dataset.folder = folder;
+                deleteBtn.dataset.index = index;
+                deleteBtn.onclick = () => deleteTrip(folder, index);
+                
+                li.appendChild(loadBtn);
+                li.appendChild(deleteBtn);
+                ul.appendChild(li);
             });
-            content += '</ul>';
+            modalBody.appendChild(ul);
         }
     }
-    content += '</div></div>';
-    modal.innerHTML = content;
+    
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modal.appendChild(modalContent);
+    
     document.body.classList.add('modal-open');
     document.body.appendChild(modal);
 }
