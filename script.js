@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sett opp signaturfelt
     initCanvas();
     
+    // Last inn lagret personinfo
+    loadPersonalInfo();
+    
     // Lytt etter endringer i hele skjemaet for sanntidsutregning
     const form = document.getElementById('expense-form');
     if (form) {
@@ -288,11 +291,124 @@ function collectFormData() {
     };
 }
 
+function savePersonalInfo() {
+    const personalInfo = {
+        name: document.getElementById('emp-name').value,
+        id: document.getElementById('emp-id').value,
+        department: document.getElementById('emp-dept').value,
+        address: document.getElementById('emp-addr').value
+    };
+    localStorage.setItem('personalInfo', JSON.stringify(personalInfo));
+    alert("Personinformasjon er lagret!");
+}
+
+function loadPersonalInfo() {
+    const saved = localStorage.getItem('personalInfo');
+    if (saved) {
+        const info = JSON.parse(saved);
+        document.getElementById('emp-name').value = info.name || '';
+        document.getElementById('emp-id').value = info.id || '';
+        document.getElementById('emp-dept').value = info.department || '';
+        document.getElementById('emp-addr').value = info.address || '';
+    }
+}
+
 function saveExpenseReport() {
-    const reports = JSON.parse(localStorage.getItem('expenseReports') || '[]');
-    reports.push({ ...collectFormData(), timestamp: new Date().toISOString() });
+    const data = collectFormData();
+    const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
+    if (!tripName) return;
+
+    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    if (!reports[tripName]) reports[tripName] = [];
+    reports[tripName].push({ ...data, timestamp: new Date().toISOString() });
     localStorage.setItem('expenseReports', JSON.stringify(reports));
-    alert("Reiseregning er lagret lokalt!");
+    alert(`Reiseregning er lagret under "${tripName}"!`);
+}
+
+function showSavedReports() {
+    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    const modal = document.createElement('div');
+    modal.id = 'saved-reports-modal';
+    modal.className = 'modal-overlay';
+    let content = '<div class="modal-content"><div class="modal-header"><h2>Lagrede reiser</h2><button type="button" class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body">';
+
+    if (Object.keys(reports).length === 0) {
+        content += '<p>Ingen lagrede reiser.</p>';
+    } else {
+        for (const [folder, trips] of Object.entries(reports)) {
+            content += `<h3>${folder} (${trips.length} reiser)</h3><ul>`;
+            trips.forEach((trip, index) => {
+                const date = new Date(trip.timestamp).toLocaleDateString('no-NO');
+                content += `<li>${date} - ${trip.travelInfo.purpose} <button onclick="loadTrip('${folder}', ${index})">Last inn</button> <button onclick="deleteTrip('${folder}', ${index})">Slett</button></li>`;
+            });
+            content += '</ul>';
+        }
+    }
+    content += '</div></div>';
+    modal.innerHTML = content;
+    document.body.classList.add('modal-open');
+    document.body.appendChild(modal);
+}
+
+function loadTrip(folder, index) {
+    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    const trip = reports[folder][index];
+    if (!trip) return;
+
+    // Last inn personinfo
+    document.getElementById('emp-name').value = trip.personalInfo.name;
+    document.getElementById('emp-id').value = trip.personalInfo.id;
+    document.getElementById('emp-dept').value = trip.personalInfo.department;
+    document.getElementById('emp-addr').value = trip.personalInfo.address;
+
+    // Last inn reiseinfo
+    document.getElementById('travel-purpose').value = trip.travelInfo.purpose;
+    document.getElementById('departure-date').value = trip.travelInfo.departure;
+    document.getElementById('return-date').value = trip.travelInfo.return;
+    document.getElementById('accommodation-type').value = trip.travelInfo.accommodation;
+
+    // Last inn kjøring
+    const mileageBody = document.getElementById('mileage-body');
+    mileageBody.innerHTML = '';
+    trip.mileage.forEach(item => {
+        addMileageRow();
+        const rows = mileageBody.querySelectorAll('tr');
+        const lastRow = rows[rows.length - 1];
+        const inputs = lastRow.querySelectorAll('input');
+        inputs[0].value = item.date;
+        inputs[1].value = item.from;
+        inputs[2].value = item.to;
+        inputs[3].value = item.km;
+        inputs[4].checked = item.passenger;
+        inputs[5].value = item.toll;
+    });
+
+    // Last inn utlegg
+    const expensesBody = document.getElementById('expenses-body');
+    expensesBody.innerHTML = '';
+    trip.expenses.forEach(item => {
+        addExpenseRow();
+        const rows = expensesBody.querySelectorAll('tr');
+        const lastRow = rows[rows.length - 1];
+        const inputs = lastRow.querySelectorAll('input');
+        inputs[0].value = item.date;
+        inputs[1].value = item.description;
+        inputs[2].value = item.amount;
+    });
+
+    calculateAll();
+    closeModal();
+    alert("Reisen er lastet inn!");
+}
+
+function deleteTrip(folder, index) {
+    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    if (reports[folder]) {
+        reports[folder].splice(index, 1);
+        if (reports[folder].length === 0) delete reports[folder];
+        localStorage.setItem('expenseReports', JSON.stringify(reports));
+        showSavedReports(); // Oppdater modal
+    }
 }
 
 function exportAsJSON() {
