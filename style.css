@@ -57,16 +57,103 @@ td input { width: 100%; border: none; background: #f8fafc; }
 
 /* --- UTSKRIFT / PDF-LOGIKK (A4) --- */
 @media print {
-    @page { size: A4; margin: 1.5cm; }
-    html, body { height: auto !important; overflow: visible !important; }
-    .no-print, .sticky-summary, .modal-header, .btn { display: none !important; }
-    
-    body.modal-open .app-container { display: none !important; }
-    body.modal-open .modal-overlay { position: static !important; display: block !important; background: white !important; }
-    body.modal-open .modal-content { width: 100% !important; max-height: none !important; border: none !important; }
-    body.modal-open .modal-body { overflow: visible !important; padding: 0 !important; }
+    /* 1. Sett A4 format og standard marger for selve arket */
+    @page { 
+        size: A4; 
+        margin: 15mm 20mm; 
+    }
 
+    /* 2. Tving nettleseren til å tegne bakgrunnsfarger (for tabellheadere) */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 3. Skjul hele appen og grensesnittet, vis KUN modalen */
+    body { 
+        background: white !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        color: black !important;
+    }
+    
+    .app-container, 
+    .no-print, 
+    .sticky-summary, 
+    .modal-header, 
+    .btn { 
+        display: none !important; 
+    }
+
+    /* 4. Flatt ut modalen slik at den blir selve arket */
+    body.modal-open .modal-overlay { 
+        position: absolute !important; 
+        top: 0 !important; 
+        left: 0 !important; 
+        width: 100% !important; 
+        background: white !important; 
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    body.modal-open .modal-content { 
+        box-shadow: none !important; 
+        border: none !important; 
+        width: 100% !important; 
+        max-width: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.modal-open .modal-body { 
+        padding: 0 !important; 
+        overflow: visible !important; 
+    }
+
+    /* 5. Typografi og styling for selve dokumentet */
+    .expense-report-document {
+        font-family: 'Times New Roman', Times, serif !important; /* Tradisjonell dokumentfont */
+        font-size: 11pt !important;
+        line-height: 1.4 !important;
+        width: 100% !important;
+    }
+
+    .expense-report-document h1 { font-size: 22pt !important; margin-bottom: 5px !important; }
+    .expense-report-document h3 { font-size: 13pt !important; margin-bottom: 5px !important; margin-top: 15px !important; }
+    .expense-report-document p { margin: 3px 0 !important; }
+
+    /* 6. Sikre at tabellen ser pen ut på papir */
+    .expense-table { 
+        width: 100% !important; 
+        border-collapse: collapse !important;
+        margin: 15px 0 !important;
+    }
+    
+    .expense-table th {
+        background-color: #f1f5f9 !important;
+        color: black !important;
+        font-weight: bold !important;
+        padding: 6px !important;
+    }
+
+    .expense-table td {
+        padding: 6px !important;
+    }
+
+    /* 7. Sørg for at elementer ikke brekker stygt over to sider */
     .expense-table { page-break-inside: auto; }
     .expense-table tr { page-break-inside: avoid; page-break-after: auto; }
-    .employee-section, .travel-section, .signature-section { page-break-inside: avoid; }
+    .document-header, 
+    .employee-section, 
+    .travel-section, 
+    .diet-section, 
+    .signature-section { 
+        page-break-inside: avoid !important; 
+    }
+
+    /* 8. Begrens størrelsen på signaturen */
+    .sig-box img {
+        max-height: 2cm !important;
+        width: auto !important;
+    }
 }

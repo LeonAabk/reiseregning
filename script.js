@@ -222,7 +222,7 @@ function previewExpenseReport() {
             <div class="modal-body" id="preview-content">
                 <div class="expense-report-document">
                     <div class="document-header">
-                        <div><h1>REISEREGNING</h1><p>År: 2024</p></div>
+                        <div><h1>REISEREGNING</h1><p>År: 2026</p></div>
                         <div style="text-align:right"><strong>Eksempelbedrift AS</strong><p>Ref: ${data.personalInfo.id || '-'}</p></div>
                     </div>
                     <div class="employee-section">
