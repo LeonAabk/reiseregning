@@ -160,3 +160,66 @@ td input { width: 100%; border: none; background: #f8fafc; }
         width: auto !important;
     }
 }
+
+
+/* --- VIPPS DONASJON --- */
+.vipps-card {
+    text-align: center;
+    border: 2px solid #ff5b24; /* Gir kortet en diskret Vipps-ramme */
+}
+
+.vipps-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+.vipps-qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.vipps-qr-img {
+    max-width: 150px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.vipps-help-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 10px;
+}
+
+.vipps-text-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.vipps-number {
+    font-size: 2.5rem;
+    color: #ff5b24; /* Offisiell Vipps-oransje */
+    margin: 5px 0 15px 0;
+    letter-spacing: 2px;
+}
+
+.btn-vipps {
+    background-color: #ff5b24;
+    color: white;
+    font-size: 1.1rem;
+    padding: 12px 24px;
+    border-radius: 30px; /* Runde knapper er typisk for Vipps */
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    max-width: 250px;
+}
+
+.btn-vipps:hover {
+    background-color: #e04a1a;
+}
