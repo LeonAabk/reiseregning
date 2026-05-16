@@ -9,7 +9,7 @@
 <body>
     <div class="app-container">
         <header class="main-header card">
-            <h1>Reiseregning 2024</h1>
+            <h1>Reiseregning 2026</h1>
             <div class="header-actions">
                 <button type="button" class="btn btn-outline" onclick="saveExpenseReport()">Lagre</button>
                 <button type="button" class="btn btn-outline" onclick="exportAsJSON()">Eksporter</button>
@@ -36,10 +36,16 @@
                     <div class="form-group"><label>Hjemkomst</label><input type="datetime-local" id="return-date"></div>
                     <div class="form-group"><label>Overnatting</label>
                         <select id="accommodation-type">
-                            <option value="none">Ingen</option>
+                            <option value="none">Ingen overnatting</option>
                             <option value="hotel">Hotell</option>
-                            <option value="boarding">Hybel m/kjøkken</option>
-                            <option value="private">Privat</option>
+                            <option value="boarding">Annen overnatting med kokemuligheter</option>
+                            <option value="private">Annen overnatting uten kokemuligheter</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Diettmodus</label>
+                        <select id="diet-mode">
+                            <option value="state">Statens satser</option>
+                            <option value="taxfree">Trekkfri sats</option>
                         </select>
                     </div>
                 </div>
@@ -81,7 +87,7 @@
                     <button type="button" class="tab-btn" onclick="switchTab('upload')">Last opp</button>
                 </div>
                 <div id="draw-tab"><canvas id="sig-canvas" width="500" height="150" style="border:1px solid #ccc; background:#fff; cursor:crosshair;"></canvas><br><button type="button" onclick="clearCanvas()" class="btn btn-text">Tøm</button></div>
-                <div id="upload-tab" style="display:none;"><input type="file" onchange="handleSignatureUpload(event)"><div id="sig-preview-container"></div></div>
+                <div id="upload-tab" style="display:none;"><input id="sig-upload" type="file" onchange="handleSignatureUpload(event)"><div id="sig-preview-container"></div></div>
             </section>
         </form>
 

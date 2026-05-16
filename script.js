@@ -3,17 +3,19 @@
  * Håndterer utregninger, lagring, signatur og PDF-generering.
  */
 
-// --- 1. KONSTANTER & STATENS SATSER (2024) ---
+// --- 1. KONSTANTER & SATSER (2026) ---
 const RATES = {
-    km: 4.90,
+    km: 5.30,
     passenger: 1.00,
     diet: {
-        under6h: 0,
-        between6and12h: 400,
-        over12h: 658,
-        hotel: 940,
-        boarding: 400,
-        private: 434
+        stateDay6to12: 397,
+        stateOver12: 736,
+        stateDognite: 1012,
+        taxfreeDay6to12: 200,
+        taxfreeOver12: 400,
+        taxfreeHotel: 693,
+        taxfreeBoarding: 107,
+        taxfreePrivate: 400
     }
 };
 
@@ -115,6 +117,7 @@ function calculateDiet() {
     const startVal = document.getElementById('departure-date').value;
     const endVal = document.getElementById('return-date').value;
     const accType = document.getElementById('accommodation-type').value;
+    const dietMode = document.getElementById('diet-mode').value;
     
     if (!startVal || !endVal) return { amount: 0, text: "Fyll ut reisetid for diett-beregning." };
 
@@ -126,17 +129,33 @@ function calculateDiet() {
 
     let base = 0;
     let desc = "";
+    let modeLabel = dietMode === 'taxfree' ? 'Trekkfri sats' : 'Statens sats';
 
     if (accType === 'none') {
-        if (diffHours < 6) base = 0;
-        else if (diffHours <= 12) base = RATES.diet.between6and12h;
-        else base = RATES.diet.over12h;
-        desc = diffHours <= 12 ? "Dagdiett 6-12t" : "Dagdiett over 12t";
+        if (diffHours < 6) {
+            base = 0;
+            desc = `Ingen diett. Reisens varighet er under 6 timer (${modeLabel}).`;
+        } else if (diffHours <= 12) {
+            base = dietMode === 'taxfree' ? RATES.diet.taxfreeDay6to12 : RATES.diet.stateDay6to12;
+            desc = `Dagdiett 6-12t (${modeLabel})`;
+        } else {
+            base = dietMode === 'taxfree' ? RATES.diet.taxfreeOver12 : RATES.diet.stateOver12;
+            desc = `Dagdiett over 12t (${modeLabel})`;
+        }
     } else {
         const days = Math.max(1, Math.ceil(diffHours / 24));
-        const rate = accType === 'hotel' ? RATES.diet.hotel : (accType === 'boarding' ? RATES.diet.boarding : RATES.diet.private);
+        let rate = 0;
+
+        if (dietMode === 'taxfree') {
+            rate = accType === 'hotel'
+                ? RATES.diet.taxfreeHotel
+                : (accType === 'boarding' ? RATES.diet.taxfreeBoarding : RATES.diet.taxfreePrivate);
+        } else {
+            rate = RATES.diet.stateDognite;
+        }
+
         base = days * rate;
-        desc = `${days} døgn (${accType})`;
+        desc = `${days} døgn (${accType === 'hotel' ? 'hotell' : accType === 'boarding' ? 'annen med kokemuligheter' : 'annen uten kokemuligheter'}) - ${modeLabel}`;
     }
 
     // Måltidstrekk
@@ -144,9 +163,9 @@ function calculateDiet() {
     document.querySelectorAll('.meal-check:checked').forEach(cb => trekPercent += parseFloat(cb.dataset.percent));
     const trekAmt = base * trekPercent;
     
-    return { 
-        amount: Math.max(0, base - trekAmt), 
-        text: `<strong>${desc}</strong>: ${currencyFormatter.format(base)}. Trekk: -${currencyFormatter.format(trekAmt)}.` 
+    return {
+        amount: Math.max(0, base - trekAmt),
+        text: `<strong>${desc}</strong>: ${currencyFormatter.format(base)}. Trekk: -${currencyFormatter.format(trekAmt)}.`
     };
 }
 
@@ -183,6 +202,10 @@ function clearCanvas() {
     const canvas = document.getElementById('sig-canvas');
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     canvasHasContent = false;
+    const preview = document.getElementById('sig-preview-container');
+    if (preview) preview.innerHTML = '';
+    const uploadInput = document.getElementById('sig-upload');
+    if (uploadInput) uploadInput.value = '';
 }
 
 // --- 5. FORHÅNDSVISNING OG PDF ---
@@ -219,7 +242,7 @@ function previewExpenseReport() {
             <div class="modal-body" id="preview-content">
                 <div class="expense-report-document">
                     <div class="document-header">
-                        <div><h1>REISEREGNING</h1><p>År: 2024</p></div>
+                        <div><h1>REISEREGNING</h1><p>År: 2026</p></div>
                         <div style="text-align:right"><strong>Eksempelbedrift AS</strong><p>Ref: ${data.personalInfo.id || '-'}</p></div>
                     </div>
                     <div class="employee-section">
@@ -275,7 +298,8 @@ function collectFormData() {
             purpose: document.getElementById('travel-purpose').value,
             departure: document.getElementById('departure-date').value,
             return: document.getElementById('return-date').value,
-            accommodation: document.getElementById('accommodation-type').value
+            accommodation: document.getElementById('accommodation-type').value,
+            dietMode: document.getElementById('diet-mode').value
         },
         mileage: Array.from(document.querySelectorAll('#mileage-body tr')).map(r => {
             const i = r.querySelectorAll('input');
@@ -312,12 +336,16 @@ function switchTab(tab) {
 
 function handleSignatureUpload(event) {
     const file = event.target.files[0];
+    const preview = document.getElementById('sig-preview-container');
+    if (!preview) return;
+
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
             document.getElementById('sig-preview-container').innerHTML = `<img src="${e.target.result}" style="max-height:100px;">`;
-            document.querySelector('.upload-box').style.display = 'none';
         };
         reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '';
     }
 }
