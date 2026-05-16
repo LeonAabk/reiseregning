@@ -11,8 +11,9 @@
         <header class="main-header card">
             <h1>Reiseregning 2026</h1>
             <div class="header-actions">
-                <button type="button" class="btn btn-outline" onclick="saveExpenseReport()">Lagre</button>
-                <button type="button" class="btn btn-outline" onclick="exportAsJSON()">Eksporter</button>
+                <button type="button" class="btn btn-outline" onclick="savePersonalInfo()">Lagre Personinfo</button>
+                <button type="button" class="btn btn-outline" onclick="showSavedReports()">Lagrede Reiser</button>
+                <button type="button" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
                 <button type="button" class="btn btn-success" onclick="previewExpenseReport()">Forhåndsvis PDF</button>
             </div>
         </header>
@@ -21,6 +22,7 @@
             <section class="card">
                 <h2>1. Personopplysninger</h2>
                 <div class="grid-row">
+                    <div class="form-group"><label>Firma / Selskap</label><input type="text" id="emp-company" placeholder="F.eks. Mitt Firma AS"></div>
                     <div class="form-group"><label>Navn</label><input type="text" id="emp-name" required></div>
                     <div class="form-group"><label>Ansattnr</label><input type="text" id="emp-id"></div>
                     <div class="form-group"><label>Avdeling</label><input type="text" id="emp-dept"></div>
