@@ -62,11 +62,10 @@ function addMileageRow() {
     const tbody = document.getElementById('mileage-body');
     const row = document.createElement('tr');
     
-    // Setter inn HTML for den nye raden (bruker class "flatpickr-mileage")
     row.innerHTML = `
         <td><input type="text" class="flatpickr-mileage" placeholder="Dato og tid"></td>
-        <td><input type="text" placeholder="Fra..."></td>
-        <td><input type="text" placeholder="Til... (inkl. årsak til evt. omkjøring)"></td>
+        <td><input type="text" class="from-input" placeholder="Fra..."></td>
+        <td><input type="text" class="to-input" placeholder="Til... (inkl. årsak til evt. omkjøring)"></td>
         <td><input type="number" class="km-input" value="0" min="0" step="0.1" style="width: 70px;"></td>
         <td><input type="text" class="pass-name" placeholder="Navn på pass."></td>
         <td><input type="number" class="toll-input" value="0" min="0" style="width: 80px;"></td>
@@ -74,7 +73,6 @@ function addMileageRow() {
     `;
     tbody.appendChild(row);
     
-    // Aktiverer kalender MED klokkeslett for akkurat denne nye raden
     flatpickr(row.querySelector('.flatpickr-mileage'), {
         enableTime: true,
         time_24hr: true,
@@ -82,36 +80,35 @@ function addMileageRow() {
         altInput: true,
         altFormat: "d.m.Y k\\l. H:i",
         locale: "no",
-        defaultDate: new Date() // Setter dagens dato og nåværende klokkeslett som standard
+        defaultDate: new Date()
     });
     
     calculateAll();
 }
-
 
 function addExpenseRow() {
     const tbody = document.getElementById('expenses-body');
     const row = document.createElement('tr');
     const today = new Date().toISOString().split('T')[0];
     
-    // Lagt til en checkbox for "Kvittering/Bilag vedlagt"
     row.innerHTML = `
         <td><input type="text" class="flatpickr-date" value="${today}"></td>
-        <td><input type="text" placeholder="Beskrivelse (F.eks. Taxi, Fly)..."></td>
+        <td><input type="text" class="desc-input" placeholder="Beskrivelse (F.eks. Taxi, Fly)..."></td>
         <td><input type="number" class="exp-amount" value="0" min="0" step="0.01" style="width: 90px;"></td>
         <td style="text-align:center;"><input type="checkbox" class="receipt-check" checked title="Kvittering vedlagt"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
+
     flatpickr(row.querySelector('.flatpickr-date'), {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d.m.Y",
         locale: "no"
     });
+
     calculateAll();
 }
-
 
 
 function removeRow(btn) {
@@ -349,15 +346,25 @@ function collectFormData() {
             accommodationName: document.getElementById('accommodation-name').value, // NY
             dietMode: document.getElementById('diet-mode').value
         },
+        
         mileage: Array.from(document.querySelectorAll('#mileage-body tr')).map(r => {
-            const i = r.querySelectorAll('input');
-            return { date: i[0].value, from: i[1].value, to: i[2].value, km: parseFloat(i[3].value), passenger: i[4].value, toll: parseFloat(i[5].value) }; // "passenger" er nå en streng
+            return { 
+                date: r.querySelector('.flatpickr-mileage').value, 
+                from: r.querySelector('.from-input').value, 
+                to: r.querySelector('.to-input').value, 
+                km: parseFloat(r.querySelector('.km-input').value) || 0, 
+                passenger: r.querySelector('.pass-name').value, 
+                toll: parseFloat(r.querySelector('.toll-input').value) || 0 
+            };
         }),
         expenses: Array.from(document.querySelectorAll('#expenses-body tr')).map(r => {
-            const i = r.querySelectorAll('input');
-            return { date: i[0].value, description: i[1].value, amount: parseFloat(i[2].value), receipt: i[3].checked }; // "receipt" lagrer om kvittering er huket av
+            return { 
+                date: r.querySelector('.flatpickr-date').value, 
+                description: r.querySelector('.desc-input').value, 
+                amount: parseFloat(r.querySelector('.exp-amount').value) || 0, 
+                receipt: r.querySelector('.receipt-check').checked 
+            };
         })
-    };
 }
 
 function savePersonalInfo() {
@@ -486,7 +493,7 @@ function loadTrip(folder, index) {
     document.getElementById('departure-date').value = trip.travelInfo.departure || '';
     document.getElementById('return-date').value = trip.travelInfo.return || '';
     document.getElementById('accommodation-type').value = trip.travelInfo.accommodation || 'none';
-
+    
     // Last inn kjøring
     const mileageBody = document.getElementById('mileage-body');
     mileageBody.innerHTML = '';
@@ -494,13 +501,15 @@ function loadTrip(folder, index) {
         addMileageRow();
         const rows = mileageBody.querySelectorAll('tr');
         const lastRow = rows[rows.length - 1];
-        const inputs = lastRow.querySelectorAll('input');
-        inputs[0].value = item.date;
-        inputs[1].value = item.from;
-        inputs[2].value = item.to;
-        inputs[3].value = item.km;
-        inputs[4].checked = item.passenger;
-        inputs[5].value = item.toll;
+        
+        const dateInput = lastRow.querySelector('.flatpickr-mileage');
+        if (dateInput._flatpickr) dateInput._flatpickr.setDate(item.date);
+        
+        lastRow.querySelector('.from-input').value = item.from;
+        lastRow.querySelector('.to-input').value = item.to;
+        lastRow.querySelector('.km-input').value = item.km;
+        lastRow.querySelector('.pass-name').value = item.passenger;
+        lastRow.querySelector('.toll-input').value = item.toll;
     });
 
     // Last inn utlegg
@@ -510,12 +519,14 @@ function loadTrip(folder, index) {
         addExpenseRow();
         const rows = expensesBody.querySelectorAll('tr');
         const lastRow = rows[rows.length - 1];
-        const inputs = lastRow.querySelectorAll('input');
-        inputs[0].value = item.date;
-        inputs[1].value = item.description;
-        inputs[2].value = item.amount;
+        
+        const dateInput = lastRow.querySelector('.flatpickr-date');
+        if (dateInput._flatpickr) dateInput._flatpickr.setDate(item.date);
+        
+        lastRow.querySelector('.desc-input').value = item.description;
+        lastRow.querySelector('.exp-amount').value = item.amount;
+        lastRow.querySelector('.receipt-check').checked = item.receipt;
     });
-
     calculateAll();
     closeModal();
     alert("Reisen er lastet inn!");
