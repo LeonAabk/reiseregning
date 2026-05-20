@@ -30,9 +30,12 @@
                 <div class="form-group"><label>Adresse</label><input type="text" id="emp-addr"></div>
             </section>
 
-            <section class="card">
+         <section class="card">
                 <h2>2. Reiseinformasjon</h2>
-                <div class="form-group" style="margin-bottom:15px;"><label>Formål</label><input type="text" id="travel-purpose" required></div>
+                <div class="grid-row">
+                    <div class="form-group"><label>Formål</label><input type="text" id="travel-purpose" required placeholder="Hvorfor reiste du?"></div>
+                    <div class="form-group"><label>Arrangement</label><input type="text" id="travel-event" required placeholder="Hvilket arrangement deltok du på?"></div>
+                </div>
                 <div class="grid-row">
                     <div class="form-group"><label>Avreise</label><input type="datetime-local" id="departure-date"></div>
                     <div class="form-group"><label>Hjemkomst</label><input type="datetime-local" id="return-date"></div>
@@ -51,6 +54,8 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group" style="margin-top:15px;"><label>Overnattingssted (Navn og adresse)</label><input type="text" id="accommodation-name" placeholder="F.eks. Thon Hotel Opera, Dronning Eufemias gate 4 (La stå tom ved privat overnatting)"></div>
+
                 <div id="diet-summary" class="info-box" style="margin-top:15px; padding:10px; background:#f1f5f9; border-radius:5px;"></div>
                 <div class="checkbox-group" style="margin-top:10px; display:flex; gap:15px;">
                     <label><input type="checkbox" class="meal-check" data-percent="0.2"> Frokost</label>
@@ -65,7 +70,7 @@
                     <button type="button" class="btn btn-outline btn-small" onclick="addMileageRow()">+ Ny rad</button>
                 </div>
                 <table id="mileage-table">
-                    <thead><tr><th>Dato</th><th>Fra</th><th>Til</th><th>Km</th><th>Pass.</th><th>Bom</th><th class="no-print"></th></tr></thead>
+                    <thead><tr><th>Dato</th><th>Fra</th><th>Til / Evt. omkjøring</th><th>Km</th><th>Passasjer (Navn)</th><th>Bom</th><th class="no-print"></th></tr></thead>
                     <tbody id="mileage-body"></tbody>
                 </table>
             </section>
@@ -76,11 +81,11 @@
                     <button type="button" class="btn btn-outline btn-small" onclick="addExpenseRow()">+ Ny rad</button>
                 </div>
                 <table>
-                    <thead><tr><th>Dato</th><th>Beskrivelse</th><th>Beløp</th><th class="no-print"></th></tr></thead>
+                    <thead><tr><th>Dato</th><th>Beskrivelse</th><th>Beløp</th><th>Bilag?</th><th class="no-print"></th></tr></thead>
                     <tbody id="expenses-body"></tbody>
                 </table>
             </section>
-
+            
             <section class="card">
                 <h2>5. Signatur</h2>
                 <div class="form-group" style="max-width:300px; margin-bottom:15px;"><label>Sted og dato</label><input type="text" id="final-date-place"></div>
