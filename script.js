@@ -267,15 +267,18 @@ function previewExpenseReport() {
                     <div class="travel-section">
                         <h3>Om reisen</h3>
                         <p><strong>Formål:</strong> ${data.travelInfo.purpose}</p>
+                        <p><strong>Arrangement:</strong> ${data.travelInfo.event || 'Ikke oppgitt'}</p>
                         <p><strong>Periode:</strong> ${new Date(data.travelInfo.departure).toLocaleString('no-NO')} - ${new Date(data.travelInfo.return).toLocaleString('no-NO')}</p>
+                        <p><strong>Overnattingssted:</strong> ${data.travelInfo.accommodationName || 'Ikke oppgitt / Privat'}</p>
                     </div>
                     <table class="expense-table">
                         <thead><tr><th>Dato</th><th>Beskrivelse/Rute</th><th>Km</th><th>Beløp</th></tr></thead>
                         <tbody>
-                            ${data.mileage.map(i => `<tr><td>${i.date}</td><td>${i.from}-${i.to}</td><td>${i.km}</td><td>${currencyFormatter.format((i.km * (i.passenger?RATES.km+RATES.passenger:RATES.km))+i.toll)}</td></tr>`).join('')}
-                            ${data.expenses.map(i => `<tr><td>${i.date}</td><td>${i.description}</td><td>-</td><td>${currencyFormatter.format(i.amount)}</td></tr>`).join('')}
+                            ${data.mileage.map(i => `<tr><td>${i.date}</td><td><strong>Rute:</strong> ${i.from} - ${i.to} ${i.passenger ? '<br><small>Passasjer: '+i.passenger+'</small>' : ''}</td><td>${i.km}</td><td>${currencyFormatter.format((i.km * (i.passenger ? RATES.km+RATES.passenger : RATES.km))+i.toll)}</td></tr>`).join('')}
+                            ${data.expenses.map(i => `<tr><td>${i.date}</td><td><strong>Utlegg:</strong> ${i.description} <br><small>${i.receipt ? '(Bilag lagt ved)' : '(Ingen kvittering)'}</small></td><td>-</td><td>${currencyFormatter.format(i.amount)}</td></tr>`).join('')}
                         </tbody>
                     </table>
+
                     <div class="diet-section">
                         <h3>Diett og totalt</h3>
                         <p>${diet.text}</p>
