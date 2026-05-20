@@ -95,13 +95,15 @@ function removeRow(btn) {
 function calculateAll() {
     let totalMileage = 0;
     let totalOther = 0;
-    
+
+
     // Kjøring
     document.querySelectorAll('#mileage-body tr').forEach(row => {
         const km = parseFloat(row.querySelector('.km-input').value) || 0;
-        const pass = row.querySelector('.pass-check').checked;
+        const passName = row.querySelector('.pass-name').value.trim();
+        const hasPassenger = passName.length > 0;
         const toll = parseFloat(row.querySelector('.toll-input').value) || 0;
-        const rate = pass ? (RATES.km + RATES.passenger) : RATES.km;
+        const rate = hasPassenger ? (RATES.km + RATES.passenger) : RATES.km;
         totalMileage += (km * rate) + toll;
     });
 
@@ -301,7 +303,7 @@ function closeModal() {
 function collectFormData() {
     return {
         personalInfo: {
-            company: document.getElementById('emp-company').value, // Lagrer firmanavn
+            company: document.getElementById('emp-company').value,
             name: document.getElementById('emp-name').value,
             id: document.getElementById('emp-id').value,
             department: document.getElementById('emp-dept').value,
@@ -309,18 +311,20 @@ function collectFormData() {
         },
         travelInfo: {
             purpose: document.getElementById('travel-purpose').value,
+            event: document.getElementById('travel-event').value, // NY
             departure: document.getElementById('departure-date').value,
             return: document.getElementById('return-date').value,
             accommodation: document.getElementById('accommodation-type').value,
+            accommodationName: document.getElementById('accommodation-name').value, // NY
             dietMode: document.getElementById('diet-mode').value
         },
         mileage: Array.from(document.querySelectorAll('#mileage-body tr')).map(r => {
             const i = r.querySelectorAll('input');
-            return { date: i[0].value, from: i[1].value, to: i[2].value, km: parseFloat(i[3].value), passenger: i[4].checked, toll: parseFloat(i[5].value) };
+            return { date: i[0].value, from: i[1].value, to: i[2].value, km: parseFloat(i[3].value), passenger: i[4].value, toll: parseFloat(i[5].value) }; // "passenger" er nå en streng
         }),
         expenses: Array.from(document.querySelectorAll('#expenses-body tr')).map(r => {
             const i = r.querySelectorAll('input');
-            return { date: i[0].value, description: i[1].value, amount: parseFloat(i[2].value) };
+            return { date: i[0].value, description: i[1].value, amount: parseFloat(i[2].value), receipt: i[3].checked }; // "receipt" lagrer om kvittering er huket av
         })
     };
 }
