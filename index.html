@@ -88,9 +88,25 @@
                     <tbody id="expenses-body"></tbody>
                 </table>
             </section>
+
+
+            <section class="card no-print">
+                <div class="card-header">
+                    <h2>5. Kvitteringer / Vedlegg</h2>
+                </div>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    Ta bilde av kvitteringene dine eller last dem opp her. De vil automatisk legges ved som egne sider bakerst i PDF-en.
+                </p>
+                <div class="form-group">
+                    <input type="file" id="receipt-uploads" multiple accept="image/*" onchange="handleReceiptUploads(event)">
+                </div>
+                <div id="receipt-preview-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;"></div>
+            </section>
+
+
             
             <section class="card">
-                <h2>5. Signatur</h2>
+                <h2>6. Signatur</h2>
                 <div class="form-group" style="max-width:300px; margin-bottom:15px;"><label>Sted og dato</label><input type="text" id="final-date-place"></div>
                 <div class="tab-container no-print">
                     <button type="button" class="tab-btn active" onclick="switchTab('draw')">Tegn</button>
