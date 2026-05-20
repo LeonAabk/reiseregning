@@ -53,13 +53,14 @@ function addMileageRow() {
     const row = document.createElement('tr');
     const today = new Date().toISOString().split('T')[0];
     
+    // Byttet ut checkbox med et tekstfelt for passasjernavn
     row.innerHTML = `
         <td><input type="date" value="${today}"></td>
         <td><input type="text" placeholder="Fra..."></td>
-        <td><input type="text" placeholder="Til..."></td>
-        <td><input type="number" class="km-input" value="0" min="0" step="0.1"></td>
-        <td style="text-align: center;"><input type="checkbox" class="pass-check" style="width:20px; height:20px;"></td>
-        <td><input type="number" class="toll-input" value="0" min="0"></td>
+        <td><input type="text" placeholder="Til... (inkl. årsak til evt. omkjøring)"></td>
+        <td><input type="number" class="km-input" value="0" min="0" step="0.1" style="width: 70px;"></td>
+        <td><input type="text" class="pass-name" placeholder="Navn på pass."></td>
+        <td><input type="number" class="toll-input" value="0" min="0" style="width: 80px;"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
@@ -71,15 +72,19 @@ function addExpenseRow() {
     const row = document.createElement('tr');
     const today = new Date().toISOString().split('T')[0];
     
+    // Lagt til en checkbox for "Kvittering/Bilag vedlagt"
     row.innerHTML = `
         <td><input type="date" value="${today}"></td>
-        <td><input type="text" placeholder="Beskrivelse..."></td>
-        <td><input type="number" class="exp-amount" value="0" min="0" step="0.01"></td>
+        <td><input type="text" placeholder="Beskrivelse (F.eks. Taxi, Fly)..."></td>
+        <td><input type="number" class="exp-amount" value="0" min="0" step="0.01" style="width: 90px;"></td>
+        <td style="text-align:center;"><input type="checkbox" class="receipt-check" checked title="Kvittering vedlagt"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
     calculateAll();
 }
+
+
 
 function removeRow(btn) {
     btn.closest('tr').remove();
