@@ -61,11 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function addMileageRow() {
     const tbody = document.getElementById('mileage-body');
     const row = document.createElement('tr');
-    const today = new Date().toISOString().split('T')[0];
     
-    // Byttet ut checkbox med et tekstfelt for passasjernavn
+    // Setter inn HTML for den nye raden (bruker class "flatpickr-mileage")
     row.innerHTML = `
-        <td><input type="text" class="flatpickr-date" value="${today}"></td>
+        <td><input type="text" class="flatpickr-mileage" placeholder="Dato og tid"></td>
         <td><input type="text" placeholder="Fra..."></td>
         <td><input type="text" placeholder="Til... (inkl. årsak til evt. omkjøring)"></td>
         <td><input type="number" class="km-input" value="0" min="0" step="0.1" style="width: 70px;"></td>
@@ -74,14 +73,21 @@ function addMileageRow() {
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
-    flatpickr(row.querySelector('.flatpickr-date'), {
-        dateFormat: "Y-m-d",
+    
+    // Aktiverer kalender MED klokkeslett for akkurat denne nye raden
+    flatpickr(row.querySelector('.flatpickr-mileage'), {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i",
         altInput: true,
-        altFormat: "d.m.Y",
-        locale: "no"
+        altFormat: "d.m.Y kl. H:i",
+        locale: "no",
+        defaultDate: new Date() // Setter dagens dato og nåværende klokkeslett som standard
     });
+    
     calculateAll();
 }
+
 
 function addExpenseRow() {
     const tbody = document.getElementById('expenses-body');
