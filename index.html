@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reiseregning - Statens Satser</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/no.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -37,8 +40,8 @@
                     <div class="form-group"><label>Arrangement</label><input type="text" id="travel-event" required placeholder="Hvilket arrangement deltok du på?"></div>
                 </div>
                 <div class="grid-row">
-                    <div class="form-group"><label>Avreise</label><input type="datetime-local" id="departure-date"></div>
-                    <div class="form-group"><label>Hjemkomst</label><input type="datetime-local" id="return-date"></div>
+                    <div class="form-group"><label>Avreise</label><input type="text" id="departure-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
+                    <div class="form-group"><label>Hjemkomst</label><input type="text" id="return-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
                     <div class="form-group"><label>Overnatting</label>
                         <select id="accommodation-type">
                             <option value="none">Ingen overnatting</option>
