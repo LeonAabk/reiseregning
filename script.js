@@ -25,6 +25,7 @@ const currencyFormatter = new Intl.NumberFormat('no-NO', {
 });
 
 let canvasHasContent = false; // Tracker om signatur er tegnet
+let uploadedReceipts = [];    // Tracker opplastede kvitteringer
 
 // --- 2. INITIALISERING OG DYNAMISKE RADER ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
         time_24hr: true,
         dateFormat: "Y-m-d H:i",
         altInput: true,
-        altFormat: "d.m.Y k\\l. H:i", // Dette er det brukeren ser (norsk format)
-        locale: "no" // Tvinger kalenderen til norsk (mandag først, norske navn)
+        altFormat: "d.m.Y k\\l. H:i", // Det brukeren ser
+        locale: "no"
     });
     
     // Last inn lagret personinfo
@@ -110,7 +111,6 @@ function addExpenseRow() {
     calculateAll();
 }
 
-
 function removeRow(btn) {
     btn.closest('tr').remove();
     calculateAll();
@@ -120,7 +120,6 @@ function removeRow(btn) {
 function calculateAll() {
     let totalMileage = 0;
     let totalOther = 0;
-
 
     // Kjøring
     document.querySelectorAll('#mileage-body tr').forEach(row => {
@@ -266,7 +265,6 @@ function previewExpenseReport() {
     modal.id = 'preview-modal';
     modal.className = 'modal-overlay';
     
-    // Her settes firmanavnet inn, faller tilbake på "Ikke oppgitt firma" hvis tomt
     const companyName = data.personalInfo.company || 'Ikke oppgitt firma';
 
     modal.innerHTML = `
@@ -293,7 +291,7 @@ function previewExpenseReport() {
                         <h3>Om reisen</h3>
                         <p><strong>Formål:</strong> ${data.travelInfo.purpose}</p>
                         <p><strong>Arrangement:</strong> ${data.travelInfo.event || 'Ikke oppgitt'}</p>
-                        <p><strong>Periode:</strong> ${new Date(data.travelInfo.departure).toLocaleString('no-NO')} - ${new Date(data.travelInfo.return).toLocaleString('no-NO')}</p>
+                        <p><strong>Periode:</strong> ${data.travelInfo.departure} - ${data.travelInfo.return}</p>
                         <p><strong>Overnattingssted:</strong> ${data.travelInfo.accommodationName || 'Ikke oppgitt / Privat'}</p>
                     </div>
                     <table class="expense-table">
@@ -314,6 +312,14 @@ function previewExpenseReport() {
                         <div class="sig-box">${sigImg}</div>
                         <p>__________________________<br>${data.personalInfo.name}</p>
                     </div>
+                    
+                    ${uploadedReceipts.length > 0 ? `
+                    <div class="receipts-section" style="page-break-before: always; padding-top: 20px;">
+                        <h2>Vedlegg / Kvitteringer</h2>
+                        ${uploadedReceipts.map(src => `<div style="text-align:center; margin-bottom: 30px;"><img src="${src}" style="max-width:100%; max-height:900px; border:1px solid #ddd; padding: 5px;"></div>`).join('')}
+                    </div>
+                    ` : ''}
+
                 </div>
             </div>
         </div>`;
@@ -339,14 +345,13 @@ function collectFormData() {
         },
         travelInfo: {
             purpose: document.getElementById('travel-purpose').value,
-            event: document.getElementById('travel-event').value, // NY
+            event: document.getElementById('travel-event').value,
             departure: document.getElementById('departure-date').value,
             return: document.getElementById('return-date').value,
             accommodation: document.getElementById('accommodation-type').value,
-            accommodationName: document.getElementById('accommodation-name').value, // NY
+            accommodationName: document.getElementById('accommodation-name').value,
             dietMode: document.getElementById('diet-mode').value
         },
-        
         mileage: Array.from(document.querySelectorAll('#mileage-body tr')).map(r => {
             return { 
                 date: r.querySelector('.flatpickr-mileage').value, 
@@ -365,11 +370,12 @@ function collectFormData() {
                 receipt: r.querySelector('.receipt-check').checked 
             };
         })
+    }; // <-- HER manglet den ene parentesen tidligere, noe som ødela alt!
 }
 
 function savePersonalInfo() {
     const personalInfo = {
-        company: document.getElementById('emp-company').value, // Lagrer firmanavn
+        company: document.getElementById('emp-company').value,
         name: document.getElementById('emp-name').value,
         id: document.getElementById('emp-id').value,
         department: document.getElementById('emp-dept').value,
@@ -383,7 +389,7 @@ function loadPersonalInfo() {
     const saved = localStorage.getItem('personalInfo');
     if (saved) {
         const info = JSON.parse(saved);
-        document.getElementById('emp-company').value = info.company || ''; // Henter opp firmanavn
+        document.getElementById('emp-company').value = info.company || '';
         document.getElementById('emp-name').value = info.name || '';
         document.getElementById('emp-id').value = info.id || '';
         document.getElementById('emp-dept').value = info.department || '';
@@ -406,7 +412,6 @@ function saveExpenseReport() {
 function showSavedReports() {
     let reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
     
-    // Håndter bakoverkompatibilitet: hvis det er en array, konverter til objekt
     if (Array.isArray(reports)) {
         const oldReports = reports;
         reports = { 'Gamle reiser': oldReports };
@@ -481,7 +486,7 @@ function loadTrip(folder, index) {
     const trip = reports[folder][index];
     if (!trip) return;
 
-    // Last inn personinfo inkludert firmanavn
+    // Last inn personinfo
     document.getElementById('emp-company').value = trip.personalInfo.company || '';
     document.getElementById('emp-name').value = trip.personalInfo.name || '';
     document.getElementById('emp-id').value = trip.personalInfo.id || '';
@@ -490,9 +495,17 @@ function loadTrip(folder, index) {
 
     // Last inn reiseinfo
     document.getElementById('travel-purpose').value = trip.travelInfo.purpose || '';
-    document.getElementById('departure-date').value = trip.travelInfo.departure || '';
-    document.getElementById('return-date').value = trip.travelInfo.return || '';
+    document.getElementById('travel-event').value = trip.travelInfo.event || '';
+    document.getElementById('accommodation-name').value = trip.travelInfo.accommodationName || '';
+    document.getElementById('diet-mode').value = trip.travelInfo.dietMode || 'state';
     document.getElementById('accommodation-type').value = trip.travelInfo.accommodation || 'none';
+    
+    // Sett dato i flatpickr for avreise/hjemkomst
+    const depDate = document.getElementById('departure-date');
+    if(depDate._flatpickr) depDate._flatpickr.setDate(trip.travelInfo.departure);
+    
+    const retDate = document.getElementById('return-date');
+    if(retDate._flatpickr) retDate._flatpickr.setDate(trip.travelInfo.return);
     
     // Last inn kjøring
     const mileageBody = document.getElementById('mileage-body');
@@ -538,12 +551,11 @@ function deleteTrip(folder, index) {
         reports[folder].splice(index, 1);
         if (reports[folder].length === 0) delete reports[folder];
         localStorage.setItem('expenseReports', JSON.stringify(reports));
-        showSavedReports(); // Oppdater modal
+        showSavedReports();
     }
 }
 
-
-// Funksjoner for tabs og bildeopplasting
+// Funksjoner for tabs og bildeopplasting (Kvitteringer og signatur)
 function switchTab(tab) {
     document.getElementById('draw-tab').style.display = tab === 'draw' ? 'block' : 'none';
     document.getElementById('upload-tab').style.display = tab === 'upload' ? 'block' : 'none';
@@ -563,5 +575,30 @@ function handleSignatureUpload(event) {
         reader.readAsDataURL(file);
     } else {
         preview.innerHTML = '';
+    }
+}
+
+function handleReceiptUploads(event) {
+    const files = event.target.files;
+    const container = document.getElementById('receipt-preview-container');
+    
+    for (let file of files) {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                uploadedReceipts.push(dataUrl);
+                
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.style.height = '80px';
+                img.style.width = '80px';
+                img.style.objectFit = 'cover';
+                img.style.border = '1px solid #ccc';
+                img.style.borderRadius = '4px';
+                container.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
     }
 }
