@@ -34,6 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Sett opp signaturfelt
     initCanvas();
+
+    // Aktiver norsk kalender for Avreise og Hjemkomst (Dato + Tid)
+    flatpickr(".flatpickr-datetime", {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i",
+        altInput: true,
+        altFormat: "d.m.Y kl. H:i", // Dette er det brukeren ser (norsk format)
+        locale: "no" // Tvinger kalenderen til norsk (mandag først, norske navn)
+    });
     
     // Last inn lagret personinfo
     loadPersonalInfo();
@@ -55,7 +65,7 @@ function addMileageRow() {
     
     // Byttet ut checkbox med et tekstfelt for passasjernavn
     row.innerHTML = `
-        <td><input type="date" value="${today}"></td>
+        <td><input type="text" class="flatpickr-date" value="${today}"></td>
         <td><input type="text" placeholder="Fra..."></td>
         <td><input type="text" placeholder="Til... (inkl. årsak til evt. omkjøring)"></td>
         <td><input type="number" class="km-input" value="0" min="0" step="0.1" style="width: 70px;"></td>
@@ -64,6 +74,12 @@ function addMileageRow() {
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
+    flatpickr(row.querySelector('.flatpickr-date'), {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d.m.Y",
+        locale: "no"
+    });
     calculateAll();
 }
 
@@ -74,13 +90,19 @@ function addExpenseRow() {
     
     // Lagt til en checkbox for "Kvittering/Bilag vedlagt"
     row.innerHTML = `
-        <td><input type="date" value="${today}"></td>
+        <td><input type="text" class="flatpickr-date" value="${today}"></td>
         <td><input type="text" placeholder="Beskrivelse (F.eks. Taxi, Fly)..."></td>
         <td><input type="number" class="exp-amount" value="0" min="0" step="0.01" style="width: 90px;"></td>
         <td style="text-align:center;"><input type="checkbox" class="receipt-check" checked title="Kvittering vedlagt"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
+    flatpickr(row.querySelector('.flatpickr-date'), {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d.m.Y",
+        locale: "no"
+    });
     calculateAll();
 }
 
