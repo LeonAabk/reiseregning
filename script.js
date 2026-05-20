@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         time_24hr: true,
         dateFormat: "Y-m-d H:i",
         altInput: true,
-        altFormat: "d.m.Y kl. H:i", // Dette er det brukeren ser (norsk format)
+        altFormat: "d.m.Y k\\l. H:i", // Dette er det brukeren ser (norsk format)
         locale: "no" // Tvinger kalenderen til norsk (mandag først, norske navn)
     });
     
@@ -80,7 +80,7 @@ function addMileageRow() {
         time_24hr: true,
         dateFormat: "Y-m-d H:i",
         altInput: true,
-        altFormat: "d.m.Y kl. H:i",
+        altFormat: "d.m.Y k\\l. H:i",
         locale: "no",
         defaultDate: new Date() // Setter dagens dato og nåværende klokkeslett som standard
     });
