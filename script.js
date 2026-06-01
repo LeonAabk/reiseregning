@@ -323,10 +323,7 @@ function collectFormData() {
             description: r.querySelector('.desc-input').value, 
             amount: parseFloat(r.querySelector('.exp-amount').value) || 0, 
             receipt: r.querySelector('.receipt-check').checked 
-        })),
-        // Lagrer nå også vedlegg i data-objektet
-        receipts: uploadedReceipts,
-        signatureContent: canvasHasContent ? document.getElementById('sig-canvas').toDataURL() : null
+        }))
     }; 
 }
 
