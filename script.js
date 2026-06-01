@@ -631,3 +631,47 @@ function loadTrip(folder, index) {
         alert("Det oppstod en feil under innlasting av reisen.");
     }
 }
+
+// --- 7. BRUKERVEILEDNING / HJELPEMODAL ---
+function showHelpModal() {
+    const modal = document.createElement('div');
+    modal.id = 'help-modal';
+    modal.className = 'modal-overlay';
+    
+    // Vi setter en max-width direkte her for å gjøre boksen litt smalere og mer lesbar
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header no-print">
+                <h2>Informasjon og Brukerveiledning</h2>
+                <div class="modal-actions">
+                    <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" style="line-height: 1.6; font-size: 0.95rem;">
+                <h3>Slik fungerer applikasjonen</h3>
+                <p>Denne kalkulatoren hjelper deg med å fylle ut en komplett reiseregning basert på statens satser for 2026. Alt regnes ut automatisk mens du skriver.</p>
+
+                <ul style="padding-left: 20px; margin-bottom: 25px;">
+                    <li style="margin-bottom: 10px;"><strong>Reise og Diett:</strong> Fyll inn dato og klokkeslett for avreise og hjemkomst. Appen beregner automatisk døgndiett og overskytende timer etter gjeldende regelverk. Kryss av for de måltidene du har fått dekket for å få riktig måltidstrekk.</li>
+                    <li style="margin-bottom: 10px;"><strong>Kjøring og Utlegg:</strong> Legg til ruter og utlegg. Du kan legge til så mange rader du trenger. Systemet legger automatisk til passasjertillegg hvis du fyller inn navnet på en passasjer.</li>
+                    <li style="margin-bottom: 10px;"><strong>Kvitteringer / Vedlegg:</strong> Du kan laste opp bilder av kvitteringene dine direkte fra PC eller mobil. Disse vil automatisk bli lagt til som egne, ryddige sider bakerst i PDF-dokumentet.</li>
+                    <li style="margin-bottom: 10px;"><strong>Signering:</strong> Du kan tegne signaturen din direkte på skjermen (med mus eller finger), eller laste opp et ferdig bilde av signaturen din.</li>
+                </ul>
+
+                <h3 style="border-top: 1px solid #e2e8f0; padding-top: 20px;">Lagring og Personvern</h3>
+                <p><strong>Appen sender ingen data til internett.</strong> Alt du skriver inn lagres utelukkende <em>lokalt i din egen nettleser</em> (via noe som heter Local Storage).</p>
+                <ul style="padding-left: 20px; margin-bottom: 25px;">
+                    <li style="margin-bottom: 10px;">Personvernet ditt er 100% ivaretatt, ingen andre kan se reiseregningene dine.</li>
+                    <li style="margin-bottom: 10px;">Fordi bildene fra moderne mobilkameraer tar enormt mye plass, <strong>lagres ikke opplastede kvitteringer i minnet</strong> når du trykker "Lagre Reise". Slik unngår vi at appen krasjer. Legg derfor til bildene rett før du forhåndsviser/skriver ut PDF-en.</li>
+                </ul>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="button" class="btn btn-primary" onclick="closeModal()">Jeg forstår, lukk vinduet</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.classList.add('modal-open');
+    document.body.appendChild(modal);
+}
