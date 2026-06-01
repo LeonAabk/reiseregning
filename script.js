@@ -1,6 +1,6 @@
 /**
- * REISEREGNING KALKULATOR - REFAKTORERT OG SIKRET
- * Håndterer utregninger, lagring, signatur og PDF-generering.
+ * REISEREGNING KALKULATOR - KOMPLETT OG SIKRET
+ * Håndterer utregninger, lagring (uten å sprenge kvoter), signatur og PDF-generering.
  */
 
 // --- 1. KONSTANTER & SATSER (2026) ---
@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     loadPersonalInfo();
     
-    // Delegert event listener for bedre ytelse
     const form = document.getElementById('expense-form');
     if (form) {
         form.addEventListener('input', calculateAll);
@@ -129,7 +128,6 @@ function calculateAll() {
 
     const diet = calculateDiet();
     
-    // Oppdaterer DOM effektivt
     document.getElementById('total-mileage').textContent = currencyFormatter.format(totalMileage);
     document.getElementById('total-diet').textContent = currencyFormatter.format(diet.amount);
     document.getElementById('total-other').textContent = currencyFormatter.format(totalOther);
@@ -158,7 +156,6 @@ function calculateDiet() {
     const isTaxfree = dietMode === 'taxfree';
     const modeLabel = isTaxfree ? 'Trekkfri sats' : 'Statens sats';
 
-    // Bestem overnattingssats
     let nightRate = 0;
     if (accType !== 'none') {
         if (isTaxfree) {
@@ -169,18 +166,15 @@ function calculateDiet() {
         }
     }
 
-    // Bestem dagsats for overskytende timer
     const dayRate6to12 = isTaxfree ? RATES.diet.taxfreeDay6to12 : RATES.diet.stateDay6to12;
     const dayRateOver12 = isTaxfree ? RATES.diet.taxfreeOver12 : RATES.diet.stateOver12;
 
-    // Beregn fulle døgn
     if (fullDays > 0) {
         let rateToUse = accType !== 'none' ? nightRate : dayRateOver12;
         totalBase += fullDays * rateToUse;
         descParts.push(`${fullDays} fulle døgn`);
     }
 
-    // Beregn rest-timer
     if (remainderHours >= 6) {
         let remainderRate = remainderHours <= 12 ? dayRate6to12 : dayRateOver12;
         totalBase += remainderRate;
@@ -189,15 +183,11 @@ function calculateDiet() {
 
     if (totalBase === 0) return { amount: 0, text: `Ingen diett. Reisetid under 6t (${modeLabel}).` };
 
-    // Måltidstrekk beregnes KUN av gjeldende døgnsats per dag, her forenklet trekkes det av totalen 
-    // For 100% nøyaktighet må bruker angi antall frokoster osv, ikke bare en checkbox.
-    // Beholder din checkbox-logikk for nå, men trekker av korrekt dagsats:
     let mealDeductionPercentage = 0;
     document.querySelectorAll('.meal-check:checked').forEach(cb => {
         mealDeductionPercentage += parseFloat(cb.dataset.percent);
     });
     
-    // Et trekk kan aldri overstige det man har krav på for den gitte perioden
     const mealDeductionAmount = totalBase * mealDeductionPercentage;
     const finalAmount = Math.max(0, totalBase - mealDeductionAmount);
     
@@ -215,12 +205,10 @@ function initCanvas() {
     const ctx = canvas.getContext('2d');
     let drawing = false;
 
-    // Fikser touch-koordinater på mobil
     const getPos = (e) => {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        // Skalerer koordinatene i tilfelle canvaset strekkes av CSS
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         return { 
@@ -258,12 +246,33 @@ function clearCanvas() {
     if (uploadInput) uploadInput.value = '';
 }
 
+function switchTab(tab) {
+    document.getElementById('draw-tab').style.display = tab === 'draw' ? 'block' : 'none';
+    document.getElementById('upload-tab').style.display = tab === 'upload' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i===0 && tab==='draw') || (i===1 && tab==='upload')));
+}
+
+function handleSignatureUpload(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('sig-preview-container');
+    if (!preview) return;
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('sig-preview-container').innerHTML = `<img src="${escapeHTML(e.target.result)}" style="max-height:100px;">`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
 function handleReceiptUploads(event) {
     const files = event.target.files;
     const container = document.getElementById('receipt-preview-container');
     
     Array.from(files).forEach((file, index) => {
-        // Enkel validering for å sikre at det faktisk er et bilde
         if (!file.type.startsWith('image/')) return;
 
         const reader = new FileReader();
@@ -271,7 +280,6 @@ function handleReceiptUploads(event) {
             const dataUrl = e.target.result;
             uploadedReceipts.push(dataUrl);
             
-            // Opprett en wrapper for å kunne slette bildet
             const wrapper = document.createElement('div');
             wrapper.style.position = 'relative';
             wrapper.style.display = 'inline-block';
@@ -323,7 +331,10 @@ function collectFormData() {
             description: r.querySelector('.desc-input').value, 
             amount: parseFloat(r.querySelector('.exp-amount').value) || 0, 
             receipt: r.querySelector('.receipt-check').checked 
-        }))
+        })),
+        // Inkluderer bilder KUN for forhåndsvisningen. Disse fjernes før lagring.
+        receipts: uploadedReceipts,
+        signatureContent: canvasHasContent ? document.getElementById('sig-canvas').toDataURL() : null
     }; 
 }
 
@@ -350,7 +361,6 @@ function previewExpenseReport() {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay preview-modal-overlay';
     
-    // ALL brukerinput er nå encodet med escapeHTML()
     modal.innerHTML = `
         <div class="modal-content preview-modal-content">
             <div class="modal-header no-print">
@@ -397,7 +407,7 @@ function previewExpenseReport() {
                         <p>__________________________<br>${escapeHTML(data.personalInfo.name)}</p>
                     </div>
                     
-                    ${data.receipts.length > 0 ? `
+                    ${data.receipts && data.receipts.length > 0 ? `
                     <div class="receipts-section" style="page-break-before: always; padding-top: 20px;">
                         <h2>Vedlegg / Kvitteringer</h2>
                         ${data.receipts.map(src => `<div style="text-align:center; margin-bottom: 30px;"><img src="${escapeHTML(src)}" style="max-width:100%; max-height:900px; border:1px solid #ddd; padding: 5px;"></div>`).join('')}
@@ -412,7 +422,6 @@ function previewExpenseReport() {
 }
 
 function closeModal() {
-    // Fjerner alle åpne modaler sikkert
     document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
     document.body.classList.remove('modal-open');
 }
@@ -447,32 +456,122 @@ function loadPersonalInfo() {
 }
 
 function saveExpenseReport() {
-    const data = collectFormData();
+    const fullData = collectFormData();
     const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
     if (!tripName) return;
+
+    // Fjerner bilde-data for å unngå å sprenge 5MB-grensen i nettleseren
+    const safeDataToSave = {
+        ...fullData,
+        receipts: [],
+        signatureContent: null
+    };
 
     try {
         const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
         if (!reports[tripName]) reports[tripName] = [];
-        reports[tripName].push({ ...data, timestamp: new Date().toISOString() });
+        reports[tripName].push({ ...safeDataToSave, timestamp: new Date().toISOString() });
         
         localStorage.setItem('expenseReports', JSON.stringify(reports));
         alert(`Reiseregning er lagret under "${tripName}"!`);
     } catch (e) {
         if (e.name === 'QuotaExceededError') {
-            alert("Feil: Lagringskapasiteten er full. Slett noen gamle reiser eller fjern store kvitteringer før du prøver igjen.");
+            alert("Feil: Lagringskapasiteten er full. Slett noen gamle reiser før du prøver igjen.");
         } else {
             console.error("Feil ved lagring", e);
         }
     }
 }
 
+function showSavedReports() {
+    let reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    
+    // Bakoverkompatibilitet hvis gammel struktur brukes
+    if (Array.isArray(reports)) {
+        const oldReports = reports;
+        reports = { 'Gamle reiser': oldReports };
+        localStorage.setItem('expenseReports', JSON.stringify(reports));
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'saved-reports-modal';
+    modal.className = 'modal-overlay';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    
+    const modalHeader = document.createElement('div');
+    modalHeader.className = 'modal-header';
+    modalHeader.innerHTML = '<h2>Lagrede reiser</h2>';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'modal-close';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = closeModal;
+    modalHeader.appendChild(closeBtn);
+    
+    const modalBody = document.createElement('div');
+    modalBody.className = 'modal-body';
+    
+    if (Object.keys(reports).length === 0) {
+        modalBody.innerHTML = '<p>Ingen lagrede reiser.</p>';
+    } else {
+        for (const [folder, trips] of Object.entries(reports)) {
+            const h3 = document.createElement('h3');
+            h3.textContent = `${folder} (${trips.length} reiser)`;
+            modalBody.appendChild(h3);
+            
+            const ul = document.createElement('ul');
+            trips.forEach((trip, index) => {
+                const li = document.createElement('li');
+                const date = new Date(trip.timestamp).toLocaleDateString('no-NO');
+                li.textContent = `${date} - ${trip.travelInfo.purpose} `;
+                
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn btn-outline btn-small';
+                loadBtn.style.marginRight = '5px';
+                loadBtn.textContent = 'Last inn';
+                loadBtn.onclick = () => loadTrip(folder, index);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-text btn-small';
+                deleteBtn.style.color = 'var(--danger-color)';
+                deleteBtn.textContent = 'Slett';
+                deleteBtn.onclick = () => deleteTrip(folder, index);
+                
+                li.appendChild(loadBtn);
+                li.appendChild(deleteBtn);
+                ul.appendChild(li);
+            });
+            modalBody.appendChild(ul);
+        }
+    }
+    
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modal.appendChild(modalContent);
+    
+    document.body.classList.add('modal-open');
+    document.body.appendChild(modal);
+}
+
+function deleteTrip(folder, index) {
+    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
+    if (reports[folder]) {
+        reports[folder].splice(index, 1);
+        if (reports[folder].length === 0) delete reports[folder];
+        localStorage.setItem('expenseReports', JSON.stringify(reports));
+        
+        // Lukk aktiv modal og åpne oppdatert visning
+        closeModal();
+        showSavedReports();
+    }
+}
+
 function resetFormState() {
-    // Tømmer tabeller
     document.getElementById('mileage-body').innerHTML = '';
     document.getElementById('expenses-body').innerHTML = '';
-    
-    // Tømmer globale states
     clearCanvas();
     uploadedReceipts = [];
     document.getElementById('receipt-preview-container').innerHTML = '';
@@ -524,22 +623,6 @@ function loadTrip(folder, index) {
             lastRow.querySelector('.receipt-check').checked = item.receipt;
         });
         
-        // Gjenopprett kvitteringer hvis de finnes
-        if (trip.receipts && Array.isArray(trip.receipts)) {
-            uploadedReceipts = [...trip.receipts];
-            const container = document.getElementById('receipt-preview-container');
-            uploadedReceipts.forEach((dataUrl, idx) => {
-                 const wrapper = document.createElement('div');
-                 wrapper.style.position = 'relative';
-                 wrapper.style.display = 'inline-block';
-                 wrapper.innerHTML = `
-                     <img src="${escapeHTML(dataUrl)}" style="height:80px; width:80px; object-fit:cover; border:1px solid #ccc; border-radius:4px;">
-                     <button type="button" class="btn-text" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; width:20px; height:20px; font-size:12px; padding:0; line-height:1;" onclick="removeReceipt(this, ${idx})">&times;</button>
-                 `;
-                 container.appendChild(wrapper);
-            });
-        }
-
         calculateAll();
         closeModal();
         alert("Reisen er lastet inn!");
@@ -548,7 +631,3 @@ function loadTrip(folder, index) {
         alert("Det oppstod en feil under innlasting av reisen.");
     }
 }
-
-// ... Behold showSavedReports, deleteTrip, switchTab, og handleSignatureUpload som før.
-// (For å spare plass har jeg utelatt dem da de ikke krevde vesentlige sikkerhetsfikser, 
-// utover å sikre at closeModal() brukes riktig).
