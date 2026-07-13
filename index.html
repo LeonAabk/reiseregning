@@ -8,8 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/no.js"></script>
     <link rel="stylesheet" href="style.css">
-    <script data-goatcounter="https://leonaabak.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+    <script data-goatcounter="https://leonaabak.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -24,28 +23,28 @@
             </div>
         </header>
 
-        <form id="expense-form">
+        <form id="expense-form" onsubmit="event.preventDefault();">
             <section class="card">
                 <h2>1. Personopplysninger</h2>
                 <div class="grid-row">
-                    <div class="form-group"><label>Firma / Selskap</label><input type="text" id="emp-company" placeholder="F.eks. Mitt Firma AS"></div>
-                    <div class="form-group"><label>Navn</label><input type="text" id="emp-name" required></div>
-                    <div class="form-group"><label>Ansattnr</label><input type="text" id="emp-id"></div>
-                    <div class="form-group"><label>Avdeling</label><input type="text" id="emp-dept"></div>
+                    <div class="form-group"><label for="emp-company">Firma / Selskap</label><input type="text" id="emp-company" placeholder="F.eks. Mitt Firma AS"></div>
+                    <div class="form-group"><label for="emp-name">Navn</label><input type="text" id="emp-name" required></div>
+                    <div class="form-group"><label for="emp-id">Ansattnr</label><input type="text" id="emp-id"></div>
+                    <div class="form-group"><label for="emp-dept">Avdeling</label><input type="text" id="emp-dept"></div>
                 </div>
-                <div class="form-group"><label>Adresse</label><input type="text" id="emp-addr"></div>
+                <div class="form-group"><label for="emp-addr">Adresse</label><input type="text" id="emp-addr"></div>
             </section>
 
-         <section class="card">
+            <section class="card">
                 <h2>2. Reiseinformasjon</h2>
                 <div class="grid-row">
-                    <div class="form-group"><label>Formål</label><input type="text" id="travel-purpose" required placeholder="Hvorfor reiste du?"></div>
-                    <div class="form-group"><label>Arrangement (Valgfritt)</label><input type="text" id="travel-event" placeholder="Hvilket arrangement deltok du på?"></div>
+                    <div class="form-group"><label for="travel-purpose">Formål</label><input type="text" id="travel-purpose" required placeholder="Hvorfor reiste du?"></div>
+                    <div class="form-group"><label for="travel-event">Arrangement (Valgfritt)</label><input type="text" id="travel-event" placeholder="Hvilket arrangement deltok du på?"></div>
                 </div>
                 <div class="grid-row">
-                    <div class="form-group"><label>Avreise</label><input type="text" id="departure-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
-                    <div class="form-group"><label>Hjemkomst</label><input type="text" id="return-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
-                    <div class="form-group"><label>Overnatting</label>
+                    <div class="form-group"><label for="departure-date">Avreise</label><input type="text" id="departure-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
+                    <div class="form-group"><label for="return-date">Hjemkomst</label><input type="text" id="return-date" class="flatpickr-datetime" placeholder="Velg dato og tid"></div>
+                    <div class="form-group"><label for="accommodation-type">Overnatting</label>
                         <select id="accommodation-type">
                             <option value="none">Ingen overnatting</option>
                             <option value="hotel">Hotell</option>
@@ -53,14 +52,14 @@
                             <option value="private">Annen overnatting uten kokemuligheter</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Diettmodus</label>
+                    <div class="form-group"><label for="diet-mode">Diettmodus</label>
                         <select id="diet-mode">
                             <option value="state">Statens satser</option>
                             <option value="taxfree">Trekkfri sats</option>
                         </select>
                     </div>
                 </div>
-                <div class="form-group" style="margin-top:15px;"><label>Overnattingssted (Navn og adresse)</label><input type="text" id="accommodation-name" placeholder="F.eks. Thon Hotel Opera, Dronning Eufemias gate 4 (La stå tom ved privat overnatting)"></div>
+                <div class="form-group" style="margin-top:15px;"><label for="accommodation-name">Overnattingssted (Navn og adresse)</label><input type="text" id="accommodation-name" placeholder="F.eks. Thon Hotel Opera, Dronning Eufemias gate 4 (La stå tom ved privat overnatting)"></div>
 
                 <div id="diet-summary" class="info-box" style="margin-top:15px; padding:10px; background:#f1f5f9; border-radius:5px;"></div>
                 <div class="checkbox-group" style="margin-top:10px; display:flex; gap:15px;">
@@ -92,7 +91,6 @@
                 </table>
             </section>
 
-
             <section class="card no-print">
                 <div class="card-header">
                     <h2>5. Kvitteringer / Vedlegg</h2>
@@ -106,11 +104,9 @@
                 <div id="receipt-preview-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;"></div>
             </section>
 
-
-            
             <section class="card">
                 <h2>6. Signatur</h2>
-                <div class="form-group" style="max-width:300px; margin-bottom:15px;"><label>Sted og dato</label><input type="text" id="final-date-place"></div>
+                <div class="form-group" style="max-width:300px; margin-bottom:15px;"><label for="final-date-place">Sted og dato</label><input type="text" id="final-date-place"></div>
                 <div class="tab-container no-print">
                     <button type="button" class="tab-btn active" onclick="switchTab('draw')">Tegn</button>
                     <button type="button" class="tab-btn" onclick="switchTab('upload')">Last opp</button>
