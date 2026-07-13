@@ -33,6 +33,10 @@ td input { width: 100%; border: none; background: #f8fafc; }
 .btn-success { background: var(--success-color); color: white; }
 .btn-text { background: transparent; padding: 5px; }
 
+/* Nye hover-effekter for bedre UX */
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
 /* Sticky-meny i bunnen */
 .sticky-summary { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary-color); color: white; padding: 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.2); z-index: 100; }
 .totals-grid { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-around; flex-wrap: wrap; }
@@ -125,7 +129,7 @@ td input { width: 100%; border: none; background: #f8fafc; }
 
     /* 5. Typografi og styling for selve dokumentet */
     .expense-report-document {
-        font-family: 'Times New Roman', Times, serif !important; /* Tradisjonell dokumentfont */
+        font-family: 'Times New Roman', Times, serif !important;
         font-size: 11pt !important;
         line-height: 1.4 !important;
         width: 100% !important;
@@ -171,11 +175,10 @@ td input { width: 100%; border: none; background: #f8fafc; }
     }
 }
 
-
 /* --- VIPPS DONASJON --- */
 .vipps-card {
     text-align: center;
-    border: 2px solid #ff5b24; /* Gir kortet en diskret Vipps-ramme */
+    border: 2px solid #ff5b24;
 }
 
 .vipps-container {
@@ -213,7 +216,7 @@ td input { width: 100%; border: none; background: #f8fafc; }
 
 .vipps-number {
     font-size: 2.5rem;
-    color: #ff5b24; /* Offisiell Vipps-oransje */
+    color: #ff5b24;
     margin: 5px 0 15px 0;
     letter-spacing: 2px;
 }
@@ -223,7 +226,7 @@ td input { width: 100%; border: none; background: #f8fafc; }
     color: white;
     font-size: 1.1rem;
     padding: 12px 24px;
-    border-radius: 30px; /* Runde knapper er typisk for Vipps */
+    border-radius: 30px;
     text-decoration: none;
     display: inline-block;
     width: 100%;
