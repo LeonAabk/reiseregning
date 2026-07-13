@@ -28,7 +28,7 @@ const currencyFormatter = new Intl.NumberFormat('no-NO', {
 let canvasHasContent = false;
 let uploadedReceipts = [];
 
-// --- HJELPEFUNKSJONER (SIKKERHET) ---
+// --- HJELPEFUNKSJONER (SIKKERHET & PARSING) ---
 /**
  * Forhindrer Cross-Site Scripting (XSS) ved å escape farlige tegn.
  */
@@ -37,6 +37,15 @@ function escapeHTML(str) {
     return String(str).replace(/[&<>'"]/g, match => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
     }[match] || match));
+}
+
+/**
+ * Trygg konvertering av tall, støtter både norsk komma og punktum.
+ */
+function parseNum(val) {
+    if (!val) return 0;
+    const parsed = parseFloat(String(val).replace(',', '.'));
+    return isNaN(parsed) ? 0 : parsed;
 }
 
 // --- 2. INITIALISERING ---
@@ -72,9 +81,9 @@ function addMileageRow() {
         <td><input type="text" class="flatpickr-mileage" placeholder="Dato og tid"></td>
         <td><input type="text" class="from-input" placeholder="Fra..."></td>
         <td><input type="text" class="to-input" placeholder="Til..."></td>
-        <td><input type="number" class="km-input" value="0" min="0" step="0.1" style="width: 70px;"></td>
+        <td><input type="text" inputmode="decimal" class="km-input" value="0" style="width: 70px;"></td>
         <td><input type="text" class="pass-name" placeholder="Navn på pass."></td>
-        <td><input type="number" class="toll-input" value="0" min="0" style="width: 80px;"></td>
+        <td><input type="text" inputmode="decimal" class="toll-input" value="0" style="width: 80px;"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
     tbody.appendChild(row);
@@ -93,7 +102,7 @@ function addExpenseRow() {
     row.innerHTML = `
         <td><input type="text" class="flatpickr-date" value="${today}"></td>
         <td><input type="text" class="desc-input" placeholder="Beskrivelse..."></td>
-        <td><input type="number" class="exp-amount" value="0" min="0" step="0.01" style="width: 90px;"></td>
+        <td><input type="text" inputmode="decimal" class="exp-amount" value="0" style="width: 90px;"></td>
         <td style="text-align:center;"><input type="checkbox" class="receipt-check" checked title="Kvittering vedlagt"></td>
         <td class="no-print"><button type="button" class="btn btn-text btn-small" style="color:var(--danger-color)" onclick="removeRow(this)">Slett</button></td>
     `;
@@ -116,14 +125,14 @@ function calculateAll() {
     let totalOther = 0;
 
     document.querySelectorAll('#mileage-body tr').forEach(row => {
-        const km = parseFloat(row.querySelector('.km-input').value) || 0;
+        const km = parseNum(row.querySelector('.km-input').value);
         const hasPassenger = row.querySelector('.pass-name').value.trim().length > 0;
-        const toll = parseFloat(row.querySelector('.toll-input').value) || 0;
+        const toll = parseNum(row.querySelector('.toll-input').value);
         totalMileage += (km * (hasPassenger ? RATES.km + RATES.passenger : RATES.km)) + toll;
     });
 
     document.querySelectorAll('.exp-amount').forEach(input => {
-        totalOther += parseFloat(input.value) || 0;
+        totalOther += parseNum(input.value);
     });
 
     const diet = calculateDiet();
@@ -322,14 +331,14 @@ function collectFormData() {
             date: r.querySelector('.flatpickr-mileage').value, 
             from: r.querySelector('.from-input').value, 
             to: r.querySelector('.to-input').value, 
-            km: parseFloat(r.querySelector('.km-input').value) || 0, 
-            passenger: r.querySelector('.pass-name').value, 
-            toll: parseFloat(r.querySelector('.toll-input').value) || 0 
+            km: parseNum(r.querySelector('.km-input').value), 
+            passenger: r.querySelector('.pass-name').value.trim(), 
+            toll: parseNum(r.querySelector('.toll-input').value) 
         })),
         expenses: Array.from(document.querySelectorAll('#expenses-body tr')).map(r => ({ 
             date: r.querySelector('.flatpickr-date').value, 
             description: r.querySelector('.desc-input').value, 
-            amount: parseFloat(r.querySelector('.exp-amount').value) || 0, 
+            amount: parseNum(r.querySelector('.exp-amount').value), 
             receipt: r.querySelector('.receipt-check').checked 
         })),
         // Inkluderer bilder KUN for forhåndsvisningen. Disse fjernes før lagring.
@@ -346,7 +355,7 @@ function previewExpenseReport() {
     }
 
     const diet = calculateDiet();
-    let totalM = data.mileage.reduce((sum, i) => sum + (i.km * (i.passenger ? RATES.km+RATES.passenger : RATES.km)) + i.toll, 0);
+    let totalM = data.mileage.reduce((sum, i) => sum + (i.km * (i.passenger.length > 0 ? RATES.km+RATES.passenger : RATES.km)) + i.toll, 0);
     let totalE = data.expenses.reduce((sum, i) => sum + i.amount, 0);
 
     let sigImg = "";
@@ -391,7 +400,7 @@ function previewExpenseReport() {
                     <table class="expense-table">
                         <thead><tr><th>Dato</th><th>Beskrivelse/Rute</th><th>Km</th><th>Beløp</th></tr></thead>
                         <tbody>
-                            ${data.mileage.map(i => `<tr><td>${escapeHTML(i.date)}</td><td><strong>Rute:</strong> ${escapeHTML(i.from)} - ${escapeHTML(i.to)} ${i.passenger ? '<br><small>Passasjer: '+escapeHTML(i.passenger)+'</small>' : ''}</td><td>${i.km}</td><td>${currencyFormatter.format((i.km * (i.passenger ? RATES.km+RATES.passenger : RATES.km))+i.toll)}</td></tr>`).join('')}
+                            ${data.mileage.map(i => `<tr><td>${escapeHTML(i.date)}</td><td><strong>Rute:</strong> ${escapeHTML(i.from)} - ${escapeHTML(i.to)} ${i.passenger.length > 0 ? '<br><small>Passasjer: '+escapeHTML(i.passenger)+'</small>' : ''}</td><td>${i.km}</td><td>${currencyFormatter.format((i.km * (i.passenger.length > 0 ? RATES.km+RATES.passenger : RATES.km))+i.toll)}</td></tr>`).join('')}
                             ${data.expenses.map(i => `<tr><td>${escapeHTML(i.date)}</td><td><strong>Utlegg:</strong> ${escapeHTML(i.description)} <br><small>${i.receipt ? '(Bilag lagt ved)' : '(Ingen kvittering)'}</small></td><td>-</td><td>${currencyFormatter.format(i.amount)}</td></tr>`).join('')}
                         </tbody>
                     </table>
@@ -402,7 +411,7 @@ function previewExpenseReport() {
                         <div class="summary-row"><strong>TOTALT Å UTBETALE:</strong> <strong>${currencyFormatter.format(totalM + totalE + diet.amount)}</strong></div>
                     </div>
                     <div class="signature-section" style="margin-top:40px">
-                        <p>Sted/Dato: ${escapeHTML(document.getElementById('final-date-place').value)}</p>
+                        <p>Sted/Dato: ${escapeHTML(document.getElementById('final-date-place') ? document.getElementById('final-date-place').value : '')}</p>
                         <div class="sig-box">${sigImg}</div>
                         <p>__________________________<br>${escapeHTML(data.personalInfo.name)}</p>
                     </div>
