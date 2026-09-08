@@ -376,6 +376,7 @@ function previewExpenseReport() {
                 <h2>Forhåndsvisning</h2>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-primary" onclick="window.print()">Skriv ut / Lagre PDF</button>
+                    <button type="button" class="btn btn-primary" onclick="exportToCSV()">Last ned CSV</button>
                     <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
                 </div>
             </div>
@@ -683,4 +684,81 @@ function showHelpModal() {
     
     document.body.classList.add('modal-open');
     document.body.appendChild(modal);
+}
+
+// --- 8. CSV EXPORT ---
+function exportToCSV() {
+    const data = collectFormData();
+    if (!data.personalInfo.name || !data.travelInfo.purpose) {
+        alert("Vennligst fyll ut navn og formål før eksport.");
+        return;
+    }
+
+    const diet = calculateDiet();
+    let csvContent = "";
+
+    // Helper function to format numbers for Norwegian locale in CSV
+    const formatNum = (num) => String(num).replace('.', ',');
+
+    // Metadata
+    csvContent += `Navn;${data.personalInfo.name}\n`;
+    csvContent += `Ansattnr;${data.personalInfo.id}\n`;
+    csvContent += `Avdeling;${data.personalInfo.department}\n`;
+    csvContent += `Firma;${data.personalInfo.company}\n`;
+    csvContent += `\n`;
+
+    // Header
+    csvContent += `Dato;Beskrivelse/Rute;Type;Beløp\n`;
+
+    let totalSum = 0;
+
+    // Mileage
+    data.mileage.forEach(i => {
+        if (i.km > 0 || i.toll > 0) {
+            let amount = (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll;
+            let desc = `${i.from} - ${i.to}`;
+            if (i.passenger.length > 0) desc += ` (Passasjer: ${i.passenger})`;
+            csvContent += `${i.date};${desc};Kjøring/Bom;${formatNum(amount)}\n`;
+            totalSum += amount;
+        }
+    });
+
+    // Expenses
+    data.expenses.forEach(i => {
+        if (i.amount > 0 || i.description) {
+            csvContent += `${i.date};${i.description};Utlegg;${formatNum(i.amount)}\n`;
+            totalSum += i.amount;
+        }
+    });
+
+    // Diet
+    if (diet.amount > 0 || data.travelInfo.departure) {
+        let dateStr = `${data.travelInfo.departure} - ${data.travelInfo.return}`;
+        csvContent += `${dateStr};${diet.text};Diett;${formatNum(diet.amount)}\n`;
+        totalSum += diet.amount;
+    }
+
+    // Total
+    csvContent += `\n`;
+    csvContent += `TOTALT Å UTBETALE;;;${formatNum(totalSum)}\n`;
+
+    // Add BOM for Excel and generate Blob
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `Reiseregning_${data.personalInfo.name.replace(/\s+/g, '_')}_${today}.csv`;
+
+    // Create download link
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
 }
