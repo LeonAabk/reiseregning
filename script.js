@@ -75,14 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         currentUser = session?.user || null;
         updateAuthUI();
-        if (currentUser) fetchUserCompany();
     });
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user || null;
         updateAuthUI();
-        if (currentUser) fetchUserCompany();
-        else checkCompanyState();
     });
 
     const form = document.getElementById('expense-form');
@@ -148,17 +145,28 @@ function updateAuthUI() {
         loggedOutDiv.style.display = 'none';
         loggedInDiv.style.display = 'block';
         userEmailSpan.textContent = currentUser.email;
-        if (companySection) companySection.style.display = 'block';
+        if (companySection) {
+            companySection.style.display = 'block';
+            renderCompanyDashboard();
+        }
     } else {
         loggedOutDiv.style.display = 'block';
         loggedInDiv.style.display = 'none';
         userEmailSpan.textContent = '';
         if (companySection) companySection.style.display = 'none';
+        renderCompanyDashboard(); // to clear the container
     }
 }
 
-async function fetchUserCompany() {
-    if (!currentUser) return;
+async function renderCompanyDashboard() {
+    const container = document.getElementById('company-dashboard-container');
+    if (!container) return;
+
+    if (!currentUser) {
+        container.innerHTML = '';
+        return;
+    }
+
     try {
         const { data: memberData, error: memberError } = await supabaseClient
             .from('company_members')
@@ -181,38 +189,95 @@ async function fetchUserCompany() {
         } else {
             currentCompany = null;
         }
-        checkCompanyState();
+
+        if (!currentCompany) {
+            container.innerHTML = `
+                <div id="no-company-view">
+                    <p>Du er ikke knyttet til et firma enda.</p>
+                    <div class="grid-row" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label for="new-company-name">Opprett nytt firma</label>
+                            <input type="text" id="new-company-name" placeholder="F.eks. Mitt Firma AS">
+                            <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="createCompany()">Opprett</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="join-company-code">Bli med i et firma</label>
+                            <input type="text" id="join-company-code" placeholder="Oppgi 6-tegns kode">
+                            <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="joinCompany()">Bli med</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (currentCompany.role !== 'admin') {
+            container.innerHTML = `
+                <div id="employee-view">
+                    <p>Firma: <strong>${escapeHTML(currentCompany.company_name)}</strong></p>
+                    <p>Din rolle: <span>Ansatt</span></p>
+                    <h3 style="margin-top: 20px;">Dine innsendte reiseregninger</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dato</th>
+                                <th>Navn på reise</th>
+                                <th>Sum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-reports-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            fetchEmployeeReports();
+        } else {
+            container.innerHTML = `
+                <div id="admin-dashboard-view">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <p style="margin: 0;">Firma: <strong style="font-size: 1.2rem;">${escapeHTML(currentCompany.company_name)}</strong></p>
+                            <p style="margin: 5px 0 0 0;">Invitasjonskode: <strong>${escapeHTML(currentCompany.join_code)}</strong>
+                                <button type="button" class="btn btn-outline" onclick="copyJoinCode()" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;">Kopier kode</button>
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Medlemmer</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Navn / E-post</th>
+                                <th>Rolle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-members-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">Alle reiseregninger i firmaet</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dato</th>
+                                <th>Navn på reise</th>
+                                <th>Ansatt</th>
+                                <th>Sum</th>
+                                <th>Handling</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-reports-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            fetchAdminDashboardData();
+        }
     } catch (e) {
-        console.error(e);
+        console.error("Feil ved rendring av bedriftsportal:", e);
     }
 }
 
-function checkCompanyState() {
-    const noCompanyView = document.getElementById('no-company-view');
-    const employeeView = document.getElementById('employee-view');
-    const adminDashboardView = document.getElementById('admin-dashboard-view');
-
-    if (!noCompanyView || !employeeView || !adminDashboardView) return;
-
-    // Reset views
-    noCompanyView.style.display = 'none';
-    employeeView.style.display = 'none';
-    adminDashboardView.style.display = 'none';
-
-    if (!currentCompany) {
-        noCompanyView.style.display = 'block';
-    } else if (currentCompany.role === 'admin') {
-        adminDashboardView.style.display = 'block';
-        document.getElementById('admin-company-name').textContent = currentCompany.company_name;
-        document.getElementById('admin-join-code').textContent = currentCompany.join_code;
-        fetchAdminDashboardData();
-    } else {
-        employeeView.style.display = 'block';
-        document.getElementById('emp-view-company-name').textContent = currentCompany.company_name;
-        document.getElementById('emp-view-role').textContent = 'Ansatt';
-        fetchEmployeeReports();
-    }
-}
 
 function copyJoinCode() {
     if (!currentCompany || !currentCompany.join_code) return;
