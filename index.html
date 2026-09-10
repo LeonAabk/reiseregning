@@ -26,8 +26,16 @@
         </header>
 
         <section class="card" id="auth-section">
-            <h2>Konto og Innlogging</h2>
-            <div id="auth-logged-out">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2>Konto og Innlogging</h2>
+                </div>
+                <div>
+                    <a href="dashboard.html" class="btn btn-primary" style="text-decoration: none;">Åpne Bedriftsportal (Admin)</a>
+                </div>
+            </div>
+
+            <div id="auth-logged-out" style="margin-top: 15px;">
                 <p style="margin-bottom: 15px;">Logg inn for å kunne lagre reiseregningene dine sikkert i skyen.</p>
                 <div class="grid-row">
                     <div class="form-group"><label for="auth-email">E-post</label><input type="email" id="auth-email" placeholder="Din e-postadresse"></div>
@@ -39,15 +47,10 @@
                 </div>
                 <div id="auth-message" style="margin-top: 10px; color: var(--danger-color);"></div>
             </div>
-            <div id="auth-logged-in" style="display: none;">
+            <div id="auth-logged-in" style="display: none; margin-top: 15px;">
                 <p>Logget inn som: <strong id="auth-user-email"></strong></p>
                 <button type="button" class="btn btn-outline" style="margin-top: 10px;" onclick="logOut()">Logg ut</button>
             </div>
-        </section>
-
-        <section class="card" id="company-portal-section" style="display: none;">
-            <h2>Bedriftsportal</h2>
-            <div id="company-dashboard-container"></div>
         </section>
 
         <form id="expense-form" onsubmit="event.preventDefault();">

@@ -87,6 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('input', calculateAll);
         form.addEventListener('change', calculateAll);
     }
+
+    // Check if we need to load a trip from localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('load') === 'true') {
+        const tempTrip = localStorage.getItem('tempLoadTrip');
+        if (tempTrip) {
+            try {
+                loadTrip(tempTrip);
+                localStorage.removeItem('tempLoadTrip');
+                // Remove the query param to avoid reloading on refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (e) {
+                console.error('Error loading temp trip:', e);
+            }
+        }
+    }
 });
 
 // --- 2.5 AUTHENTICATION FUNKSJONER ---
@@ -139,219 +155,23 @@ function updateAuthUI() {
     const loggedOutDiv = document.getElementById('auth-logged-out');
     const loggedInDiv = document.getElementById('auth-logged-in');
     const userEmailSpan = document.getElementById('auth-user-email');
-    const companySection = document.getElementById('company-portal-section');
 
     if (currentUser) {
         loggedOutDiv.style.display = 'none';
         loggedInDiv.style.display = 'block';
         userEmailSpan.textContent = currentUser.email;
-        if (companySection) {
-            companySection.style.display = 'block';
-            renderCompanyDashboard();
-        }
     } else {
         loggedOutDiv.style.display = 'block';
         loggedInDiv.style.display = 'none';
         userEmailSpan.textContent = '';
-        if (companySection) companySection.style.display = 'none';
-        renderCompanyDashboard(); // to clear the container
-    }
-}
-
-async function renderCompanyDashboard() {
-    const container = document.getElementById('company-dashboard-container');
-    if (!container) return;
-
-    if (!currentUser) {
-        container.innerHTML = '';
-        return;
-    }
-
-    try {
-        const { data: memberData, error: memberError } = await supabaseClient
-            .from('company_members')
-            .select('role, companies(id, name, join_code)')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        if (memberError && memberError.code !== 'PGRST116') { // PGRST116 is "Row not found"
-            console.error("Feil ved henting av firma:", memberError);
-            return;
-        }
-
-        if (memberData && memberData.companies) {
-            currentCompany = {
-                company_id: memberData.companies.id,
-                role: memberData.role,
-                company_name: memberData.companies.name,
-                join_code: memberData.companies.join_code
-            };
-        } else {
-            currentCompany = null;
-        }
-
-        if (!currentCompany) {
-            container.innerHTML = `
-                <div id="no-company-view">
-                    <p>Du er ikke knyttet til et firma enda.</p>
-                    <div class="grid-row" style="margin-top: 15px;">
-                        <div class="form-group">
-                            <label for="new-company-name">Opprett nytt firma</label>
-                            <input type="text" id="new-company-name" placeholder="F.eks. Mitt Firma AS">
-                            <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="createCompany()">Opprett</button>
-                        </div>
-                        <div class="form-group">
-                            <label for="join-company-code">Bli med i et firma</label>
-                            <input type="text" id="join-company-code" placeholder="Oppgi 6-tegns kode">
-                            <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="joinCompany()">Bli med</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else if (currentCompany.role !== 'admin') {
-            container.innerHTML = `
-                <div id="employee-view">
-                    <p>Firma: <strong>${escapeHTML(currentCompany.company_name)}</strong></p>
-                    <p>Din rolle: <span>Ansatt</span></p>
-                    <h3 style="margin-top: 20px;">Dine innsendte reiseregninger</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dato</th>
-                                <th>Navn på reise</th>
-                                <th>Sum</th>
-                            </tr>
-                        </thead>
-                        <tbody id="employee-reports-body">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            fetchEmployeeReports();
-        } else {
-            container.innerHTML = `
-                <div id="admin-dashboard-view">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <p style="margin: 0;">Firma: <strong style="font-size: 1.2rem;">${escapeHTML(currentCompany.company_name)}</strong></p>
-                            <p style="margin: 5px 0 0 0;">Invitasjonskode: <strong>${escapeHTML(currentCompany.join_code)}</strong>
-                                <button type="button" class="btn btn-outline" onclick="copyJoinCode()" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;">Kopier kode</button>
-                            </p>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">Medlemmer</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Navn / E-post</th>
-                                <th>Rolle</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-members-body">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-
-                    <h3 style="margin-top: 20px;">Alle reiseregninger i firmaet</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dato</th>
-                                <th>Navn på reise</th>
-                                <th>Ansatt</th>
-                                <th>Sum</th>
-                                <th>Handling</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-reports-body">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            fetchAdminDashboardData();
-        }
-    } catch (e) {
-        console.error("Feil ved rendring av bedriftsportal:", e);
     }
 }
 
 
-function copyJoinCode() {
-    if (!currentCompany || !currentCompany.join_code) return;
-    navigator.clipboard.writeText(currentCompany.join_code).then(() => {
-        alert("Kode kopiert til utklippstavlen: " + currentCompany.join_code);
-    }).catch(err => {
-        console.error("Kunne ikke kopiere kode: ", err);
-        alert("Feil ved kopiering av kode.");
-    });
-}
 
-function generateJoinCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
 
-async function createCompany() {
-    if (!currentUser) return;
-    const nameInput = document.getElementById('new-company-name').value.trim();
-    if (!nameInput) {
-        alert("Vennligst skriv inn et firmanavn.");
-        return;
-    }
 
-    const joinCode = generateJoinCode();
 
-    try {
-        const { data, error } = await supabaseClient.rpc('create_company', {
-            company_name: nameInput,
-            new_join_code: joinCode
-        });
-
-        if (error) throw error;
-
-        alert(`Firmaet "${nameInput}" er opprettet! Del koden ${joinCode} med dine ansatte.`);
-        fetchUserCompany();
-    } catch (e) {
-        console.error("Feil ved opprettelse av firma:", e);
-        alert("Feil: " + e.message);
-    }
-}
-
-async function joinCompany() {
-    if (!currentUser) return;
-    const codeInput = document.getElementById('join-company-code').value.trim().toUpperCase();
-    if (!codeInput || codeInput.length !== 6) {
-        alert("Vennligst oppgi en gyldig 6-tegns kode.");
-        return;
-    }
-
-    try {
-        const { data, error } = await supabaseClient.rpc('join_company', {
-            code: codeInput
-        });
-
-        if (error) {
-            if (error.code === '23505') {
-                alert("Du er allerede medlem av et firma.");
-            } else {
-                throw error;
-            }
-        } else {
-            alert(`Du er nå lagt til i ${data.name}!`);
-            fetchUserCompany();
-        }
-    } catch (e) {
-        console.error("Feil ved innmelding:", e);
-        alert("Feil: " + e.message);
-    }
-}
 
 // --- DYNAMISKE RADER ---
 function addMileageRow() {
@@ -760,6 +580,10 @@ async function saveExpenseReport() {
     const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
     if (!tripName) return;
 
+        // Totals mapping to be safe
+        let grandTotal = parseNum(document.getElementById('grand-total').textContent.replace(/[^0-9,-]+/g, '').replace(',', '.'));
+        fullData.totals = { grandTotal };
+
     // Fjerner bilde-data for å unngå for store lagringer
     const safeDataToSave = {
         ...fullData,
@@ -890,140 +714,7 @@ async function deleteTrip(id) {
     }
 }
 
-async function fetchEmployeeReports() {
-    if (!currentUser || !currentCompany) return;
 
-    const tbody = document.getElementById('employee-reports-body');
-    if (!tbody) return;
-
-    tbody.innerHTML = '<tr><td colspan="3">Laster...</td></tr>';
-
-    try {
-        const { data: reports, error } = await supabaseClient
-            .from('expense_reports')
-            .select('created_at, trip_name, report_data')
-            .eq('user_id', currentUser.id)
-            .eq('company_id', currentCompany.company_id)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        tbody.innerHTML = '';
-        if (!reports || reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
-            return;
-        }
-
-        reports.forEach(r => {
-            const date = new Date(r.created_at).toLocaleDateString('no-NO');
-            let grandTotal = '0,00';
-            if (r.report_data && r.report_data.totals) {
-                grandTotal = r.report_data.totals.grandTotal.toFixed(2).replace('.', ',');
-            }
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${date}</td>
-                <td>${r.trip_name || 'Uten navn'}</td>
-                <td>Kr ${grandTotal}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    } catch (e) {
-        console.error("Feil ved henting av ansatt-rapporter:", e);
-        tbody.innerHTML = '<tr><td colspan="3" style="color:var(--danger-color);">Feil ved lasting av rapporter.</td></tr>';
-    }
-}
-
-async function fetchAdminDashboardData() {
-    if (!currentCompany || currentCompany.role !== 'admin') return;
-
-    const membersBody = document.getElementById('admin-members-body');
-    const reportsBody = document.getElementById('admin-reports-body');
-
-    if (membersBody) membersBody.innerHTML = '<tr><td colspan="2">Laster medlemmer...</td></tr>';
-    if (reportsBody) reportsBody.innerHTML = '<tr><td colspan="5">Laster rapporter...</td></tr>';
-
-    try {
-        // Fetch Members
-        const { data: members, error: membersError } = await supabaseClient
-            .from('company_members')
-            .select('role, user_id')
-            .eq('company_id', currentCompany.company_id);
-
-        if (membersError) throw membersError;
-
-        if (membersBody) {
-            membersBody.innerHTML = '';
-            if (!members || members.length === 0) {
-                membersBody.innerHTML = '<tr><td colspan="2">Ingen medlemmer funnet.</td></tr>';
-            } else {
-                members.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${m.user_id.substring(0,8)}...</td>
-                        <td>${m.role === 'admin' ? 'Administrator' : 'Ansatt'}</td>
-                    `;
-                    membersBody.appendChild(tr);
-                });
-            }
-        }
-
-        // Fetch Reports
-        const { data: reports, error: reportsError } = await supabaseClient
-            .from('expense_reports')
-            .select('*')
-            .eq('company_id', currentCompany.company_id)
-            .order('created_at', { ascending: false });
-
-        if (reportsError) throw reportsError;
-
-        if (reportsBody) {
-            reportsBody.innerHTML = '';
-            if (!reports || reports.length === 0) {
-                reportsBody.innerHTML = '<tr><td colspan="5">Ingen reiseregninger funnet.</td></tr>';
-            } else {
-                reports.forEach(r => {
-                    const date = new Date(r.created_at).toLocaleDateString('no-NO');
-                    const empName = r.report_data?.personalInfo?.name || r.user_id.substring(0,8);
-                    let grandTotal = '0,00';
-                    if (r.report_data && r.report_data.totals) {
-                        grandTotal = r.report_data.totals.grandTotal.toFixed(2).replace('.', ',');
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${date}</td>
-                        <td>${r.trip_name || 'Uten navn'}</td>
-                        <td>${empName}</td>
-                        <td>Kr ${grandTotal}</td>
-                        <td><button type="button" class="btn btn-outline btn-small">Se detaljer</button></td>
-                    `;
-
-                    const btn = tr.querySelector('button');
-                    btn.onclick = function() {
-                        try {
-                            loadTrip(JSON.stringify({ report_data: r.report_data }));
-                            alert("Reise lastet inn i skjemaet.");
-                            window.scrollTo({ top: document.getElementById('expense-form').offsetTop, behavior: 'smooth' });
-                        } catch(e) {
-                            console.error(e);
-                            alert("Klarte ikke laste reisen.");
-                        }
-                    };
-
-                    reportsBody.appendChild(tr);
-                });
-            }
-        }
-
-    } catch (e) {
-        console.error("Feil ved lasting av admin data:", e);
-        if (membersBody) membersBody.innerHTML = '<tr><td colspan="2" style="color:var(--danger-color);">Feil ved lasting.</td></tr>';
-        if (reportsBody) reportsBody.innerHTML = '<tr><td colspan="5" style="color:var(--danger-color);">Feil ved lasting.</td></tr>';
-    }
-}
 
 function resetFormState() {
     document.getElementById('mileage-body').innerHTML = '';
