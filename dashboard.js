@@ -103,10 +103,11 @@ async function renderDashboard() {
                                     <th>Dato</th>
                                     <th>Navn på reise</th>
                                     <th>Sum</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="employee-reports-body">
-                                <tr><td colspan="3">Laster...</td></tr>
+                                <tr><td colspan="4">Laster...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -171,11 +172,12 @@ async function renderDashboard() {
                                     <th>Navn på reise</th>
                                     <th>Ansatt</th>
                                     <th>Sum</th>
+                                    <th>Status</th>
                                     <th>Handling</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-reports-body">
-                                <tr><td colspan="5">Laster rapporter...</td></tr>
+                                <tr><td colspan="6">Laster rapporter...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -272,7 +274,7 @@ async function fetchEmployeeReports() {
     try {
         const { data: reports, error } = await supabaseClient
             .from('expense_reports')
-            .select('created_at, trip_name, report_data')
+            .select('created_at, trip_name, report_data, status')
             .eq('user_id', currentUser.id)
             .eq('company_id', currentCompany.company_id)
             .order('created_at', { ascending: false });
@@ -281,7 +283,7 @@ async function fetchEmployeeReports() {
 
         tbody.innerHTML = '';
         if (!reports || reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
             return;
         }
 
@@ -293,17 +295,25 @@ async function fetchEmployeeReports() {
                 grandTotal = r.report_data.totals.grandTotal.toFixed(2).replace('.', ',');
             }
 
+            const statusVal = r.status || 'utkast';
+            let statusBadge = '';
+            if (statusVal === 'utkast') statusBadge = '<span class="status-badge badge-draft">Utkast</span>';
+            else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
+            else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
+            else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${date}</td>
                 <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
                 <td>Kr ${grandTotal}</td>
+                <td>${statusBadge}</td>
             `;
             tbody.appendChild(tr);
         });
     } catch (e) {
         console.error("Feil ved henting av ansatt-rapporter:", e);
-        tbody.innerHTML = '<tr><td colspan="3" style="color:var(--danger-color);">Feil ved lasting av rapporter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger-color);">Feil ved lasting av rapporter.</td></tr>';
     }
 }
 
@@ -343,7 +353,7 @@ async function fetchAdminDashboardData() {
         if (reportsBody) {
             reportsBody.innerHTML = '';
             if (!reports || reports.length === 0) {
-                reportsBody.innerHTML = '<tr><td colspan="5" class="empty-state">Ingen reiseregninger funnet.</td></tr>';
+                reportsBody.innerHTML = '<tr><td colspan="6" class="empty-state">Ingen reiseregninger funnet.</td></tr>';
             } else {
                 reports.forEach(r => {
                     const date = new Date(r.created_at).toLocaleDateString('no-NO');
@@ -357,17 +367,32 @@ async function fetchAdminDashboardData() {
                     }
                     totalCompanySum += grandTotal;
 
+                    const statusVal = r.status || 'utkast';
+                    let statusBadge = '';
+                    if (statusVal === 'utkast') statusBadge = '<span class="status-badge badge-draft">Utkast</span>';
+                    else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
+                    else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
+                    else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
+
+                    let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
+                    if (statusVal === 'innsendt') {
+                        actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-approve" data-id="${r.id}">Godkjenn</button>`;
+                    } else if (statusVal === 'godkjent') {
+                        actionButtons += ` <button type="button" class="btn btn-success btn-small btn-pay" data-id="${r.id}">Utbetalt</button>`;
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${date}</td>
                         <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
                         <td>${escapeHTML(empName)}</td>
                         <td>Kr ${grandTotalStr}</td>
-                        <td><button type="button" class="btn btn-outline btn-small">Se detaljer</button></td>
+                        <td>${statusBadge}</td>
+                        <td>${actionButtons}</td>
                     `;
 
-                    const btn = tr.querySelector('button');
-                    btn.onclick = function() {
+                    const btnView = tr.querySelector('.btn-view');
+                    btnView.onclick = function() {
                         try {
                             localStorage.setItem('tempLoadTrip', JSON.stringify({ report_data: r.report_data }));
                             window.location.href = 'index.html?load=true';
@@ -376,6 +401,15 @@ async function fetchAdminDashboardData() {
                             alert("Klarte ikke laste reisen.");
                         }
                     };
+
+                    const btnApprove = tr.querySelector('.btn-approve');
+                    if (btnApprove) {
+                        btnApprove.onclick = () => updateReportStatus(r.id, 'godkjent');
+                    }
+                    const btnPay = tr.querySelector('.btn-pay');
+                    if (btnPay) {
+                        btnPay.onclick = () => updateReportStatus(r.id, 'utbetalt');
+                    }
 
                     reportsBody.appendChild(tr);
                 });
@@ -427,6 +461,23 @@ async function fetchAdminDashboardData() {
     } catch (e) {
         console.error("Feil ved lasting av admin data:", e);
         if (membersBody) membersBody.innerHTML = '<tr><td colspan="2" style="color:var(--danger-color);">Feil ved lasting.</td></tr>';
-        if (reportsBody) reportsBody.innerHTML = '<tr><td colspan="4" style="color:var(--danger-color);">Feil ved lasting.</td></tr>';
+        if (reportsBody) reportsBody.innerHTML = '<tr><td colspan="6" style="color:var(--danger-color);">Feil ved lasting.</td></tr>';
+    }
+}
+
+async function updateReportStatus(reportId, newStatus) {
+    try {
+        const { error } = await supabaseClient
+            .from('expense_reports')
+            .update({ status: newStatus })
+            .eq('id', reportId);
+
+        if (error) throw error;
+
+        alert(`Status oppdatert til ${newStatus}.`);
+        fetchAdminDashboardData();
+    } catch (e) {
+        console.error("Feil ved oppdatering av status:", e);
+        alert(`Feil ved oppdatering av status: ${e.message}`);
     }
 }

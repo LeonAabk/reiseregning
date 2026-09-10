@@ -570,7 +570,13 @@ function loadPersonalInfo() {
     }
 }
 
-async function saveExpenseReport() {
+async function submitExpenseReport() {
+    const confirmSubmit = confirm("Er du sikker på at du vil sende inn reiseregningen til godkjenning? Når den er sendt inn, kan den ikke lenger redigeres.");
+    if (!confirmSubmit) return;
+    await saveExpenseReport('innsendt');
+}
+
+async function saveExpenseReport(status = 'utkast') {
     if (!currentUser) {
         alert("Du må være logget inn for å lagre en reise i skyen.");
         return;
@@ -595,7 +601,8 @@ async function saveExpenseReport() {
         const payload = {
             user_id: currentUser.id,
             trip_name: tripName,
-            report_data: safeDataToSave
+            report_data: safeDataToSave,
+            status: status
         };
 
         if (currentCompany && currentCompany.company_id) {
