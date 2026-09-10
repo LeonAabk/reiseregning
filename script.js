@@ -14,11 +14,10 @@ const RATES = {
         taxfreeDay6to12: 200,
         taxfreeOver12: 400,
         taxfreeHotel: 693,
-        taxfreeBoarding: 107,
-        taxfreePrivate: 400
+        taxfreeBoarding: 400,  // Rettet fra 107
+        taxfreePrivate: 107    // Rettet fra 400
     }
 };
-
 const currencyFormatter = new Intl.NumberFormat('no-NO', {
     style: 'currency',
     currency: 'NOK'
