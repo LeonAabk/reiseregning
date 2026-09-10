@@ -384,6 +384,10 @@ function handleReceiptUploads(event) {
 function removeReceipt(btn, index) {
     uploadedReceipts.splice(index, 1);
     btn.parentElement.remove();
+    const fileInput = document.getElementById('receipt-uploads');
+    if (fileInput) {
+        fileInput.value = '';
+    }
 }
 
 // --- 5. DATA OG FORHÅNDSVISNING ---
