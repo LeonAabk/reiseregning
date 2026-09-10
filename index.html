@@ -62,11 +62,62 @@
                     </div>
                 </div>
             </div>
-            <div id="has-company-view" style="display: none;">
-                <p>Firma: <strong id="current-company-name"></strong></p>
-                <p>Din rolle: <span id="current-user-role"></span></p>
-                <p id="company-join-code-container" style="display: none;">Invitasjonskode: <strong id="current-join-code"></strong></p>
-                <button type="button" id="admin-dashboard-btn" class="btn btn-outline" style="margin-top: 10px; display: none;" onclick="showAdminDashboard()">Firma Administrasjon</button>
+            <div id="employee-view" style="display: none;">
+                <p>Firma: <strong id="emp-view-company-name"></strong></p>
+                <p>Din rolle: <span id="emp-view-role"></span></p>
+                <h3 style="margin-top: 20px;">Dine innsendte reiseregninger</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Navn på reise</th>
+                            <th>Sum</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-reports-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="admin-dashboard-view" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <p style="margin: 0;">Firma: <strong id="admin-company-name" style="font-size: 1.2rem;"></strong></p>
+                        <p style="margin: 5px 0 0 0;">Invitasjonskode: <strong id="admin-join-code"></strong>
+                            <button type="button" class="btn btn-outline" onclick="copyJoinCode()" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;">Kopier kode</button>
+                        </p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">Medlemmer</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Navn / E-post</th>
+                            <th>Rolle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-members-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 20px;">Alle reiseregninger i firmaet</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Navn på reise</th>
+                            <th>Ansatt</th>
+                            <th>Sum</th>
+                            <th>Handling</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-reports-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -194,17 +245,6 @@
             <div class="sticky-credit">Laget av Leon Aabak</div>
         </div>
     </div>
-        <!-- Admin Dashboard Modal -->
-        <div id="admin-modal" class="modal">
-            <div class="modal-content" style="max-width: 800px;">
-                <span class="close-modal" onclick="closeAdminModal()">&times;</span>
-                <h2 style="margin-top: 0;">Firma Administrasjon</h2>
-                <div id="admin-modal-body" style="margin-top: 15px;">
-                    Laster...
-                </div>
-            </div>
-        </div>
-
     <script src="script.js"></script>
 </body>
 </html>
