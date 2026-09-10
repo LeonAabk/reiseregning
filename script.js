@@ -32,6 +32,7 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 let canvasHasContent = false;
 let uploadedReceipts = [];
 let currentUser = null;
+let currentCompany = null; // { company_id, role, company_name, join_code }
 
 // --- HJELPEFUNKSJONER (SIKKERHET & PARSING) ---
 /**
@@ -74,11 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         currentUser = session?.user || null;
         updateAuthUI();
+        if (currentUser) fetchUserCompany();
     });
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user || null;
         updateAuthUI();
+        if (currentUser) fetchUserCompany();
+        else updateCompanyUI();
     });
 
     const form = document.getElementById('expense-form');
@@ -138,15 +142,143 @@ function updateAuthUI() {
     const loggedOutDiv = document.getElementById('auth-logged-out');
     const loggedInDiv = document.getElementById('auth-logged-in');
     const userEmailSpan = document.getElementById('auth-user-email');
+    const companySection = document.getElementById('company-portal-section');
 
     if (currentUser) {
         loggedOutDiv.style.display = 'none';
         loggedInDiv.style.display = 'block';
         userEmailSpan.textContent = currentUser.email;
+        if (companySection) companySection.style.display = 'block';
     } else {
         loggedOutDiv.style.display = 'block';
         loggedInDiv.style.display = 'none';
         userEmailSpan.textContent = '';
+        if (companySection) companySection.style.display = 'none';
+    }
+}
+
+async function fetchUserCompany() {
+    if (!currentUser) return;
+    try {
+        const { data: memberData, error: memberError } = await supabaseClient
+            .from('company_members')
+            .select('role, companies(id, name, join_code)')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (memberError && memberError.code !== 'PGRST116') { // PGRST116 is "Row not found"
+            console.error("Feil ved henting av firma:", memberError);
+            return;
+        }
+
+        if (memberData && memberData.companies) {
+            currentCompany = {
+                company_id: memberData.companies.id,
+                role: memberData.role,
+                company_name: memberData.companies.name,
+                join_code: memberData.companies.join_code
+            };
+        } else {
+            currentCompany = null;
+        }
+        updateCompanyUI();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function updateCompanyUI() {
+    const noCompanyView = document.getElementById('no-company-view');
+    const hasCompanyView = document.getElementById('has-company-view');
+
+    if (!noCompanyView || !hasCompanyView) return;
+
+    if (currentCompany) {
+        noCompanyView.style.display = 'none';
+        hasCompanyView.style.display = 'block';
+
+        document.getElementById('current-company-name').textContent = currentCompany.company_name;
+        document.getElementById('current-user-role').textContent = currentCompany.role === 'admin' ? 'Administrator' : 'Ansatt';
+
+        const joinCodeContainer = document.getElementById('company-join-code-container');
+        const joinCodeEl = document.getElementById('current-join-code');
+        const adminBtn = document.getElementById('admin-dashboard-btn');
+
+        if (currentCompany.role === 'admin') {
+            joinCodeContainer.style.display = 'block';
+            joinCodeEl.textContent = currentCompany.join_code;
+            adminBtn.style.display = 'inline-block';
+        } else {
+            joinCodeContainer.style.display = 'none';
+            adminBtn.style.display = 'none';
+        }
+    } else {
+        noCompanyView.style.display = 'block';
+        hasCompanyView.style.display = 'none';
+    }
+}
+
+function generateJoinCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+async function createCompany() {
+    if (!currentUser) return;
+    const nameInput = document.getElementById('new-company-name').value.trim();
+    if (!nameInput) {
+        alert("Vennligst skriv inn et firmanavn.");
+        return;
+    }
+
+    const joinCode = generateJoinCode();
+
+    try {
+        const { data, error } = await supabaseClient.rpc('create_company', {
+            company_name: nameInput,
+            new_join_code: joinCode
+        });
+
+        if (error) throw error;
+
+        alert(`Firmaet "${nameInput}" er opprettet! Del koden ${joinCode} med dine ansatte.`);
+        fetchUserCompany();
+    } catch (e) {
+        console.error("Feil ved opprettelse av firma:", e);
+        alert("Feil: " + e.message);
+    }
+}
+
+async function joinCompany() {
+    if (!currentUser) return;
+    const codeInput = document.getElementById('join-company-code').value.trim().toUpperCase();
+    if (!codeInput || codeInput.length !== 6) {
+        alert("Vennligst oppgi en gyldig 6-tegns kode.");
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient.rpc('join_company', {
+            code: codeInput
+        });
+
+        if (error) {
+            if (error.code === '23505') {
+                alert("Du er allerede medlem av et firma.");
+            } else {
+                throw error;
+            }
+        } else {
+            alert(`Du er nå lagt til i ${data.name}!`);
+            fetchUserCompany();
+        }
+    } catch (e) {
+        console.error("Feil ved innmelding:", e);
+        alert("Feil: " + e.message);
     }
 }
 
@@ -565,13 +697,19 @@ async function saveExpenseReport() {
     };
 
     try {
+        const payload = {
+            user_id: currentUser.id,
+            trip_name: tripName,
+            report_data: safeDataToSave
+        };
+
+        if (currentCompany && currentCompany.company_id) {
+            payload.company_id = currentCompany.company_id;
+        }
+
         const { data, error } = await supabaseClient
             .from('expense_reports')
-            .insert([{
-                user_id: currentUser.id,
-                trip_name: tripName,
-                report_data: safeDataToSave
-            }]);
+            .insert([payload]);
 
         if (error) throw error;
         
@@ -678,6 +816,114 @@ async function deleteTrip(id) {
     } catch (e) {
         console.error("Feil ved sletting", e);
         alert(`Feil ved sletting: ${e.message}`);
+    }
+}
+
+function showAdminDashboard() {
+    const adminModal = document.getElementById('admin-modal');
+    if (!adminModal) return;
+
+    adminModal.style.display = 'block';
+    fetchCompanyReports();
+}
+
+function closeAdminModal() {
+    const adminModal = document.getElementById('admin-modal');
+    if (adminModal) {
+        adminModal.style.display = 'none';
+    }
+}
+
+async function fetchCompanyReports() {
+    const modalBody = document.getElementById('admin-modal-body');
+    if (!currentCompany || currentCompany.role !== 'admin') {
+        modalBody.innerHTML = '<p>Du har ikke tilgang.</p>';
+        return;
+    }
+
+    modalBody.innerHTML = '<p>Laster...</p>';
+
+    try {
+        // Since RLS is set up, querying expense_reports where company_id = currentCompany.company_id
+        // will return all reports for this company because we are admin.
+        const { data: reports, error } = await supabaseClient
+            .from('expense_reports')
+            .select('*')
+            .eq('company_id', currentCompany.company_id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!reports || reports.length === 0) {
+            modalBody.innerHTML = '<p>Ingen reiseregninger funnet for dette firmaet.</p>';
+            return;
+        }
+
+        // Group by user_id
+        const groupedReports = {};
+        reports.forEach(report => {
+            const uid = report.user_id;
+            if (!groupedReports[uid]) {
+                groupedReports[uid] = [];
+            }
+            groupedReports[uid].push(report);
+        });
+
+        modalBody.innerHTML = '';
+
+        for (const [uid, userReports] of Object.entries(groupedReports)) {
+            const userSection = document.createElement('div');
+            userSection.style.marginBottom = '20px';
+            userSection.style.padding = '10px';
+            userSection.style.border = '1px solid #ccc';
+            userSection.style.borderRadius = '5px';
+
+            // Note: Since auth_users is an auth table, selecting email directly might not work without
+            // a custom view or profile table due to Supabase restrictions, unless it's just a placeholder.
+            // We use user_id or report_data.personal.name as fallback.
+            const employeeName = userReports[0].report_data?.personal?.name || 'Ukjent ansatt';
+
+            const title = document.createElement('h3');
+            title.textContent = `Ansatt: ${employeeName} (ID: ${uid.substring(0, 8)}...)`;
+            title.style.marginTop = '0';
+            userSection.appendChild(title);
+
+            const ul = document.createElement('ul');
+            userReports.forEach(report => {
+                const li = document.createElement('li');
+                const date = new Date(report.created_at).toLocaleDateString('no-NO');
+
+                let grandTotal = '0,00';
+                if (report.report_data && report.report_data.totals) {
+                    grandTotal = report.report_data.totals.grandTotal.toFixed(2).replace('.', ',');
+                }
+
+                li.textContent = `${date} - ${report.trip_name} - Kr ${grandTotal} `;
+
+                // Provide a load button so admin can view the report
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn btn-outline btn-small';
+                loadBtn.style.marginRight = '5px';
+                loadBtn.textContent = 'Se på';
+                loadBtn.onclick = () => {
+                    closeAdminModal();
+                    // loadTrip takes the JSON string of the whole record from localStorage usually,
+                    // but we can mock it here since it expects record.report_data to equal the actual data.
+                    loadTrip(JSON.stringify({ report_data: report.report_data }));
+                    alert(`Lastet opp reiseregningen "${report.trip_name}" for visning.`);
+                };
+
+                li.appendChild(loadBtn);
+                ul.appendChild(li);
+            });
+
+            userSection.appendChild(ul);
+            modalBody.appendChild(userSection);
+        }
+
+    } catch (e) {
+        console.error("Feil ved henting av firmareiseregninger", e);
+        modalBody.innerHTML = `<p style="color:var(--danger-color)">Feil: ${e.message}</p>`;
     }
 }
 
@@ -876,5 +1122,21 @@ function exportToCSV() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+    }
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('saved-reports-modal');
+    const helpModal = document.getElementById('help-modal');
+    const adminModal = document.getElementById('admin-modal');
+
+    if (event.target === modal) {
+        closeModal();
+    }
+    if (helpModal && event.target === helpModal) {
+        document.body.removeChild(helpModal);
+    }
+    if (adminModal && event.target === adminModal) {
+        closeAdminModal();
     }
 }

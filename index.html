@@ -45,6 +45,31 @@
             </div>
         </section>
 
+        <section class="card" id="company-portal-section" style="display: none;">
+            <h2>Bedriftsportal</h2>
+            <div id="no-company-view">
+                <p>Du er ikke knyttet til et firma enda.</p>
+                <div class="grid-row" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label for="new-company-name">Opprett nytt firma</label>
+                        <input type="text" id="new-company-name" placeholder="F.eks. Mitt Firma AS">
+                        <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="createCompany()">Opprett</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="join-company-code">Bli med i et firma</label>
+                        <input type="text" id="join-company-code" placeholder="Oppgi 6-tegns kode">
+                        <button type="button" class="btn btn-primary" style="margin-top: 5px;" onclick="joinCompany()">Bli med</button>
+                    </div>
+                </div>
+            </div>
+            <div id="has-company-view" style="display: none;">
+                <p>Firma: <strong id="current-company-name"></strong></p>
+                <p>Din rolle: <span id="current-user-role"></span></p>
+                <p id="company-join-code-container" style="display: none;">Invitasjonskode: <strong id="current-join-code"></strong></p>
+                <button type="button" id="admin-dashboard-btn" class="btn btn-outline" style="margin-top: 10px; display: none;" onclick="showAdminDashboard()">Firma Administrasjon</button>
+            </div>
+        </section>
+
         <form id="expense-form" onsubmit="event.preventDefault();">
             <section class="card">
                 <h2>1. Personopplysninger</h2>
@@ -169,6 +194,17 @@
             <div class="sticky-credit">Laget av Leon Aabak</div>
         </div>
     </div>
+        <!-- Admin Dashboard Modal -->
+        <div id="admin-modal" class="modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+                <h2 style="margin-top: 0;">Firma Administrasjon</h2>
+                <div id="admin-modal-body" style="margin-top: 15px;">
+                    Laster...
+                </div>
+            </div>
+        </div>
+
     <script src="script.js"></script>
 </body>
 </html>
