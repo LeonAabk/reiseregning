@@ -698,13 +698,26 @@ function exportToCSV() {
     let csvContent = "";
 
     // Helper function to format numbers for Norwegian locale in CSV
-    const formatNum = (num) => String(num).replace('.', ',');
+    const formatNum = (num) => Number(num).toFixed(2).replace('.', ',');
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const parts = dateStr.split(' ');
+        const d = parts[0].split('-');
+        if (d.length === 3) {
+            const formattedDate = `${d[2]}.${d[1]}.${d[0]}`;
+            return parts.length > 1 ? `${formattedDate} ${parts[1]}` : formattedDate;
+        }
+        return dateStr;
+    };
+
+    const cleanStr = (str) => str ? String(str).replace(/\s+/g, ' ').trim() : '';
 
     // Metadata
-    csvContent += `Navn;${data.personalInfo.name}\n`;
-    csvContent += `Ansattnr;${data.personalInfo.id}\n`;
-    csvContent += `Avdeling;${data.personalInfo.department}\n`;
-    csvContent += `Firma;${data.personalInfo.company}\n`;
+    csvContent += `Navn;${cleanStr(data.personalInfo.name)}\n`;
+    csvContent += `Ansattnr;${cleanStr(data.personalInfo.id)}\n`;
+    csvContent += `Avdeling;${cleanStr(data.personalInfo.department)}\n`;
+    csvContent += `Firma;${cleanStr(data.personalInfo.company)}\n`;
     csvContent += `\n`;
 
     // Header
@@ -718,7 +731,7 @@ function exportToCSV() {
             let amount = (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll;
             let desc = `${i.from} - ${i.to}`;
             if (i.passenger.length > 0) desc += ` (Passasjer: ${i.passenger})`;
-            csvContent += `${i.date};${desc};Kjøring/Bom;${formatNum(amount)}\n`;
+            csvContent += `${formatDate(i.date)};${cleanStr(desc)};Kjøring/Bom;${formatNum(amount)}\n`;
             totalSum += amount;
         }
     });
@@ -726,15 +739,15 @@ function exportToCSV() {
     // Expenses
     data.expenses.forEach(i => {
         if (i.amount > 0 || i.description) {
-            csvContent += `${i.date};${i.description};Utlegg;${formatNum(i.amount)}\n`;
+            csvContent += `${formatDate(i.date)};${cleanStr(i.description)};Utlegg;${formatNum(i.amount)}\n`;
             totalSum += i.amount;
         }
     });
 
     // Diet
     if (diet.amount > 0 || data.travelInfo.departure) {
-        let dateStr = `${data.travelInfo.departure} - ${data.travelInfo.return}`;
-        csvContent += `${dateStr};${diet.text};Diett;${formatNum(diet.amount)}\n`;
+        let dateStr = `${formatDate(data.travelInfo.departure)} - ${formatDate(data.travelInfo.return)}`;
+        csvContent += `${dateStr};${cleanStr(diet.text)};Diett;${formatNum(diet.amount)}\n`;
         totalSum += diet.amount;
     }
 
