@@ -768,13 +768,14 @@ function showHelpModal() {
                     <li style="margin-bottom: 10px;"><strong>Kjøring og Utlegg:</strong> Legg til ruter og utlegg. Du kan legge til så mange rader du trenger. Systemet legger automatisk til passasjertillegg hvis du fyller inn navnet på en passasjer.</li>
                     <li style="margin-bottom: 10px;"><strong>Kvitteringer / Vedlegg:</strong> Du kan laste opp bilder av kvitteringene dine direkte fra PC eller mobil. Disse vil automatisk bli lagt til som egne, ryddige sider bakerst i PDF-dokumentet.</li>
                     <li style="margin-bottom: 10px;"><strong>Signering:</strong> Du kan tegne signaturen din direkte på skjermen (med mus eller finger), eller laste opp et ferdig bilde av signaturen din.</li>
+                    <li style="margin-bottom: 10px;"><strong>Eksport:</strong> Du kan eksportere reiseregningen som en CSV-fil, perfekt formatert for norske regnskapssystemer (med semikolon som skilletegn og UTF-8 for riktig visning av særnorske tegn).</li>
                 </ul>
 
                 <h3 style="border-top: 1px solid #e2e8f0; padding-top: 20px;">Lagring og Personvern</h3>
-                <p><strong>Appen sender ingen data til internett.</strong> Alt du skriver inn lagres utelukkende <em>lokalt i din egen nettleser</em> (via noe som heter Local Storage).</p>
+                <p>Når du er logget inn, lagres reiseregningene dine sikkert i skyen. Dette gjør at du enkelt kan få tilgang til dem på tvers av alle dine enheter.</p>
                 <ul style="padding-left: 20px; margin-bottom: 25px;">
-                    <li style="margin-bottom: 10px;">Personvernet ditt er 100% ivaretatt, ingen andre kan se reiseregningene dine.</li>
-                    <li style="margin-bottom: 10px;">Fordi bildene fra moderne mobilkameraer tar enormt mye plass, <strong>lagres ikke opplastede kvitteringer i minnet</strong> når du trykker "Lagre Reise". Slik unngår vi at appen krasjer. Legg derfor til bildene rett før du forhåndsviser/skriver ut PDF-en.</li>
+                    <li style="margin-bottom: 10px;">Personvernet ditt er godt ivaretatt; bare du har tilgang til dine lagrede reiseregninger.</li>
+                    <li style="margin-bottom: 10px;">For å spare lagringsplass i databasen og sikre at appen laster lynraskt, <strong>lagres ikke opplastede kvitteringer i skyen</strong> når du trykker "Lagre Reise". Legg derfor til bildene av kvitteringer rett før du forhåndsviser, eksporterer eller skriver ut PDF-en.</li>
                 </ul>
 
                 <div style="margin-top: 30px; text-align: center;">
