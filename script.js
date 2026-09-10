@@ -26,7 +26,7 @@ const currencyFormatter = new Intl.NumberFormat('no-NO', {
 // Supabase Initialization
 const supabaseUrl = 'https://yfanegpwyjqhkbiikfny.supabase.co';
 const supabaseKey = 'sb_publishable_G8uHOPVInNnMvm6rSjWB5g_QjeHyhY-';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // State management
 let canvasHasContent = false;
@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPersonalInfo();
     
     // Auth State Initialization
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
         currentUser = session?.user || null;
         updateAuthUI();
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user || null;
         updateAuthUI();
     });
@@ -99,7 +99,7 @@ async function signUp() {
         return;
     }
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
     if (error) {
         msg.textContent = error.message;
     } else {
@@ -118,7 +118,7 @@ async function logIn() {
         return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
         msg.style.color = "var(--danger-color)";
         msg.textContent = error.message;
@@ -130,7 +130,7 @@ async function logIn() {
 }
 
 async function logOut() {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
     if (error) console.error("Feil ved utlogging:", error);
 }
 
@@ -561,7 +561,7 @@ async function saveExpenseReport() {
     };
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('expense_reports')
             .insert([{
                 user_id: currentUser.id,
@@ -614,7 +614,7 @@ async function showSavedReports() {
     document.body.appendChild(modal);
 
     try {
-        const { data: reports, error } = await supabase
+        const { data: reports, error } = await supabaseClient
             .from('expense_reports')
             .select('*')
             .eq('user_id', currentUser.id)
@@ -661,7 +661,7 @@ async function showSavedReports() {
 async function deleteTrip(id) {
     if (!confirm("Er du sikker på at du vil slette denne reisen?")) return;
     try {
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('expense_reports')
             .delete()
             .eq('id', id);
