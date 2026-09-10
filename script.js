@@ -23,9 +23,15 @@ const currencyFormatter = new Intl.NumberFormat('no-NO', {
     currency: 'NOK'
 });
 
+// Supabase Initialization
+const supabaseUrl = 'https://yfanegpwyjqhkbiikfny.supabase.co';
+const supabaseKey = 'sb_publishable_G8uHOPVInNnMvm6rSjWB5g_QjeHyhY-';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 // State management
 let canvasHasContent = false;
 let uploadedReceipts = [];
+let currentUser = null;
 
 // --- HJELPEFUNKSJONER (SIKKERHET & PARSING) ---
 /**
@@ -64,12 +70,85 @@ document.addEventListener('DOMContentLoaded', () => {
     
     loadPersonalInfo();
     
+    // Auth State Initialization
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        currentUser = session?.user || null;
+        updateAuthUI();
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user || null;
+        updateAuthUI();
+    });
+
     const form = document.getElementById('expense-form');
     if (form) {
         form.addEventListener('input', calculateAll);
         form.addEventListener('change', calculateAll);
     }
 });
+
+// --- 2.5 AUTHENTICATION FUNKSJONER ---
+async function signUp() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const msg = document.getElementById('auth-message');
+
+    if (!email || !password) {
+        msg.textContent = "Fyll inn e-post og passord.";
+        return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+        msg.textContent = error.message;
+    } else {
+        msg.style.color = "green";
+        msg.textContent = "Sjekk innboksen for bekreftelses-e-post (hvis aktivert), eller logg inn.";
+    }
+}
+
+async function logIn() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const msg = document.getElementById('auth-message');
+
+    if (!email || !password) {
+        msg.textContent = "Fyll inn e-post og passord.";
+        return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+        msg.style.color = "var(--danger-color)";
+        msg.textContent = error.message;
+    } else {
+        msg.textContent = "";
+        document.getElementById('auth-email').value = '';
+        document.getElementById('auth-password').value = '';
+    }
+}
+
+async function logOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Feil ved utlogging:", error);
+}
+
+function updateAuthUI() {
+    const loggedOutDiv = document.getElementById('auth-logged-out');
+    const loggedInDiv = document.getElementById('auth-logged-in');
+    const userEmailSpan = document.getElementById('auth-user-email');
+
+    if (currentUser) {
+        loggedOutDiv.style.display = 'none';
+        loggedInDiv.style.display = 'block';
+        userEmailSpan.textContent = currentUser.email;
+    } else {
+        loggedOutDiv.style.display = 'block';
+        loggedInDiv.style.display = 'none';
+        userEmailSpan.textContent = '';
+    }
+}
 
 // --- DYNAMISKE RADER ---
 function addMileageRow() {
@@ -464,12 +543,17 @@ function loadPersonalInfo() {
     }
 }
 
-function saveExpenseReport() {
+async function saveExpenseReport() {
+    if (!currentUser) {
+        alert("Du må være logget inn for å lagre en reise i skyen.");
+        return;
+    }
+
     const fullData = collectFormData();
     const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
     if (!tripName) return;
 
-    // Fjerner bilde-data for å unngå å sprenge 5MB-grensen i nettleseren
+    // Fjerner bilde-data for å unngå for store lagringer
     const safeDataToSave = {
         ...fullData,
         receipts: [],
@@ -477,31 +561,29 @@ function saveExpenseReport() {
     };
 
     try {
-        const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
-        if (!reports[tripName]) reports[tripName] = [];
-        reports[tripName].push({ ...safeDataToSave, timestamp: new Date().toISOString() });
+        const { data, error } = await supabase
+            .from('expense_reports')
+            .insert([{
+                user_id: currentUser.id,
+                trip_name: tripName,
+                report_data: safeDataToSave
+            }]);
+
+        if (error) throw error;
         
-        localStorage.setItem('expenseReports', JSON.stringify(reports));
-        alert(`Reiseregning er lagret under "${tripName}"!`);
+        alert(`Reiseregning er lagret under "${tripName}" i skyen!`);
     } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-            alert("Feil: Lagringskapasiteten er full. Slett noen gamle reiser før du prøver igjen.");
-        } else {
-            console.error("Feil ved lagring", e);
-        }
+        console.error("Feil ved lagring", e);
+        alert(`Feil ved lagring: ${e.message}`);
     }
 }
 
-function showSavedReports() {
-    let reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
-    
-    // Bakoverkompatibilitet hvis gammel struktur brukes
-    if (Array.isArray(reports)) {
-        const oldReports = reports;
-        reports = { 'Gamle reiser': oldReports };
-        localStorage.setItem('expenseReports', JSON.stringify(reports));
+async function showSavedReports() {
+    if (!currentUser) {
+        alert("Du må være logget inn for å se lagrede reiser.");
+        return;
     }
-    
+
     const modal = document.createElement('div');
     modal.id = 'saved-reports-modal';
     modal.className = 'modal-overlay';
@@ -511,7 +593,7 @@ function showSavedReports() {
     
     const modalHeader = document.createElement('div');
     modalHeader.className = 'modal-header';
-    modalHeader.innerHTML = '<h2>Lagrede reiser</h2>';
+    modalHeader.innerHTML = '<h2>Lagrede reiser fra skyen</h2>';
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -522,32 +604,47 @@ function showSavedReports() {
     
     const modalBody = document.createElement('div');
     modalBody.className = 'modal-body';
+    modalBody.innerHTML = '<p>Laster...</p>';
     
-    if (Object.keys(reports).length === 0) {
-        modalBody.innerHTML = '<p>Ingen lagrede reiser.</p>';
-    } else {
-        for (const [folder, trips] of Object.entries(reports)) {
-            const h3 = document.createElement('h3');
-            h3.textContent = `${folder} (${trips.length} reiser)`;
-            modalBody.appendChild(h3);
-            
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modal.appendChild(modalContent);
+
+    document.body.classList.add('modal-open');
+    document.body.appendChild(modal);
+
+    try {
+        const { data: reports, error } = await supabase
+            .from('expense_reports')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        modalBody.innerHTML = '';
+
+        if (!reports || reports.length === 0) {
+            modalBody.innerHTML = '<p>Ingen lagrede reiser.</p>';
+        } else {
             const ul = document.createElement('ul');
-            trips.forEach((trip, index) => {
+            reports.forEach(report => {
                 const li = document.createElement('li');
-                const date = new Date(trip.timestamp).toLocaleDateString('no-NO');
-                li.textContent = `${date} - ${trip.travelInfo.purpose} `;
+                const date = new Date(report.created_at).toLocaleDateString('no-NO');
+                li.textContent = `${date} - ${report.trip_name} `;
                 
                 const loadBtn = document.createElement('button');
                 loadBtn.className = 'btn btn-outline btn-small';
                 loadBtn.style.marginRight = '5px';
                 loadBtn.textContent = 'Last inn';
-                loadBtn.onclick = () => loadTrip(folder, index);
+                // Passing stringified object because it might be destroyed in DOM event handler
+                loadBtn.onclick = () => loadTrip(JSON.stringify(report));
                 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-text btn-small';
                 deleteBtn.style.color = 'var(--danger-color)';
                 deleteBtn.textContent = 'Slett';
-                deleteBtn.onclick = () => deleteTrip(folder, index);
+                deleteBtn.onclick = () => deleteTrip(report.id);
                 
                 li.appendChild(loadBtn);
                 li.appendChild(deleteBtn);
@@ -555,26 +652,28 @@ function showSavedReports() {
             });
             modalBody.appendChild(ul);
         }
+    } catch (e) {
+        console.error("Feil ved henting av reiser", e);
+        modalBody.innerHTML = '<p style="color:var(--danger-color);">Feil ved lasting av reiser.</p>';
     }
-    
-    modalContent.appendChild(modalHeader);
-    modalContent.appendChild(modalBody);
-    modal.appendChild(modalContent);
-    
-    document.body.classList.add('modal-open');
-    document.body.appendChild(modal);
 }
 
-function deleteTrip(folder, index) {
-    const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
-    if (reports[folder]) {
-        reports[folder].splice(index, 1);
-        if (reports[folder].length === 0) delete reports[folder];
-        localStorage.setItem('expenseReports', JSON.stringify(reports));
+async function deleteTrip(id) {
+    if (!confirm("Er du sikker på at du vil slette denne reisen?")) return;
+    try {
+        const { error } = await supabase
+            .from('expense_reports')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
         
         // Lukk aktiv modal og åpne oppdatert visning
         closeModal();
         showSavedReports();
+    } catch (e) {
+        console.error("Feil ved sletting", e);
+        alert(`Feil ved sletting: ${e.message}`);
     }
 }
 
@@ -586,10 +685,10 @@ function resetFormState() {
     document.getElementById('receipt-preview-container').innerHTML = '';
 }
 
-function loadTrip(folder, index) {
+function loadTrip(tripRecordStr) {
     try {
-        const reports = JSON.parse(localStorage.getItem('expenseReports') || '{}');
-        const trip = reports[folder][index];
+        const record = JSON.parse(tripRecordStr);
+        const trip = record.report_data;
         if (!trip) return;
 
         resetFormState();
