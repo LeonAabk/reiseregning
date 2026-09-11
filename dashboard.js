@@ -223,7 +223,8 @@ async function createCompany() {
     try {
         const { data, error } = await supabaseClient.rpc('create_company', {
             company_name: nameInput,
-            new_join_code: joinCode
+            new_join_code: joinCode,
+            user_email: currentUser.email
         });
 
         if (error) throw error;
@@ -246,7 +247,8 @@ async function joinCompany() {
 
     try {
         const { data, error } = await supabaseClient.rpc('join_company', {
-            code: codeInput
+            code: codeInput,
+            user_email: currentUser.email
         });
 
         if (error) {
@@ -330,7 +332,7 @@ async function fetchAdminDashboardData() {
         // Fetch Members
         const { data: members, error: membersError } = await supabaseClient
             .from('company_members')
-            .select('role, user_id')
+            .select('role, user_id, user_email')
             .eq('company_id', currentCompany.company_id);
 
         if (membersError) throw membersError;
@@ -418,36 +420,14 @@ async function fetchAdminDashboardData() {
 
         if (statSum) statSum.textContent = 'Kr ' + totalCompanySum.toFixed(2).replace('.', ',');
 
-        // Render Members - Since we can't fetch profiles table via frontend, we'll try to find the email in reports or fall back to UUID.
-        // Wait, the new plan says to query the profiles table!
-        // We assume the user runs supabase_setup.sql, so we will try fetching from profiles, joined with company_members.
-
-        // Wait! We can fetch from profiles if RLS allows it! Let's get the emails.
-        // Since we fetched `company_members` without joining, let's manually fetch `profiles` for these members.
-        let userEmails = {};
-        try {
-            const userIds = members ? members.map(m => m.user_id) : [];
-            if (userIds.length > 0) {
-                const { data: profiles, error: profError } = await supabaseClient
-                    .from('profiles')
-                    .select('id, email')
-                    .in('id', userIds);
-                if (!profError && profiles) {
-                    profiles.forEach(p => userEmails[p.id] = p.email);
-                }
-            }
-        } catch (e) {
-            console.warn("Klarte ikke å hente profiler. Mangler tabell?", e);
-        }
-
+        // Render Members
         if (membersBody) {
             membersBody.innerHTML = '';
             if (!members || members.length === 0) {
                 membersBody.innerHTML = '<tr><td colspan="2" class="empty-state">Ingen medlemmer funnet.</td></tr>';
             } else {
                 members.forEach(m => {
-                    const email = userEmails[m.user_id];
-                    let display = email || m.user_id.substring(0, 8) + '...';
+                    let display = m.user_email || m.user_id.substring(0, 8) + '...';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
