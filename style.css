@@ -21,7 +21,8 @@ label { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: 
 input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; }
 
 /* Tabeller */
-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; min-width: 600px; }
 th { text-align: left; font-size: 0.8rem; color: #64748b; padding: 10px; border-bottom: 2px solid var(--border-color); }
 td { padding: 5px; border-bottom: 1px solid var(--border-color); }
 td input { width: 100%; border: none; background: #f8fafc; }
@@ -70,7 +71,26 @@ td input { width: 100%; border: none; background: #f8fafc; }
 }
 
 /* Legger til touch-action for bedre mobil-signering */
-#sig-canvas { touch-action: none; }
+#sig-canvas { touch-action: none; max-width: 100%; width: 100%; }
+
+/* Mobil-tilpasninger */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 220px;
+    }
+    .header-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .total-value {
+        font-size: 1.1rem;
+    }
+}
 
 /* --- UTSKRIFT / PDF-LOGIKK (A4) --- */
 @media print {
