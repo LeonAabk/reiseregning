@@ -582,6 +582,23 @@ async function saveExpenseReport(status = 'utkast') {
         return;
     }
 
+    // Ensure we have currentCompany.company_id to save against
+    if (!currentCompany) {
+        try {
+            const { data: memberData, error: memberError } = await supabaseClient
+                .from('company_members')
+                .select('company_id')
+                .eq('user_id', currentUser.id)
+                .single();
+
+            if (memberData && memberData.company_id) {
+                currentCompany = { company_id: memberData.company_id };
+            }
+        } catch (e) {
+            console.warn("Kunne ikke hente firma-ID", e);
+        }
+    }
+
     const fullData = collectFormData();
     const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
     if (!tripName) return;
@@ -613,11 +630,14 @@ async function saveExpenseReport(status = 'utkast') {
             .from('expense_reports')
             .insert([payload]);
 
-        if (error) throw error;
+        if (error) {
+            console.error("Feil fra Supabase ved insert:", error);
+            throw error;
+        }
         
         alert(`Reiseregning er lagret under "${tripName}" i skyen!`);
     } catch (e) {
-        console.error("Feil ved lagring", e);
+        console.error("Feil ved lagring:", e);
         alert(`Feil ved lagring: ${e.message}`);
     }
 }

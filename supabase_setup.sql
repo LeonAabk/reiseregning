@@ -42,3 +42,43 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Since we can't run this directly on Supabase via frontend API, the owner needs to run this in their Supabase SQL editor.
+ALTER TABLE company_members ADD COLUMN user_email TEXT;
+
+-- Task 1: Add user_email to company_members
+-- ALTER TABLE company_members ADD COLUMN user_email TEXT;
+
+-- Update create_company RPC to include user_email
+CREATE OR REPLACE FUNCTION public.create_company(company_name TEXT, new_join_code TEXT, user_email TEXT)
+RETURNS json AS $$
+DECLARE
+  new_company_id UUID;
+BEGIN
+  INSERT INTO public.companies (name, join_code)
+  VALUES (company_name, new_join_code)
+  RETURNING id INTO new_company_id;
+
+  INSERT INTO public.company_members (company_id, user_id, role, user_email)
+  VALUES (new_company_id, auth.uid(), 'admin', user_email);
+
+  RETURN json_build_object('company_id', new_company_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Update join_company RPC to include user_email
+CREATE OR REPLACE FUNCTION public.join_company(code TEXT, user_email TEXT)
+RETURNS json AS $$
+DECLARE
+  target_company_id UUID;
+BEGIN
+  SELECT id INTO target_company_id FROM public.companies WHERE join_code = code LIMIT 1;
+
+  IF target_company_id IS NULL THEN
+    RAISE EXCEPTION 'Ugyldig kode';
+  END IF;
+
+  INSERT INTO public.company_members (company_id, user_id, role, user_email)
+  VALUES (target_company_id, auth.uid(), 'employee', user_email);
+
+  RETURN json_build_object('company_id', target_company_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
