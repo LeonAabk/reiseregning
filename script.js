@@ -759,50 +759,85 @@ function loadTrip(tripRecordStr) {
 
         resetFormState();
 
-        document.getElementById('emp-company').value = trip.personalInfo.company || '';
-        document.getElementById('emp-name').value = trip.personalInfo.name || '';
-        document.getElementById('emp-id').value = trip.personalInfo.id || '';
-        document.getElementById('emp-dept').value = trip.personalInfo.department || '';
-        document.getElementById('emp-addr').value = trip.personalInfo.address || '';
+        const safeSetVal = (id, val) => {
+            try {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            } catch (e) {
+                console.warn(`Kunne ikke sette verdi for ${id}:`, e);
+            }
+        };
 
-        document.getElementById('travel-purpose').value = trip.travelInfo.purpose || '';
-        document.getElementById('travel-event').value = trip.travelInfo.event || '';
-        document.getElementById('accommodation-name').value = trip.travelInfo.accommodationName || '';
-        document.getElementById('diet-mode').value = trip.travelInfo.dietMode || 'state';
-        document.getElementById('accommodation-type').value = trip.travelInfo.accommodation || 'none';
-        
-        const depDate = document.getElementById('departure-date');
-        if(depDate._flatpickr) depDate._flatpickr.setDate(trip.travelInfo.departure);
-        
-        const retDate = document.getElementById('return-date');
-        if(retDate._flatpickr) retDate._flatpickr.setDate(trip.travelInfo.return);
-        
-        trip.mileage.forEach(item => {
-            addMileageRow();
-            const lastRow = document.querySelector('#mileage-body tr:last-child');
-            if (lastRow.querySelector('.flatpickr-mileage')._flatpickr) lastRow.querySelector('.flatpickr-mileage')._flatpickr.setDate(item.date);
-            lastRow.querySelector('.from-input').value = item.from;
-            lastRow.querySelector('.to-input').value = item.to;
-            lastRow.querySelector('.km-input').value = item.km;
-            lastRow.querySelector('.pass-name').value = item.passenger;
-            lastRow.querySelector('.toll-input').value = item.toll;
-        });
+        if (trip.personalInfo) {
+            safeSetVal('emp-company', trip.personalInfo.company);
+            safeSetVal('emp-name', trip.personalInfo.name);
+            safeSetVal('emp-id', trip.personalInfo.id);
+            safeSetVal('emp-dept', trip.personalInfo.department);
+            safeSetVal('emp-addr', trip.personalInfo.address);
+        }
 
-        trip.expenses.forEach(item => {
-            addExpenseRow();
-            const lastRow = document.querySelector('#expenses-body tr:last-child');
-            if (lastRow.querySelector('.flatpickr-date')._flatpickr) lastRow.querySelector('.flatpickr-date')._flatpickr.setDate(item.date);
-            lastRow.querySelector('.desc-input').value = item.description;
-            lastRow.querySelector('.exp-amount').value = item.amount;
-            lastRow.querySelector('.receipt-check').checked = item.receipt;
-        });
+        if (trip.travelInfo) {
+            safeSetVal('travel-purpose', trip.travelInfo.purpose);
+            safeSetVal('travel-event', trip.travelInfo.event);
+            safeSetVal('accommodation-name', trip.travelInfo.accommodationName);
+            safeSetVal('diet-mode', trip.travelInfo.dietMode || 'state');
+            safeSetVal('accommodation-type', trip.travelInfo.accommodation || 'none');
+
+            try {
+                const depDate = document.getElementById('departure-date');
+                if(depDate && depDate._flatpickr && trip.travelInfo.departure) depDate._flatpickr.setDate(trip.travelInfo.departure);
+            } catch(e) { console.warn("Feil med departure-date", e); }
+
+            try {
+                const retDate = document.getElementById('return-date');
+                if(retDate && retDate._flatpickr && trip.travelInfo.return) retDate._flatpickr.setDate(trip.travelInfo.return);
+            } catch(e) { console.warn("Feil med return-date", e); }
+        }
+        
+        if (trip.mileage && Array.isArray(trip.mileage)) {
+            trip.mileage.forEach(item => {
+                try {
+                    addMileageRow();
+                    const lastRow = document.querySelector('#mileage-body tr:last-child');
+                    if (lastRow) {
+                        if (lastRow.querySelector('.flatpickr-mileage') && lastRow.querySelector('.flatpickr-mileage')._flatpickr) {
+                            lastRow.querySelector('.flatpickr-mileage')._flatpickr.setDate(item.date);
+                        }
+                        if (lastRow.querySelector('.from-input')) lastRow.querySelector('.from-input').value = item.from || '';
+                        if (lastRow.querySelector('.to-input')) lastRow.querySelector('.to-input').value = item.to || '';
+                        if (lastRow.querySelector('.km-input')) lastRow.querySelector('.km-input').value = item.km || '';
+                        if (lastRow.querySelector('.pass-name')) lastRow.querySelector('.pass-name').value = item.passenger || '';
+                        if (lastRow.querySelector('.toll-input')) lastRow.querySelector('.toll-input').value = item.toll || '';
+                    }
+                } catch(e) { console.warn("Feil ved lasting av mileage rad", e); }
+            });
+        }
+
+        if (trip.expenses && Array.isArray(trip.expenses)) {
+            trip.expenses.forEach(item => {
+                try {
+                    addExpenseRow();
+                    const lastRow = document.querySelector('#expenses-body tr:last-child');
+                    if (lastRow) {
+                        if (lastRow.querySelector('.flatpickr-date') && lastRow.querySelector('.flatpickr-date')._flatpickr) {
+                            lastRow.querySelector('.flatpickr-date')._flatpickr.setDate(item.date);
+                        }
+                        if (lastRow.querySelector('.desc-input')) lastRow.querySelector('.desc-input').value = item.description || '';
+                        if (lastRow.querySelector('.exp-amount')) lastRow.querySelector('.exp-amount').value = item.amount || '';
+                        if (lastRow.querySelector('.receipt-check')) lastRow.querySelector('.receipt-check').checked = item.receipt || false;
+                    }
+                } catch(e) { console.warn("Feil ved lasting av utlegg rad", e); }
+            });
+        }
         
         calculateAll();
         closeModal();
-        alert("Reisen er lastet inn!");
+        console.log("Reisen er lastet inn!");
+
+        // Remove any left over styling classes
+        document.body.classList.remove('modal-open');
     } catch (e) {
         console.error("Klarte ikke laste inn reisen", e);
-        alert("Det oppstod en feil under innlasting av reisen.");
     }
 }
 
