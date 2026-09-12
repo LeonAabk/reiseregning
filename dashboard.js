@@ -427,7 +427,13 @@ async function fetchAdminDashboardData() {
                 membersBody.innerHTML = '<tr><td colspan="2" class="empty-state">Ingen medlemmer funnet.</td></tr>';
             } else {
                 members.forEach(m => {
-                    let display = m.user_email || m.user_id.substring(0, 8) + '...';
+                    let display = m.user_email;
+                    if (!display && m.user_id === currentUser.id) {
+                        display = currentUser.email;
+                    }
+                    if (!display) {
+                        display = m.user_id.substring(0, 8) + '...';
+                    }
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
