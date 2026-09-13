@@ -43,6 +43,8 @@ td input:focus { background: white; }
 .btn-primary { background: var(--accent-color); color: white; }
 .btn-outline { border: 1px solid var(--accent-color); color: var(--accent-color); background: transparent; }
 .btn-success { background: var(--success-color); color: white; }
+.btn-danger { background: var(--danger-color); color: white; }
+.btn-info { background: #3b82f6; color: white; }
 .btn-text { background: transparent; padding: 5px; }
 
 /* Nye hover-effekter for bedre UX */
@@ -62,6 +64,7 @@ td input:focus { background: white; }
 .modal-content { background: white; width: 100%; max-width: 900px; max-height: 95vh; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
 .modal-header { padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
 .modal-body { padding: 40px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 15px 25px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end; background: #f8fafc; border-radius: 0 0 8px 8px; }
 
 /* Status Badges */
 .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }

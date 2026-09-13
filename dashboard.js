@@ -54,125 +54,119 @@ function showReportModal(report) {
             </div>
             <div style="text-align: right;">
                 <p><strong>Ansatt:</strong> ${escapeHTML(data.personalInfo?.name || '')}</p>
-                <p><strong>E-post:</strong> ${escapeHTML(data.personalInfo?.email || '')}</p>
+                <p><strong>E-post:</strong> ${escapeHTML(report.employeeEmail || data.personalInfo?.email || '')}</p>
                 <p><strong>Avdeling:</strong> ${escapeHTML(data.personalInfo?.department || '')}</p>
             </div>
         </div>
     `;
 
-    // Routes (Driving)
-    if (data.routes && data.routes.length > 0) {
+    // Kjøring (Mileage)
+    if (data.mileage && data.mileage.length > 0) {
         html += `
-            <h3>Kjørerute</h3>
-            <table class="expense-table">
-                <thead>
-                    <tr>
-                        <th>Dato</th>
-                        <th>Rute</th>
-                        <th>Km</th>
-                        <th>Sats</th>
-                        <th>Sum</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <h3>Kjøring</h3>
+            <div class="table-responsive">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Fra-Til</th>
+                            <th>Km</th>
+                            <th>Passasjer</th>
+                            <th>Bompenger</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         `;
-        data.routes.forEach(route => {
+        data.mileage.forEach(route => {
             html += `
                 <tr>
-                    <td>${escapeHTML(route.date)}</td>
-                    <td>${escapeHTML(route.description)}</td>
-                    <td>${escapeHTML(route.km)}</td>
-                    <td>Kr ${formatCurrency(route.rate)}</td>
-                    <td>Kr ${formatCurrency(route.total)}</td>
-                </tr>
-            `;
-            // Add passengers if any
-            if (route.passengers && route.passengers.length > 0) {
-                const pNames = route.passengers.map(p => escapeHTML(p.name)).join(', ');
-                html += `
-                    <tr>
-                        <td colspan="5" style="padding-left: 20px; font-size: 0.9em; color: #555;">
-                            <em>Passasjerer: ${pNames} (Totalt kr ${formatCurrency(route.passengerTotal)})</em>
-                        </td>
-                    </tr>
-                `;
-            }
-        });
-        html += `</tbody></table>`;
-    }
-
-    // Tolls/Ferries
-    if (data.tolls && data.tolls.length > 0) {
-        html += `
-            <h3>Bompenger / Ferge</h3>
-            <table class="expense-table">
-                <thead>
-                    <tr>
-                        <th>Dato</th>
-                        <th>Beskrivelse</th>
-                        <th>Sum</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        data.tolls.forEach(toll => {
-            html += `
-                <tr>
-                    <td>${escapeHTML(toll.date)}</td>
-                    <td>${escapeHTML(toll.description)}</td>
-                    <td>Kr ${formatCurrency(toll.amount)}</td>
+                    <td>${escapeHTML(route.date || '')}</td>
+                    <td>${escapeHTML(route.from || '')} - ${escapeHTML(route.to || '')}</td>
+                    <td>${escapeHTML(route.km || '0')}</td>
+                    <td>${escapeHTML(route.passenger || '-')}</td>
+                    <td>Kr ${formatCurrency(route.toll || 0)}</td>
                 </tr>
             `;
         });
-        html += `</tbody></table>`;
+        html += `</tbody></table></div>`;
     }
 
-    // Diet / Per Diem
+    // Diet / Per Diem (Diettgodtgjørelse)
     if (data.diet && data.diet.length > 0) {
         html += `
             <h3>Diettgodtgjørelse</h3>
-            <table class="expense-table">
-                <thead>
-                    <tr>
-                        <th>Dato</th>
-                        <th>Type</th>
-                        <th>Sats</th>
-                        <th>Fratrekk Måltider</th>
-                        <th>Sum</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="table-responsive">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Type</th>
+                            <th>Sats</th>
+                            <th>Fratrekk Måltider</th>
+                            <th>Sum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         `;
         data.diet.forEach(diet => {
             const deductionText = (diet.deductions && diet.deductions.length > 0) ? diet.deductions.map(d => escapeHTML(d)).join(', ') : 'Ingen';
             html += `
                 <tr>
-                    <td>${escapeHTML(diet.date)}</td>
-                    <td>${escapeHTML(diet.type)}</td>
-                    <td>Kr ${formatCurrency(diet.rate)}</td>
+                    <td>${escapeHTML(diet.date || '')}</td>
+                    <td>${escapeHTML(diet.type || '')}</td>
+                    <td>Kr ${formatCurrency(diet.rate || 0)}</td>
                     <td>${deductionText}</td>
-                    <td>Kr ${formatCurrency(diet.total)}</td>
+                    <td>Kr ${formatCurrency(diet.total || 0)}</td>
                 </tr>
             `;
         });
-        html += `</tbody></table>`;
+        html += `</tbody></table></div>`;
+    }
+
+    // Utlegg (Expenses)
+    if (data.expenses && data.expenses.length > 0) {
+        html += `
+            <h3>Utlegg</h3>
+            <div class="table-responsive">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Beskrivelse</th>
+                            <th>Beløp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        data.expenses.forEach(exp => {
+            html += `
+                <tr>
+                    <td>${escapeHTML(exp.date || '')}</td>
+                    <td>${escapeHTML(exp.description || '')}</td>
+                    <td>Kr ${formatCurrency(exp.amount || 0)}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table></div>`;
     }
 
     // Grand Total
     html += `
         <div class="summary-row">
             <strong>Total sum til utbetaling:</strong>
-            <strong>Kr ${formatCurrency(data.totals?.grandTotal)}</strong>
+            <strong>Kr ${formatCurrency(data.totals?.grandTotal || 0)}</strong>
         </div>
     `;
 
     // Signatures
+    const sigSrc = data.signatureContent || data.signature;
+
     html += `
         <div style="margin-top: 40px; display: flex; justify-content: space-between;">
             <div>
                 <p>Ansatt signatur</p>
                 <div class="sig-box">
-                    ${data.signature ? `<img src="${data.signature}" style="max-height:100%; max-width:100%;" alt="Signatur">` : ''}
+                    ${sigSrc ? `<img src="${sigSrc}" style="max-height:100%; max-width:100%;" alt="Signatur">` : ''}
                 </div>
             </div>
             <div>
@@ -182,9 +176,45 @@ function showReportModal(report) {
         </div>
     </div>`;
 
+    // Add Admin Action Footer if Admin
+    if (currentCompany && currentCompany.role === 'admin') {
+        html += `<div class="modal-footer" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #ddd; padding-top: 15px;">`;
+        if (report.status === 'innsendt') {
+            html += `
+                <button type="button" class="btn btn-danger" id="modal-btn-reject">Avvis</button>
+                <button type="button" class="btn btn-success" id="modal-btn-approve">Godkjenn</button>
+            `;
+        } else if (report.status === 'godkjent') {
+            html += `
+                <button type="button" class="btn btn-info" id="modal-btn-pay">Marker som utbetalt</button>
+            `;
+        }
+        html += `</div>`;
+    }
+
     body.innerHTML = html;
+
+    // Wire up Admin Actions
+    if (currentCompany && currentCompany.role === 'admin') {
+        const btnApprove = document.getElementById('modal-btn-approve');
+        if (btnApprove) btnApprove.onclick = () => handleModalStatusUpdate(report.id, 'godkjent');
+
+        const btnReject = document.getElementById('modal-btn-reject');
+        if (btnReject) btnReject.onclick = () => handleModalStatusUpdate(report.id, 'utkast');
+
+        const btnPay = document.getElementById('modal-btn-pay');
+        if (btnPay) btnPay.onclick = () => handleModalStatusUpdate(report.id, 'utbetalt');
+    }
+
     overlay.style.display = 'flex';
     document.body.classList.add('modal-open');
+}
+
+async function handleModalStatusUpdate(reportId, newStatus) {
+    await updateReportStatus(reportId, newStatus);
+    const overlay = document.getElementById('report-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.classList.remove('modal-open');
 }
 
 async function renderDashboard() {
@@ -463,6 +493,8 @@ async function fetchEmployeeReports() {
         }
 
         reports.forEach(r => {
+            r.employeeEmail = currentUser.email;
+
             const date = new Date(r.created_at).toLocaleDateString('no-NO');
 
             let grandTotal = '0,00';
@@ -532,12 +564,21 @@ async function fetchAdminDashboardData() {
 
         let totalCompanySum = 0;
 
+        const memberEmails = {};
+        if (members) {
+            members.forEach(m => {
+                memberEmails[m.user_id] = m.user_email;
+            });
+        }
+
         if (reportsBody) {
             reportsBody.innerHTML = '';
             if (!reports || reports.length === 0) {
                 reportsBody.innerHTML = '<tr><td colspan="6" class="empty-state">Ingen reiseregninger funnet.</td></tr>';
             } else {
                 reports.forEach(r => {
+                    r.employeeEmail = memberEmails[r.user_id] || '';
+
                     const date = new Date(r.created_at).toLocaleDateString('no-NO');
                     const empName = r.report_data?.personalInfo?.name || r.user_id.substring(0,8);
 
