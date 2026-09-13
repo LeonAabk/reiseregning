@@ -63,6 +63,13 @@ td input:focus { background: white; }
 .modal-header { padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
 .modal-body { padding: 40px; overflow-y: auto; flex: 1; }
 
+/* Status Badges */
+.status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+.badge-draft { background: #e2e8f0; color: #475569; }
+.badge-submitted { background: #dbeafe; color: #1d4ed8; }
+.badge-approved { background: #ffedd5; color: #c2410c; }
+.badge-paid { background: #dcfce7; color: #15803d; }
+
 /* Toast and Custom Modals */
 .custom-modal-content {
     background: white;

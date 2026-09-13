@@ -18,7 +18,174 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUser = user;
         renderDashboard();
     });
+
+    const closeBtn = document.getElementById('btn-close-report-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            const overlay = document.getElementById('report-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+    }
 });
+
+function showReportModal(report) {
+    const overlay = document.getElementById('report-modal-overlay');
+    const body = document.getElementById('report-modal-body');
+    if (!overlay || !body || !report || !report.report_data) return;
+
+    const data = report.report_data;
+
+    // Formatting numbers for Norwegian locale
+    const formatCurrency = (val) => {
+        if (!val) return '0,00';
+        return Number(val).toFixed(2).replace('.', ',');
+    };
+
+    let html = `<div class="expense-report-document">`;
+
+    // Header
+    html += `
+        <div class="document-header">
+            <div>
+                <h1 style="margin-bottom: 5px;">Reiseregning</h1>
+                <p><strong>Dato sendt:</strong> ${new Date(report.created_at).toLocaleDateString('no-NO')}</p>
+                <p><strong>Reisens navn:</strong> ${escapeHTML(report.trip_name || 'Uten navn')}</p>
+            </div>
+            <div style="text-align: right;">
+                <p><strong>Ansatt:</strong> ${escapeHTML(data.personalInfo?.name || '')}</p>
+                <p><strong>E-post:</strong> ${escapeHTML(data.personalInfo?.email || '')}</p>
+                <p><strong>Avdeling:</strong> ${escapeHTML(data.personalInfo?.department || '')}</p>
+            </div>
+        </div>
+    `;
+
+    // Routes (Driving)
+    if (data.routes && data.routes.length > 0) {
+        html += `
+            <h3>Kjørerute</h3>
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Rute</th>
+                        <th>Km</th>
+                        <th>Sats</th>
+                        <th>Sum</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        data.routes.forEach(route => {
+            html += `
+                <tr>
+                    <td>${escapeHTML(route.date)}</td>
+                    <td>${escapeHTML(route.description)}</td>
+                    <td>${escapeHTML(route.km)}</td>
+                    <td>Kr ${formatCurrency(route.rate)}</td>
+                    <td>Kr ${formatCurrency(route.total)}</td>
+                </tr>
+            `;
+            // Add passengers if any
+            if (route.passengers && route.passengers.length > 0) {
+                const pNames = route.passengers.map(p => escapeHTML(p.name)).join(', ');
+                html += `
+                    <tr>
+                        <td colspan="5" style="padding-left: 20px; font-size: 0.9em; color: #555;">
+                            <em>Passasjerer: ${pNames} (Totalt kr ${formatCurrency(route.passengerTotal)})</em>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+        html += `</tbody></table>`;
+    }
+
+    // Tolls/Ferries
+    if (data.tolls && data.tolls.length > 0) {
+        html += `
+            <h3>Bompenger / Ferge</h3>
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Beskrivelse</th>
+                        <th>Sum</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        data.tolls.forEach(toll => {
+            html += `
+                <tr>
+                    <td>${escapeHTML(toll.date)}</td>
+                    <td>${escapeHTML(toll.description)}</td>
+                    <td>Kr ${formatCurrency(toll.amount)}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table>`;
+    }
+
+    // Diet / Per Diem
+    if (data.diet && data.diet.length > 0) {
+        html += `
+            <h3>Diettgodtgjørelse</h3>
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Type</th>
+                        <th>Sats</th>
+                        <th>Fratrekk Måltider</th>
+                        <th>Sum</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        data.diet.forEach(diet => {
+            const deductionText = (diet.deductions && diet.deductions.length > 0) ? diet.deductions.map(d => escapeHTML(d)).join(', ') : 'Ingen';
+            html += `
+                <tr>
+                    <td>${escapeHTML(diet.date)}</td>
+                    <td>${escapeHTML(diet.type)}</td>
+                    <td>Kr ${formatCurrency(diet.rate)}</td>
+                    <td>${deductionText}</td>
+                    <td>Kr ${formatCurrency(diet.total)}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table>`;
+    }
+
+    // Grand Total
+    html += `
+        <div class="summary-row">
+            <strong>Total sum til utbetaling:</strong>
+            <strong>Kr ${formatCurrency(data.totals?.grandTotal)}</strong>
+        </div>
+    `;
+
+    // Signatures
+    html += `
+        <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+            <div>
+                <p>Ansatt signatur</p>
+                <div class="sig-box">
+                    ${data.signature ? `<img src="${data.signature}" style="max-height:100%; max-width:100%;" alt="Signatur">` : ''}
+                </div>
+            </div>
+            <div>
+                <p>Godkjent av leder</p>
+                <div class="sig-box"></div>
+            </div>
+        </div>
+    </div>`;
+
+    body.innerHTML = html;
+    overlay.style.display = 'flex';
+    document.body.classList.add('modal-open');
+}
 
 async function renderDashboard() {
     const container = document.getElementById('dashboard-app');
@@ -99,10 +266,11 @@ async function renderDashboard() {
                                     <th>Navn på reise</th>
                                     <th>Sum</th>
                                     <th>Status</th>
+                                    <th>Handling</th>
                                 </tr>
                             </thead>
                             <tbody id="employee-reports-body">
-                                <tr><td colspan="4">Laster...</td></tr>
+                                <tr><td colspan="5">Laster...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -290,7 +458,7 @@ async function fetchEmployeeReports() {
 
         tbody.innerHTML = '';
         if (!reports || reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
             return;
         }
 
@@ -315,12 +483,19 @@ async function fetchEmployeeReports() {
                 <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
                 <td>Kr ${grandTotal}</td>
                 <td>${statusBadge}</td>
+                <td>
+                    <button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>
+                </td>
             `;
+            const btnView = tr.querySelector('.btn-view');
+            if (btnView) {
+                btnView.onclick = () => showReportModal(r);
+            }
             tbody.appendChild(tr);
         });
     } catch (e) {
         console.error("Feil ved henting av ansatt-rapporter:", e);
-        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger-color);">Feil ved lasting av rapporter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--danger-color);">Feil ved lasting av rapporter.</td></tr>';
     }
 }
 
@@ -399,15 +574,9 @@ async function fetchAdminDashboardData() {
                     `;
 
                     const btnView = tr.querySelector('.btn-view');
-                    btnView.onclick = function() {
-                        try {
-                            localStorage.setItem('tempLoadTrip', JSON.stringify({ report_data: r.report_data }));
-                            window.location.href = 'index.html?load=true';
-                        } catch(e) {
-                            console.error(e);
-                            showToast("Klarte ikke laste reisen.", "error");
-                        }
-                    };
+                    if (btnView) {
+                        btnView.onclick = () => showReportModal(r);
+                    }
 
                     const btnApprove = tr.querySelector('.btn-approve');
                     if (btnApprove) {
