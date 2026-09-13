@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script data-goatcounter="https://leonaabak.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="ui-utils.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -18,9 +19,9 @@
             <div class="header-actions">
                 <button type="button" class="btn btn-outline" onclick="showHelpModal()">Hvordan bruke appen?</button>
                 <button type="button" class="btn btn-outline" onclick="savePersonalInfo()">Lagre Personinfo</button>
-                <button type="button" class="btn btn-outline" onclick="showSavedReports()">Lagrede Reiser</button>
-                <button type="button" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
-                <button type="button" class="btn btn-primary" onclick="submitExpenseReport()">Send inn til godkjenning</button>
+                <button type="button" id="btn-show-saved" class="btn btn-outline" onclick="showSavedReports()">Lagrede Reiser</button>
+                <button type="button" id="btn-save-expense" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
+                <button type="button" id="btn-submit-expense" class="btn btn-primary" onclick="submitExpenseReport()">Send inn til godkjenning</button>
                 <button type="button" class="btn btn-success" onclick="previewExpenseReport()">Forhåndsvis PDF</button>
                 <button type="button" class="btn btn-success" onclick="exportToCSV()">Last ned CSV</button>
             </div>
@@ -43,8 +44,8 @@
                     <div class="form-group"><label for="auth-password">Passord</label><input type="password" id="auth-password" placeholder="Ditt passord"></div>
                 </div>
                 <div style="margin-top: 15px;">
-                    <button type="button" class="btn btn-primary" onclick="logIn()">Logg inn</button>
-                    <button type="button" class="btn btn-outline" onclick="signUp()">Registrer</button>
+                    <button type="button" id="btn-login" class="btn btn-primary" onclick="logIn()">Logg inn</button>
+                    <button type="button" id="btn-signup" class="btn btn-outline" onclick="signUp()">Registrer</button>
                 </div>
                 <div id="auth-message" style="margin-top: 10px; color: var(--danger-color);"></div>
             </div>
@@ -134,7 +135,7 @@
                     Ta bilde av kvitteringene dine eller last dem opp her. De vil automatisk legges ved som egne sider bakerst i PDF-en.
                 </p>
                 <div class="form-group">
-                    <input type="file" id="receipt-uploads" multiple accept="image/*" onchange="handleReceiptUploads(event)">
+                    <input type="file" id="receipt-uploads" multiple accept="image/*" aria-label="Last opp kvitteringer" onchange="handleReceiptUploads(event)">
                 </div>
                 <div id="receipt-preview-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;"></div>
             </section>
@@ -147,7 +148,10 @@
                     <button type="button" class="tab-btn" onclick="switchTab('upload')">Last opp</button>
                 </div>
                 <div id="draw-tab"><canvas id="sig-canvas" width="500" height="150" style="border:1px solid #ccc; background:#fff; cursor:crosshair;"></canvas><br><button type="button" onclick="clearCanvas()" class="btn btn-text">Tøm</button></div>
-                <div id="upload-tab" style="display:none;"><input id="sig-upload" type="file" onchange="handleSignatureUpload(event)"><div id="sig-preview-container"></div></div>
+                <div id="upload-tab" style="display:none;">
+                    <input id="sig-upload" type="file" aria-label="Last opp signatur" onchange="handleSignatureUpload(event)">
+                    <div id="sig-preview-container"></div>
+                </div>
             </section>
         </form>
 
