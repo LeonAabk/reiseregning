@@ -72,13 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPersonalInfo();
     
     // Auth State Initialization
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-        currentUser = session?.user || null;
-        updateAuthUI();
-    });
-
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
-        currentUser = session?.user || null;
+    initAuth(supabaseClient, (user) => {
+        currentUser = user;
         updateAuthUI();
     });
 
@@ -110,9 +105,13 @@ async function signUp() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const msg = document.getElementById('auth-message');
+    const btn = document.getElementById('btn-signup');
+
+    setLoadingState(btn, true);
 
     if (!email || !password) {
         msg.textContent = "Fyll inn e-post og passord.";
+        setLoadingState(btn, false);
         return;
     }
 
@@ -123,15 +122,20 @@ async function signUp() {
         msg.style.color = "green";
         msg.textContent = "Sjekk innboksen for bekreftelses-e-post (hvis aktivert), eller logg inn.";
     }
+    setLoadingState(btn, false);
 }
 
 async function logIn() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const msg = document.getElementById('auth-message');
+    const btn = document.getElementById('btn-login');
+
+    setLoadingState(btn, true);
 
     if (!email || !password) {
         msg.textContent = "Fyll inn e-post og passord.";
+        setLoadingState(btn, false);
         return;
     }
 
@@ -455,7 +459,7 @@ function collectFormData() {
 function previewExpenseReport() {
     const data = collectFormData();
     if (!data.personalInfo.name || !data.travelInfo.purpose) {
-        alert("Vennligst fyll ut navn og formål før forhåndsvisning.");
+        showToast("Vennligst fyll ut navn og formål før forhåndsvisning.", "error");
         return;
     }
 
@@ -551,7 +555,7 @@ function savePersonalInfo() {
         address: document.getElementById('emp-addr').value
     };
     localStorage.setItem('personalInfo', JSON.stringify(personalInfo));
-    alert("Personinformasjon er lagret!");
+    showToast("Personinformasjon er lagret!", "success");
 }
 
 function loadPersonalInfo() {
@@ -571,14 +575,21 @@ function loadPersonalInfo() {
 }
 
 async function submitExpenseReport() {
-    const confirmSubmit = confirm("Er du sikker på at du vil sende inn reiseregningen til godkjenning? Når den er sendt inn, kan den ikke lenger redigeres.");
+    const confirmSubmit = await showConfirm("Er du sikker på at du vil sende inn reiseregningen til godkjenning? Når den er sendt inn, kan den ikke lenger redigeres.");
     if (!confirmSubmit) return;
+
+    // Set loading state
+    const btnSubmit = document.getElementById('btn-submit-expense');
+    setLoadingState(btnSubmit, true);
+
     await saveExpenseReport('innsendt');
+
+    setLoadingState(btnSubmit, false);
 }
 
 async function saveExpenseReport(status = 'utkast') {
     if (!currentUser) {
-        alert("Du må være logget inn for å lagre en reise i skyen.");
+        showToast("Du må være logget inn for å lagre en reise i skyen.", "error");
         return;
     }
 
@@ -600,8 +611,20 @@ async function saveExpenseReport(status = 'utkast') {
     }
 
     const fullData = collectFormData();
-    const tripName = prompt("Gi reisen et navn (for organisering):", `Reise ${new Date().toLocaleDateString('no-NO')}`);
-    if (!tripName) return;
+    let tripName = `Reiseregning ${new Date().toLocaleDateString('no-NO')}`;
+
+    if (status === 'utkast') {
+        const customName = await showPrompt("Gi reisen et navn (for organisering):", tripName);
+        if (customName === null) return; // User cancelled
+        tripName = customName || tripName;
+    }
+
+    // Set loading state on save button if it was called directly (status is utkast)
+    let btnSave = null;
+    if (status === 'utkast') {
+        btnSave = document.getElementById('btn-save-expense');
+        setLoadingState(btnSave, true);
+    }
 
         // Totals mapping to be safe
         let grandTotal = parseNum(document.getElementById('grand-total').textContent.replace(/[^0-9,-]+/g, '').replace(',', '.'));
@@ -635,18 +658,25 @@ async function saveExpenseReport(status = 'utkast') {
             throw error;
         }
         
-        alert(`Reiseregning er lagret under "${tripName}" i skyen!`);
+        showToast(`Reiseregning er lagret under "${tripName}" i skyen!`, "success");
     } catch (e) {
         console.error("Feil ved lagring:", e);
-        alert(`Feil ved lagring: ${e.message}`);
+        showToast(`Feil ved lagring: ${e.message}`, "error");
+    } finally {
+        if (btnSave) {
+            setLoadingState(btnSave, false);
+        }
     }
 }
 
 async function showSavedReports() {
     if (!currentUser) {
-        alert("Du må være logget inn for å se lagrede reiser.");
+        showToast("Du må være logget inn for å se lagrede reiser.", "error");
         return;
     }
+
+    const btn = document.getElementById('btn-show-saved');
+    setLoadingState(btn, true);
 
     const modal = document.createElement('div');
     modal.id = 'saved-reports-modal';
@@ -689,7 +719,7 @@ async function showSavedReports() {
         modalBody.innerHTML = '';
 
         if (!reports || reports.length === 0) {
-            modalBody.innerHTML = '<p>Ingen lagrede reiser.</p>';
+            modalBody.innerHTML = '<p class="empty-state">Ingen lagrede reiser.</p>';
         } else {
             const ul = document.createElement('ul');
             reports.forEach(report => {
@@ -719,11 +749,15 @@ async function showSavedReports() {
     } catch (e) {
         console.error("Feil ved henting av reiser", e);
         modalBody.innerHTML = '<p style="color:var(--danger-color);">Feil ved lasting av reiser.</p>';
+    } finally {
+        setLoadingState(btn, false);
     }
 }
 
 async function deleteTrip(id) {
-    if (!confirm("Er du sikker på at du vil slette denne reisen?")) return;
+    const isConfirmed = await showConfirm("Er du sikker på at du vil slette denne reisen?");
+    if (!isConfirmed) return;
+
     try {
         const { error } = await supabaseClient
             .from('expense_reports')
@@ -737,7 +771,7 @@ async function deleteTrip(id) {
         showSavedReports();
     } catch (e) {
         console.error("Feil ved sletting", e);
-        alert(`Feil ved sletting: ${e.message}`);
+        showToast(`Feil ved sletting: ${e.message}`, "error");
     }
 }
 
@@ -890,7 +924,7 @@ function showHelpModal() {
 function exportToCSV() {
     const data = collectFormData();
     if (!data.personalInfo.name || !data.travelInfo.purpose) {
-        alert("Vennligst fyll ut navn og formål før eksport.");
+        showToast("Vennligst fyll ut navn og formål før eksport.", "error");
         return;
     }
 

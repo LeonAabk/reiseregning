@@ -14,13 +14,8 @@ function escapeHTML(str) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-        currentUser = session?.user || null;
-        renderDashboard();
-    });
-
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
-        currentUser = session?.user || null;
+    initAuth(supabaseClient, (user) => {
+        currentUser = user;
         renderDashboard();
     });
 });
@@ -194,10 +189,10 @@ async function renderDashboard() {
 function copyJoinCode() {
     if (!currentCompany || !currentCompany.join_code) return;
     navigator.clipboard.writeText(currentCompany.join_code).then(() => {
-        alert("Kode kopiert til utklippstavlen: " + currentCompany.join_code);
+        showToast("Kode kopiert til utklippstavlen: " + currentCompany.join_code, "success");
     }).catch(err => {
         console.error("Kunne ikke kopiere kode: ", err);
-        alert("Feil ved kopiering av kode.");
+        showToast("Feil ved kopiering av kode.", "error");
     });
 }
 
@@ -214,9 +209,12 @@ async function createCompany() {
     if (!currentUser) return;
     const nameInput = document.getElementById('new-company-name').value.trim();
     if (!nameInput) {
-        alert("Vennligst skriv inn et firmanavn.");
+        showToast("Vennligst skriv inn et firmanavn.", "error");
         return;
     }
+
+    const btn = document.getElementById('btn-create-company');
+    setLoadingState(btn, true);
 
     const joinCode = generateJoinCode();
 
@@ -229,11 +227,13 @@ async function createCompany() {
 
         if (error) throw error;
 
-        alert(`Firmaet "${nameInput}" er opprettet! Del koden ${joinCode} med dine ansatte.`);
+        showToast(`Firmaet "${nameInput}" er opprettet! Del koden ${joinCode} med dine ansatte.`, "success");
         renderDashboard();
     } catch (e) {
         console.error("Feil ved opprettelse av firma:", e);
-        alert("Feil: " + e.message);
+        showToast("Feil: " + e.message, "error");
+    } finally {
+        setLoadingState(btn, false);
     }
 }
 
@@ -241,9 +241,12 @@ async function joinCompany() {
     if (!currentUser) return;
     const codeInput = document.getElementById('join-company-code').value.trim().toUpperCase();
     if (!codeInput || codeInput.length !== 6) {
-        alert("Vennligst oppgi en gyldig 6-tegns kode.");
+        showToast("Vennligst oppgi en gyldig 6-tegns kode.", "error");
         return;
     }
+
+    const btn = document.getElementById('btn-join-company');
+    setLoadingState(btn, true);
 
     try {
         const { data, error } = await supabaseClient.rpc('join_company', {
@@ -253,17 +256,19 @@ async function joinCompany() {
 
         if (error) {
             if (error.code === '23505') {
-                alert("Du er allerede medlem av et firma.");
+                showToast("Du er allerede medlem av et firma.", "error");
             } else {
                 throw error;
             }
         } else {
-            alert(`Du er nå lagt til i selskapet!`);
+            showToast(`Du er nå lagt til i selskapet!`, "success");
             renderDashboard();
         }
     } catch (e) {
         console.error("Feil ved innmelding:", e);
-        alert("Feil: " + e.message);
+        showToast("Feil: " + e.message, "error");
+    } finally {
+        setLoadingState(btn, false);
     }
 }
 
@@ -400,7 +405,7 @@ async function fetchAdminDashboardData() {
                             window.location.href = 'index.html?load=true';
                         } catch(e) {
                             console.error(e);
-                            alert("Klarte ikke laste reisen.");
+                            showToast("Klarte ikke laste reisen.", "error");
                         }
                     };
 
@@ -460,10 +465,10 @@ async function updateReportStatus(reportId, newStatus) {
 
         if (error) throw error;
 
-        alert(`Status oppdatert til ${newStatus}.`);
+        showToast(`Status oppdatert til ${newStatus}.`, "success");
         fetchAdminDashboardData();
     } catch (e) {
         console.error("Feil ved oppdatering av status:", e);
-        alert(`Feil ved oppdatering av status: ${e.message}`);
+        showToast(`Feil ved oppdatering av status: ${e.message}`, "error");
     }
 }
