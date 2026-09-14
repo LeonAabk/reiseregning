@@ -44,6 +44,19 @@ function showReportModal(report) {
 
     let html = `<div class="expense-report-document">`;
 
+    // Rejected state for employee
+    if (report.status === 'avvist' && report.admin_comment) {
+        html += `<div class="alert-danger" style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0;">AVVIST</h4>
+                    <p style="margin: 0; margin-bottom: 10px;"><strong>Begrunnelse fra leder:</strong> ${escapeHTML(report.admin_comment)}</p>`;
+
+        if (report.user_id === currentUser.id) {
+            html += `<button class="btn btn-primary btn-small" id="btn-modal-edit" data-id="${report.id}">Gjør endringer</button>`;
+        }
+
+        html += `</div>`;
+    }
+
     // Header
     html += `
         <div class="document-header">
@@ -200,10 +213,17 @@ function showReportModal(report) {
         if (btnApprove) btnApprove.onclick = () => handleModalStatusUpdate(report.id, 'godkjent');
 
         const btnReject = document.getElementById('modal-btn-reject');
-        if (btnReject) btnReject.onclick = () => handleModalStatusUpdate(report.id, 'utkast');
+        if (btnReject) btnReject.onclick = () => rejectReport(report.id);
 
         const btnPay = document.getElementById('modal-btn-pay');
         if (btnPay) btnPay.onclick = () => handleModalStatusUpdate(report.id, 'utbetalt');
+    }
+
+    const btnEdit = document.getElementById('btn-modal-edit');
+    if (btnEdit) {
+        btnEdit.onclick = () => {
+            window.location.href = 'index.html?load=true&id=' + report.id;
+        };
     }
 
     overlay.style.display = 'flex';
@@ -279,6 +299,7 @@ async function renderDashboard() {
             `;
         } else if (currentCompany.role !== 'admin') {
             container.innerHTML = `
+
                 <div class="dashboard-header">
                     <div>
                         <h1>${escapeHTML(currentCompany.company_name)}</h1>
@@ -286,6 +307,23 @@ async function renderDashboard() {
                     </div>
                     <a href="index.html" class="btn btn-outline" style="text-decoration: none;">Tilbake til Reiseregning</a>
                 </div>
+
+                <div class="stats-grid" id="emp-stats-container">
+                    <div class="stat-card">
+                        <h4>Venter på utbetaling</h4>
+                        <p class="stat-value" id="stat-emp-pending">Laster...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Totalt utbetalt</h4>
+                        <p class="stat-value" id="stat-emp-paid">Laster...</p>
+                    </div>
+                </div>
+
+                <div class="data-section" id="emp-firma-info-section" style="display: none;">
+                    <h3>Firma-info</h3>
+                    <div id="emp-firma-info"></div>
+                </div>
+
                 <div class="data-section">
                     <h3>Dine innsendte reiseregninger</h3>
                     <div class="data-table-container">
@@ -346,6 +384,8 @@ async function renderDashboard() {
                                 <tr>
                                     <th>E-post / Navn</th>
                                     <th>Rolle</th>
+                                    <th>Til godkjenning</th>
+                                    <th>Utestående beløp</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-members-body">
@@ -479,7 +519,7 @@ async function fetchEmployeeReports() {
     try {
         const { data: reports, error } = await supabaseClient
             .from('expense_reports')
-            .select('created_at, trip_name, report_data, status')
+            .select('created_at, trip_name, report_data, status, admin_comment')
             .eq('user_id', currentUser.id)
             .eq('company_id', currentCompany.company_id)
             .order('created_at', { ascending: false });
@@ -490,6 +530,48 @@ async function fetchEmployeeReports() {
         if (!reports || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Du har ikke sendt inn noen reiseregninger enda.</td></tr>';
             return;
+        }
+
+
+        let sumPending = 0;
+        let sumPaid = 0;
+
+        reports.forEach(r => {
+            if (r.report_data && r.report_data.totals) {
+                const total = r.report_data.totals.grandTotal;
+                if (r.status === 'innsendt' || r.status === 'godkjent') {
+                    sumPending += total;
+                } else if (r.status === 'utbetalt') {
+                    sumPaid += total;
+                }
+            }
+        });
+
+        const pendingEl = document.getElementById('stat-emp-pending');
+        const paidEl = document.getElementById('stat-emp-paid');
+        if (pendingEl) pendingEl.textContent = 'Kr ' + sumPending.toFixed(2).replace('.', ',');
+        if (paidEl) paidEl.textContent = 'Kr ' + sumPaid.toFixed(2).replace('.', ',');
+
+        // Fetch admins
+        try {
+            const { data: admins, error: adminsError } = await supabaseClient
+                .from('company_members')
+                .select('user_email')
+                .eq('company_id', currentCompany.company_id)
+                .eq('role', 'admin');
+
+            if (!adminsError && admins && admins.length > 0) {
+                const infoSection = document.getElementById('emp-firma-info-section');
+                const infoDiv = document.getElementById('emp-firma-info');
+                if (infoSection && infoDiv) {
+                    infoSection.style.display = 'block';
+                    let adminList = admins.map(a => escapeHTML(a.user_email || 'Ukjent')).join(', ');
+                    infoDiv.innerHTML = `<p><strong>Firma:</strong> ${escapeHTML(currentCompany.company_name)}</p>
+                                         <p><strong>Administratorer:</strong> ${adminList}</p>`;
+                }
+            }
+        } catch (adminE) {
+            console.error("Kunne ikke hente administratorer:", adminE);
         }
 
         reports.forEach(r => {
@@ -508,6 +590,7 @@ async function fetchEmployeeReports() {
             else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
             else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
             else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
+                    else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -596,10 +679,12 @@ async function fetchAdminDashboardData() {
                     else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
                     else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
                     else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
+                    else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
 
                     let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
                     if (statusVal === 'innsendt') {
                         actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-approve" data-id="${r.id}">Godkjenn</button>`;
+                        actionButtons += ` <button type="button" class="btn btn-danger btn-small btn-reject-row" data-id="${r.id}">Avvis</button>`;
                     } else if (statusVal === 'godkjent') {
                         actionButtons += ` <button type="button" class="btn btn-success btn-small btn-pay" data-id="${r.id}">Utbetalt</button>`;
                     }
@@ -622,6 +707,10 @@ async function fetchAdminDashboardData() {
                     const btnApprove = tr.querySelector('.btn-approve');
                     if (btnApprove) {
                         btnApprove.onclick = () => updateReportStatus(r.id, 'godkjent');
+                    }
+                    const btnReject = tr.querySelector('.btn-reject-row');
+                    if (btnReject) {
+                        btnReject.onclick = () => rejectReport(r.id);
                     }
                     const btnPay = tr.querySelector('.btn-pay');
                     if (btnPay) {
@@ -650,10 +739,27 @@ async function fetchAdminDashboardData() {
                         display = m.user_id.substring(0, 8) + '...';
                     }
 
+                    let tilGodkjenning = 0;
+                    let utestaende = 0;
+                    if (reports) {
+                        reports.forEach(r => {
+                            if (r.user_id === m.user_id) {
+                                if (r.status === 'innsendt') {
+                                    tilGodkjenning++;
+                                }
+                                if ((r.status === 'innsendt' || r.status === 'godkjent') && r.report_data && r.report_data.totals) {
+                                    utestaende += r.report_data.totals.grandTotal;
+                                }
+                            }
+                        });
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${escapeHTML(display)}</td>
                         <td>${m.role === 'admin' ? 'Administrator' : 'Ansatt'}</td>
+                        <td>${tilGodkjenning}</td>
+                        <td>Kr ${utestaende.toFixed(2).replace('.', ',')}</td>
                     `;
                     membersBody.appendChild(tr);
                 });
@@ -680,5 +786,39 @@ async function updateReportStatus(reportId, newStatus) {
     } catch (e) {
         console.error("Feil ved oppdatering av status:", e);
         showToast(`Feil ved oppdatering av status: ${e.message}`, "error");
+    }
+}
+
+
+async function rejectReport(reportId) {
+    const comment = await showPrompt("Skriv en begrunnelse for avvisning (påkrevd):");
+    if (!comment || comment.trim() === '') {
+        showToast("Begrunnelse er påkrevd for å avvise.", "error");
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('expense_reports')
+            .update({ status: 'avvist', admin_comment: comment })
+            .eq('id', reportId);
+
+        if (error) throw error;
+
+        showToast("Reiseregning avvist.", "success");
+        if (currentCompany && currentCompany.role === 'admin') {
+            fetchAdminDashboardData();
+        }
+
+        // Hide modal if open
+        const overlay = document.getElementById('report-modal-overlay');
+        if (overlay && overlay.style.display !== 'none') {
+            overlay.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+    } catch (e) {
+        console.error("Feil ved avvisning:", e);
+        showToast(`Feil ved avvisning: ${e.message}`, "error");
     }
 }

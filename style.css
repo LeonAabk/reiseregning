@@ -298,3 +298,6 @@ td input:focus { background: white; }
 .btn-vipps:hover {
     background-color: #e04a1a;
 }
+
+.badge-rejected { background: #fee2e2; color: #b91c1c; }
+.alert-danger { background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb; }
