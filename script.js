@@ -517,6 +517,16 @@ function previewExpenseReport() {
                         h3 { margin-top: 20px; margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
                         .summary-row { margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; font-size: 18px; text-align: right; }
                         .diet-summary { padding: 15px; background: #fdfdfd; border: 1px solid #eee; margin-bottom: 20px; border-left: 4px solid #0056b3; }
+                        @media print {
+                            .expense-report-document, .expense-report-document * { color: black !important; background: transparent !important; }
+                            .expense-table { page-break-inside: avoid; }
+                            .expense-table tr { page-break-inside: avoid; }
+                            .signature-section, .sig-box, .employee-section, .travel-section, .diet-section, .receipts-section { page-break-inside: avoid; }
+                            .expense-table th { background-color: transparent !important; color: black !important; border: 1px solid black !important; }
+                            .expense-table td { border: 1px solid black !important; }
+                            .summary-row, .diet-summary { background: transparent !important; border: 1px solid black !important; }
+                            .modal-body { padding: 0 !important; margin: 0 !important; }
+                        }
                     </style>
 
                     ${data.mileage && data.mileage.length > 0 ? `
