@@ -507,18 +507,85 @@ function previewExpenseReport() {
                         <p><strong>Periode:</strong> ${escapeHTML(data.travelInfo.departure)} - ${escapeHTML(data.travelInfo.return)}</p>
                         <p><strong>Overnattingssted:</strong> ${escapeHTML(data.travelInfo.accommodationName) || 'Ikke oppgitt / Privat'}</p>
                     </div>
-                    <table class="expense-table">
-                        <thead><tr><th>Dato</th><th>Beskrivelse/Rute</th><th>Km</th><th>Beløp</th></tr></thead>
-                        <tbody>
-                            ${data.mileage.map(i => `<tr><td>${escapeHTML(i.date)}</td><td><strong>Rute:</strong> ${escapeHTML(i.from)} - ${escapeHTML(i.to)} ${i.passenger.length > 0 ? '<br><small>Passasjer: '+escapeHTML(i.passenger)+'</small>' : ''}</td><td>${i.km}</td><td>${currencyFormatter.format((i.km * (i.passenger.length > 0 ? RATES.km+RATES.passenger : RATES.km))+i.toll)}</td></tr>`).join('')}
-                            ${data.expenses.map(i => `<tr><td>${escapeHTML(i.date)}</td><td><strong>Utlegg:</strong> ${escapeHTML(i.description)} <br><small>${i.receipt ? '(Bilag lagt ved)' : '(Ingen kvittering)'}</small></td><td>-</td><td>${currencyFormatter.format(i.amount)}</td></tr>`).join('')}
-                        </tbody>
-                    </table>
+                    <style>
+                        .expense-report-document { font-family: sans-serif; color: #333; }
+                        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 20px; }
+                        .expense-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                        .expense-table th, .expense-table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+                        .expense-table th { background-color: #f8f9fa; font-weight: bold; }
+                        .expense-table tbody tr:nth-child(even) { background-color: #fcfcfc; }
+                        h3 { margin-top: 20px; margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
+                        .summary-row { margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; font-size: 18px; text-align: right; }
+                        .diet-summary { padding: 15px; background: #fdfdfd; border: 1px solid #eee; margin-bottom: 20px; border-left: 4px solid #0056b3; }
+                    </style>
+
+                    ${data.mileage && data.mileage.length > 0 ? `
+                        <h3>Kjøring</h3>
+                        <div class="table-responsive">
+                            <table class="expense-table">
+                                <thead>
+                                    <tr>
+                                        <th>Dato</th>
+                                        <th>Fra-Til</th>
+                                        <th>Km</th>
+                                        <th>Passasjer</th>
+                                        <th>Bompenger</th>
+                                        <th>Sum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.mileage.map(i => {
+                                        const routeSum = (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll;
+                                        return `
+                                        <tr>
+                                            <td>${escapeHTML(i.date)}</td>
+                                            <td>${escapeHTML(i.from)} - ${escapeHTML(i.to)}</td>
+                                            <td>${i.km}</td>
+                                            <td>${escapeHTML(i.passenger || '-')}</td>
+                                            <td>Kr ${currencyFormatter.format(i.toll)}</td>
+                                            <td>Kr ${currencyFormatter.format(routeSum)}</td>
+                                        </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+
+                    ${data.expenses && data.expenses.length > 0 ? `
+                        <h3>Utlegg</h3>
+                        <div class="table-responsive">
+                            <table class="expense-table">
+                                <thead>
+                                    <tr>
+                                        <th>Dato</th>
+                                        <th>Beskrivelse</th>
+                                        <th>Bilag</th>
+                                        <th>Sum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.expenses.map(i => `
+                                        <tr>
+                                            <td>${escapeHTML(i.date)}</td>
+                                            <td>${escapeHTML(i.description)}</td>
+                                            <td>${i.receipt ? 'Ja' : 'Nei'}</td>
+                                            <td>Kr ${currencyFormatter.format(i.amount)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
 
                     <div class="diet-section">
-                        <h3>Diett og totalt</h3>
-                        <p>${escapeHTML(diet.text)}</p>
-                        <div class="summary-row"><strong>TOTALT Å UTBETALE:</strong> <strong>${currencyFormatter.format(totalM + totalE + diet.amount)}</strong></div>
+                        <h3>Diettgodtgjørelse</h3>
+                        <div class="diet-summary">
+                            <p style="margin:0;"><strong>Sammendrag:</strong> ${escapeHTML(diet.text)}</p>
+                            <p style="margin:5px 0 0 0;"><strong>Sum diett:</strong> Kr ${currencyFormatter.format(diet.amount)}</p>
+                        </div>
+                        <div class="summary-row">
+                            <strong>TOTALT Å UTBETALE:</strong> <strong>Kr ${currencyFormatter.format(totalM + totalE + diet.amount)}</strong>
+                        </div>
                     </div>
                     <div class="signature-section" style="margin-top:40px">
                         <p>Sted/Dato: ${escapeHTML(document.getElementById('final-date-place') ? document.getElementById('final-date-place').value : '')}</p>

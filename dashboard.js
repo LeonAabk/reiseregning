@@ -231,10 +231,12 @@ function showReportModal(report) {
 }
 
 async function handleModalStatusUpdate(reportId, newStatus) {
-    await updateReportStatus(reportId, newStatus);
-    const overlay = document.getElementById('report-modal-overlay');
-    if (overlay) overlay.style.display = 'none';
-    document.body.classList.remove('modal-open');
+    const success = await updateReportStatus(reportId, newStatus);
+    if (success) {
+        const overlay = document.getElementById('report-modal-overlay');
+        if (overlay) overlay.style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
 }
 
 async function renderDashboard() {
@@ -783,9 +785,11 @@ async function updateReportStatus(reportId, newStatus) {
 
         showToast(`Status oppdatert til ${newStatus}.`, "success");
         fetchAdminDashboardData();
+        return true;
     } catch (e) {
         console.error("Feil ved oppdatering av status:", e);
         showToast(`Feil ved oppdatering av status: ${e.message}`, "error");
+        return false;
     }
 }
 
