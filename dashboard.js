@@ -117,7 +117,18 @@ function showReportModal(report) {
     // Diet / Per Diem (Diettgodtgjørelse)
     if (data.diet && data.diet.length > 0) {
         html += `
-            <h3>Diettgodtgjørelse</h3>
+            <div class="diet-section">
+                <h3>Diettgodtgjørelse</h3>
+        `;
+        if (data.dietSummary) {
+            html += `
+                <div class="diet-summary" style="padding: 15px; background: #fdfdfd; border: 1px solid #eee; margin-bottom: 20px; border-left: 4px solid #0056b3;">
+                    <p style="margin:0;"><strong>Sammendrag:</strong> ${escapeHTML(data.dietSummary.text)}</p>
+                    <p style="margin:5px 0 0 0;"><strong>Sum diett:</strong> Kr ${formatCurrency(data.dietSummary.amount)}</p>
+                </div>
+            `;
+        }
+        html += `
             <div class="table-responsive">
                 <table class="expense-table">
                     <thead>
@@ -143,7 +154,7 @@ function showReportModal(report) {
                 </tr>
             `;
         });
-        html += `</tbody></table></div>`;
+        html += `</tbody></table></div></div>`;
     }
 
     // Utlegg (Expenses)
