@@ -29,6 +29,19 @@ input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-
     border-color: var(--accent-color);
 }
 
+.header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 /* Tabeller */
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 10px; min-width: 600px; }
@@ -43,10 +56,13 @@ td input:focus { background: white; }
 .btn-primary { background: var(--accent-color); color: white; }
 .btn-outline { border: 1px solid var(--accent-color); color: var(--accent-color); background: transparent; }
 .btn-success { background: var(--success-color); color: white; }
+.btn-outline-success { border: 1px solid var(--success-color); color: var(--success-color); background: transparent; }
 .btn-danger { background: var(--danger-color); color: white; }
 .btn-info { background: #3b82f6; color: white; }
 .btn-warning { background: transparent; color: #fbbf24; border: 1px solid #fbbf24; }
 .btn-warning:hover { background: #fffbeb; }
+.btn-ghost { border: 1px solid #cbd5e1; color: #64748b; background: transparent; }
+.btn-ghost:hover { background: #f1f5f9; color: #334155; }
 .btn-text { background: transparent; padding: 5px; }
 
 /* Nye hover-effekter for bedre UX */
@@ -120,9 +136,16 @@ td input:focus { background: white; }
     .header-actions {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        align-items: stretch;
     }
-    .header-actions .btn {
+    .action-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .action-group .btn {
         width: 100%;
         justify-content: center;
     }

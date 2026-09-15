@@ -17,13 +17,19 @@
         <header class="main-header card">
             <h1>Reiseregning 2026</h1>
             <div class="header-actions">
-                <button type="button" class="btn btn-outline" onclick="showHelpModal()">Hvordan bruke appen?</button>
-                <button type="button" class="btn btn-outline" onclick="savePersonalInfo()">Lagre Personinfo</button>
-                <button type="button" id="btn-show-saved" class="btn btn-outline" onclick="showSavedReports()">Lagrede Reiser</button>
-                <button type="button" id="btn-save-expense" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
-                <button type="button" id="btn-submit-expense" class="btn btn-primary" onclick="submitExpenseReport()">Send inn til godkjenning</button>
-                <button type="button" class="btn btn-success" onclick="previewExpenseReport()">Forhåndsvis PDF</button>
-                <button type="button" class="btn btn-success" onclick="exportToCSV()">Last ned CSV</button>
+                <div class="action-group">
+                    <button type="button" id="btn-submit-expense" class="btn btn-primary" onclick="submitExpenseReport()">Send inn til godkjenning</button>
+                    <button type="button" id="btn-save-expense" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
+                </div>
+                <div class="action-group">
+                    <button type="button" class="btn btn-outline-success" onclick="previewExpenseReport()">Forhåndsvis PDF</button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportToCSV()">Last ned CSV</button>
+                </div>
+                <div class="action-group">
+                    <button type="button" id="btn-show-saved" class="btn btn-ghost" onclick="showSavedReports()">Lagrede Reiser</button>
+                    <button type="button" class="btn btn-ghost" onclick="savePersonalInfo()">Lagre Personinfo</button>
+                    <button type="button" class="btn btn-ghost" onclick="showHelpModal()">Hvordan bruke appen?</button>
+                </div>
             </div>
         </header>
 
