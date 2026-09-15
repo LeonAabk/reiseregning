@@ -5,6 +5,7 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
 let currentCompany = null;
+let currentCompanyMembers = [];
 
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
@@ -35,6 +36,15 @@ function showReportModal(report) {
     if (!overlay || !body || !report || !report.report_data) return;
 
     const data = report.report_data;
+
+    // Look up email from currentCompanyMembers if report.employeeEmail is not explicitly set
+    let displayEmail = report.employeeEmail || data.personalInfo?.email || '';
+    if (!displayEmail && currentCompanyMembers.length > 0 && report.user_id) {
+        const matchingMember = currentCompanyMembers.find(m => m.user_id === report.user_id);
+        if (matchingMember && matchingMember.user_email) {
+            displayEmail = matchingMember.user_email;
+        }
+    }
 
     // Formatting numbers for Norwegian locale
     const formatCurrency = (val) => {
@@ -67,7 +77,7 @@ function showReportModal(report) {
             </div>
             <div style="text-align: right;">
                 <p><strong>Ansatt:</strong> ${escapeHTML(data.personalInfo?.name || '')}</p>
-                <p><strong>E-post:</strong> ${escapeHTML(report.employeeEmail || data.personalInfo?.email || '')}</p>
+                <p><strong>E-post:</strong> ${escapeHTML(displayEmail)}</p>
                 <p><strong>Avdeling:</strong> ${escapeHTML(data.personalInfo?.department || '')}</p>
             </div>
         </div>
@@ -554,15 +564,20 @@ async function fetchEmployeeReports() {
         if (pendingEl) pendingEl.textContent = 'Kr ' + sumPending.toFixed(2).replace('.', ',');
         if (paidEl) paidEl.textContent = 'Kr ' + sumPaid.toFixed(2).replace('.', ',');
 
-        // Fetch admins
+        // Fetch admins and all members
         try {
-            const { data: admins, error: adminsError } = await supabaseClient
+            const { data: membersData, error: membersError } = await supabaseClient
                 .from('company_members')
-                .select('user_email')
-                .eq('company_id', currentCompany.company_id)
-                .eq('role', 'admin');
+                .select('*')
+                .eq('company_id', currentCompany.company_id);
 
-            if (!adminsError && admins && admins.length > 0) {
+            if (!membersError && membersData) {
+                currentCompanyMembers = membersData;
+            }
+
+            const admins = currentCompanyMembers.filter(m => m.role === 'admin');
+
+            if (admins && admins.length > 0) {
                 const infoSection = document.getElementById('emp-firma-info-section');
                 const infoDiv = document.getElementById('emp-firma-info');
                 if (infoSection && infoDiv) {
@@ -629,10 +644,14 @@ async function fetchAdminDashboardData() {
         // Fetch Members
         const { data: members, error: membersError } = await supabaseClient
             .from('company_members')
-            .select('role, user_id, user_email')
+            .select('*')
             .eq('company_id', currentCompany.company_id);
 
         if (membersError) throw membersError;
+
+        if (members) {
+            currentCompanyMembers = members;
+        }
 
         if (statMembers) statMembers.textContent = members ? members.length : 0;
 
