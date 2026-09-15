@@ -209,7 +209,7 @@ function showReportModal(report) {
     const sigSrc = data.signatureContent || data.signature;
 
     html += `
-        <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+        <div class="signature-section" style="margin-top: 40px; display: flex; justify-content: space-between;">
             <div>
                 <p>Ansatt signatur</p>
                 <div class="sig-box">
@@ -716,9 +716,11 @@ async function fetchAdminDashboardData() {
                         grandTotal = r.report_data.totals.grandTotal;
                         grandTotalStr = grandTotal.toFixed(2).replace('.', ',');
                     }
-                    totalCompanySum += grandTotal;
 
                     const statusVal = r.status || 'utkast';
+                    if (statusVal === 'utbetalt') {
+                        totalCompanySum += grandTotal;
+                    }
                     let statusBadge = '';
                     if (statusVal === 'utkast') statusBadge = '<span class="status-badge badge-draft">Utkast</span>';
                     else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
@@ -835,7 +837,7 @@ async function updateReportStatus(reportId, newStatus) {
         if (error) throw error;
 
         showToast(`Status oppdatert til ${newStatus}.`, "success");
-        fetchAdminDashboardData();
+        await fetchAdminDashboardData();
         return true;
     } catch (e) {
         console.error("Feil ved oppdatering av status:", e);
@@ -862,7 +864,7 @@ async function rejectReport(reportId) {
 
         showToast("Reiseregning avvist.", "success");
         if (currentCompany && currentCompany.role === 'admin') {
-            fetchAdminDashboardData();
+            await fetchAdminDashboardData();
         }
 
         // Hide modal if open
