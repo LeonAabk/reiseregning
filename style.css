@@ -189,7 +189,7 @@ td input:focus { background: white; }
     /* 5. Typografi og styling for selve dokumentet */
     .expense-report-document {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-        font-size: 10pt !important;
+        font-size: 11px !important;
         line-height: 1.5 !important;
         width: 100% !important;
         color: #000 !important;
@@ -201,14 +201,14 @@ td input:focus { background: white; }
     }
 
     .expense-report-document h1 { font-size: 20pt !important; margin-bottom: 8px !important; color: #000 !important; }
-    .expense-report-document h3 { font-size: 12pt !important; margin-bottom: 8px !important; margin-top: 20px !important; border-bottom: 1px solid #000 !important; padding-bottom: 3px !important; color: #000 !important; }
+    .expense-report-document h3 { font-size: 12pt !important; margin-bottom: 8px !important; margin-top: 10px !important; border-bottom: 1px solid #000 !important; padding-bottom: 3px !important; color: #000 !important; }
     .expense-report-document p { margin: 4px 0 !important; }
 
     /* 6. Sikre at tabellen ser pen ut på papir */
     .expense-table { 
         width: 100% !important; 
         border-collapse: collapse !important;
-        margin: 20px 0 !important;
+        margin: 10px 0 !important;
         page-break-inside: avoid !important;
     }
     
@@ -216,13 +216,17 @@ td input:focus { background: white; }
         background-color: transparent !important;
         color: #000 !important;
         font-weight: bold !important;
-        padding: 8px 10px !important;
+        padding: 4px 6px !important;
         border: 1px solid #000 !important;
     }
 
     .expense-table td {
-        padding: 8px 10px !important;
+        padding: 4px 6px !important;
         border: 1px solid #000 !important;
+    }
+
+    .signature-section {
+        margin-top: 15px !important;
     }
 
     .document-header { border-bottom: 2px solid #000 !important; }
