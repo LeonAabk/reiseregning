@@ -83,35 +83,17 @@ function showReportModal(report) {
         </div>
     `;
 
-    // Kjøring (Mileage)
-    if (data.mileage && data.mileage.length > 0) {
+    // Travel Info (Om reisen)
+    if (data.travelInfo) {
         html += `
-            <h3>Kjøring</h3>
-            <div class="table-responsive">
-                <table class="expense-table">
-                    <thead>
-                        <tr>
-                            <th>Dato</th>
-                            <th>Fra-Til</th>
-                            <th>Km</th>
-                            <th>Passasjer</th>
-                            <th>Bompenger</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div class="travel-section">
+                <h3>Om reisen</h3>
+                <p><strong>Formål:</strong> ${escapeHTML(data.travelInfo.purpose || '')}</p>
+                <p><strong>Arrangement:</strong> ${escapeHTML(data.travelInfo.event || 'Ikke oppgitt')}</p>
+                <p><strong>Periode:</strong> ${escapeHTML(data.travelInfo.departure || '')} - ${escapeHTML(data.travelInfo.return || '')}</p>
+                <p><strong>Overnattingssted:</strong> ${escapeHTML(data.travelInfo.accommodationName || 'Ikke oppgitt / Privat')}</p>
+            </div>
         `;
-        data.mileage.forEach(route => {
-            html += `
-                <tr>
-                    <td>${escapeHTML(route.date || '')}</td>
-                    <td>${escapeHTML(route.from || '')} - ${escapeHTML(route.to || '')}</td>
-                    <td>${escapeHTML(route.km || '0')}</td>
-                    <td>${escapeHTML(route.passenger || '-')}</td>
-                    <td>Kr ${formatCurrency(route.toll || 0)}</td>
-                </tr>
-            `;
-        });
-        html += `</tbody></table></div>`;
     }
 
     // Diet / Per Diem (Diettgodtgjørelse)
@@ -155,6 +137,37 @@ function showReportModal(report) {
             `;
         });
         html += `</tbody></table></div></div>`;
+    }
+
+    // Kjøring (Mileage)
+    if (data.mileage && data.mileage.length > 0) {
+        html += `
+            <h3>Kjøring</h3>
+            <div class="table-responsive">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Fra-Til</th>
+                            <th>Km</th>
+                            <th>Passasjer</th>
+                            <th>Bompenger</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        data.mileage.forEach(route => {
+            html += `
+                <tr>
+                    <td>${escapeHTML(route.date || '')}</td>
+                    <td>${escapeHTML(route.from || '')} - ${escapeHTML(route.to || '')}</td>
+                    <td>${escapeHTML(route.km || '0')}</td>
+                    <td>${escapeHTML(route.passenger || '-')}</td>
+                    <td>Kr ${formatCurrency(route.toll || 0)}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table></div>`;
     }
 
     // Utlegg (Expenses)
@@ -721,6 +734,10 @@ async function fetchAdminDashboardData() {
                         actionButtons += ` <button type="button" class="btn btn-success btn-small btn-pay" data-id="${r.id}">Utbetalt</button>`;
                     }
 
+                    if (['godkjent', 'utbetalt', 'avvist'].includes(statusVal)) {
+                        actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-undo" data-id="${r.id}">Angre</button>`;
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${date}</td>
@@ -747,6 +764,10 @@ async function fetchAdminDashboardData() {
                     const btnPay = tr.querySelector('.btn-pay');
                     if (btnPay) {
                         btnPay.onclick = () => updateReportStatus(r.id, 'utbetalt');
+                    }
+                    const btnUndo = tr.querySelector('.btn-undo');
+                    if (btnUndo) {
+                        btnUndo.onclick = () => updateReportStatus(r.id, 'innsendt');
                     }
 
                     reportsBody.appendChild(tr);

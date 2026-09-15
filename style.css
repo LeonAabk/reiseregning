@@ -45,6 +45,8 @@ td input:focus { background: white; }
 .btn-success { background: var(--success-color); color: white; }
 .btn-danger { background: var(--danger-color); color: white; }
 .btn-info { background: #3b82f6; color: white; }
+.btn-warning { background: transparent; color: #fbbf24; border: 1px solid #fbbf24; }
+.btn-warning:hover { background: #fffbeb; }
 .btn-text { background: transparent; padding: 5px; }
 
 /* Nye hover-effekter for bedre UX */
@@ -191,10 +193,15 @@ td input:focus { background: white; }
         line-height: 1.5 !important;
         width: 100% !important;
         color: #000 !important;
+        background: transparent !important;
+    }
+    .expense-report-document * {
+        color: #000 !important;
+        background: transparent !important;
     }
 
     .expense-report-document h1 { font-size: 20pt !important; margin-bottom: 8px !important; color: #000 !important; }
-    .expense-report-document h3 { font-size: 12pt !important; margin-bottom: 8px !important; margin-top: 20px !important; border-bottom: 1px solid #ddd !important; padding-bottom: 3px !important; color: #000 !important; }
+    .expense-report-document h3 { font-size: 12pt !important; margin-bottom: 8px !important; margin-top: 20px !important; border-bottom: 1px solid #000 !important; padding-bottom: 3px !important; color: #000 !important; }
     .expense-report-document p { margin: 4px 0 !important; }
 
     /* 6. Sikre at tabellen ser pen ut på papir */
@@ -202,31 +209,33 @@ td input:focus { background: white; }
         width: 100% !important; 
         border-collapse: collapse !important;
         margin: 20px 0 !important;
+        page-break-inside: avoid !important;
     }
     
     .expense-table th {
-        background-color: #f8fafc !important;
+        background-color: transparent !important;
         color: #000 !important;
         font-weight: bold !important;
         padding: 8px 10px !important;
-        border: 1px solid #cbd5e1 !important;
+        border: 1px solid #000 !important;
     }
 
     .expense-table td {
         padding: 8px 10px !important;
-        border: 1px solid #cbd5e1 !important;
+        border: 1px solid #000 !important;
     }
 
     .document-header { border-bottom: 2px solid #000 !important; }
 
     /* 7. Sørg for at elementer ikke brekker stygt over to sider */
-    .expense-table { page-break-inside: auto; }
     .expense-table tr { page-break-inside: avoid; page-break-after: auto; }
     .document-header, 
     .employee-section, 
     .travel-section, 
     .diet-section, 
-    .signature-section { 
+    .signature-section,
+    .sig-box,
+    .receipts-section {
         page-break-inside: avoid !important; 
     }
 
