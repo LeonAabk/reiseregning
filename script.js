@@ -697,6 +697,9 @@ async function saveExpenseReport(status = 'utkast') {
         let grandTotal = parseNum(document.getElementById('grand-total').textContent.replace(/[^0-9,-]+/g, '').replace(',', '.'));
         fullData.totals = { grandTotal };
 
+        const diet = calculateDiet();
+        fullData.dietSummary = { text: diet.text, amount: diet.amount };
+
     // Fjerner bilde-data for å unngå for store lagringer
     const safeDataToSave = {
         ...fullData,
