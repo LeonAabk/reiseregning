@@ -362,6 +362,9 @@ async function renderDashboard() {
 
                 <div class="data-section">
                     <h3>Dine innsendte reiseregninger</h3>
+                    <div class="status-legend">
+                        <strong>Statusforklaring:</strong> Innsendt (Venter på godkjenning) &rarr; Godkjent (Venter på utbetaling) &rarr; Utbetalt (Ferdig behandlet)
+                    </div>
                     <div class="data-table-container">
                         <table class="data-table">
                             <thead>
@@ -398,6 +401,10 @@ async function renderDashboard() {
                 </div>
 
                 <div class="stats-grid" id="admin-stats-container">
+                    <div class="stat-card stat-card-highlight">
+                        <h4>Krever handling</h4>
+                        <p class="stat-value" id="stat-action-required">...</p>
+                    </div>
                     <div class="stat-card">
                         <h4>Totalt antall ansatte</h4>
                         <p class="stat-value" id="stat-members">...</p>
@@ -432,7 +439,26 @@ async function renderDashboard() {
                 </div>
 
                 <div class="data-section">
-                    <h3>Alle reiseregninger i firmaet</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px;">
+                        <h3 style="border: none; padding: 0; margin: 0;">Alle reiseregninger i firmaet</h3>
+                        <div class="admin-toolbar" style="display: flex; gap: 15px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <select id="filter-employee" class="form-control" style="padding: 5px; font-size: 0.9rem;">
+                                    <option value="all">Alle ansatte</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <select id="filter-status" class="form-control" style="padding: 5px; font-size: 0.9rem;">
+                                    <option value="all">Alle statuser</option>
+                                    <option value="innsendt">Innsendt</option>
+                                    <option value="godkjent">Godkjent</option>
+                                    <option value="utbetalt">Utbetalt</option>
+                                    <option value="avvist">Avvist</option>
+                                    <option value="utkast">Utkast</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div class="data-table-container">
                         <table class="data-table">
                             <thead>
@@ -690,7 +716,19 @@ async function fetchAdminDashboardData() {
 
         if (statReports) statReports.textContent = reports ? reports.length : 0;
 
+        const statActionRequired = document.getElementById('stat-action-required');
+        if (statActionRequired) {
+            statActionRequired.textContent = reports ? reports.filter(r => r.status === 'innsendt').length : 0;
+        }
+
         let totalCompanySum = 0;
+        if (reports) {
+            reports.forEach(r => {
+                if (r.status === 'utbetalt' && r.report_data && r.report_data.totals) {
+                    totalCompanySum += r.report_data.totals.grandTotal;
+                }
+            });
+        }
 
         const memberEmails = {};
         if (members) {
@@ -699,80 +737,139 @@ async function fetchAdminDashboardData() {
             });
         }
 
+        const filterEmployeeEl = document.getElementById('filter-employee');
+        const filterStatusEl = document.getElementById('filter-status');
+
+        // Populate employee filter
+        if (filterEmployeeEl && filterEmployeeEl.options.length <= 1) {
+            const uniqueEmployees = new Map();
+            if (reports) {
+                reports.forEach(r => {
+                    const empName = r.report_data?.personalInfo?.name || r.user_id.substring(0,8);
+                    const email = memberEmails[r.user_id] || '';
+                    const display = email ? `${empName} (${email})` : empName;
+                    if (!uniqueEmployees.has(r.user_id)) {
+                        uniqueEmployees.set(r.user_id, display);
+                    }
+                });
+            }
+            uniqueEmployees.forEach((display, id) => {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = display;
+                filterEmployeeEl.appendChild(opt);
+            });
+        }
+
+        // Apply filters
+        let filteredReports = reports || [];
+        if (filterEmployeeEl && filterEmployeeEl.value !== 'all') {
+            filteredReports = filteredReports.filter(r => r.user_id === filterEmployeeEl.value);
+        }
+        if (filterStatusEl && filterStatusEl.value !== 'all') {
+            filteredReports = filteredReports.filter(r => r.status === filterStatusEl.value);
+        }
+
+        // Attach event listeners
+        if (filterEmployeeEl && !filterEmployeeEl.hasAttribute('data-listener-attached')) {
+            filterEmployeeEl.addEventListener('change', fetchAdminDashboardData);
+            filterEmployeeEl.setAttribute('data-listener-attached', 'true');
+        }
+        if (filterStatusEl && !filterStatusEl.hasAttribute('data-listener-attached')) {
+            filterStatusEl.addEventListener('change', fetchAdminDashboardData);
+            filterStatusEl.setAttribute('data-listener-attached', 'true');
+        }
+
         if (reportsBody) {
             reportsBody.innerHTML = '';
-            if (!reports || reports.length === 0) {
+            if (!filteredReports || filteredReports.length === 0) {
                 reportsBody.innerHTML = '<tr><td colspan="6" class="empty-state">Ingen reiseregninger funnet.</td></tr>';
             } else {
-                reports.forEach(r => {
-                    r.employeeEmail = memberEmails[r.user_id] || '';
-
-                    const date = new Date(r.created_at).toLocaleDateString('no-NO');
-                    const empName = r.report_data?.personalInfo?.name || r.user_id.substring(0,8);
-
-                    let grandTotal = 0;
-                    let grandTotalStr = '0,00';
-                    if (r.report_data && r.report_data.totals) {
-                        grandTotal = r.report_data.totals.grandTotal;
-                        grandTotalStr = grandTotal.toFixed(2).replace('.', ',');
+                const groupedReports = new Map();
+                filteredReports.forEach(r => {
+                    if (!groupedReports.has(r.user_id)) {
+                        groupedReports.set(r.user_id, []);
                     }
+                    groupedReports.get(r.user_id).push(r);
+                });
 
-                    const statusVal = r.status || 'utkast';
-                    if (statusVal === 'utbetalt') {
-                        totalCompanySum += grandTotal;
-                    }
-                    let statusBadge = '';
-                    if (statusVal === 'utkast') statusBadge = '<span class="status-badge badge-draft">Utkast</span>';
-                    else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
-                    else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
-                    else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
-                    else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
+                groupedReports.forEach((userReports, userId) => {
+                    const firstReport = userReports[0];
+                    const email = memberEmails[userId] || '';
+                    const empName = firstReport.report_data?.personalInfo?.name || userId.substring(0,8);
+                    const display = email ? `${escapeHTML(empName)} (${escapeHTML(email)})` : escapeHTML(empName);
 
-                    let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
-                    if (statusVal === 'innsendt') {
-                        actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-approve" data-id="${r.id}">Godkjenn</button>`;
-                        actionButtons += ` <button type="button" class="btn btn-danger btn-small btn-reject-row" data-id="${r.id}">Avvis</button>`;
-                    } else if (statusVal === 'godkjent') {
-                        actionButtons += ` <button type="button" class="btn btn-success btn-small btn-pay" data-id="${r.id}">Utbetalt</button>`;
-                    }
+                    const headerTr = document.createElement('tr');
+                    headerTr.className = 'employee-group-header';
+                    headerTr.innerHTML = `<td colspan="6"><strong>${display}</strong></td>`;
+                    reportsBody.appendChild(headerTr);
 
-                    if (['godkjent', 'utbetalt', 'avvist'].includes(statusVal)) {
-                        actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-undo" data-id="${r.id}">Angre</button>`;
-                    }
+                    userReports.forEach(r => {
+                        r.employeeEmail = email;
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${date}</td>
-                        <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
-                        <td>${escapeHTML(empName)}</td>
-                        <td>Kr ${grandTotalStr}</td>
-                        <td>${statusBadge}</td>
-                        <td>${actionButtons}</td>
-                    `;
+                        const date = new Date(r.created_at).toLocaleDateString('no-NO');
 
-                    const btnView = tr.querySelector('.btn-view');
-                    if (btnView) {
-                        btnView.onclick = () => showReportModal(r);
-                    }
+                        let grandTotal = 0;
+                        let grandTotalStr = '0,00';
+                        if (r.report_data && r.report_data.totals) {
+                            grandTotal = r.report_data.totals.grandTotal;
+                            grandTotalStr = grandTotal.toFixed(2).replace('.', ',');
+                        }
 
-                    const btnApprove = tr.querySelector('.btn-approve');
-                    if (btnApprove) {
-                        btnApprove.onclick = () => updateReportStatus(r.id, 'godkjent');
-                    }
-                    const btnReject = tr.querySelector('.btn-reject-row');
-                    if (btnReject) {
-                        btnReject.onclick = () => rejectReport(r.id);
-                    }
-                    const btnPay = tr.querySelector('.btn-pay');
-                    if (btnPay) {
-                        btnPay.onclick = () => updateReportStatus(r.id, 'utbetalt');
-                    }
-                    const btnUndo = tr.querySelector('.btn-undo');
-                    if (btnUndo) {
-                        btnUndo.onclick = () => updateReportStatus(r.id, 'innsendt');
-                    }
+                        const statusVal = r.status || 'utkast';
+                        let statusBadge = '';
+                        if (statusVal === 'utkast') statusBadge = '<span class="status-badge badge-draft">Utkast</span>';
+                        else if (statusVal === 'innsendt') statusBadge = '<span class="status-badge badge-submitted">Innsendt</span>';
+                        else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
+                        else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
+                        else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
 
-                    reportsBody.appendChild(tr);
+                        let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
+                        if (statusVal === 'innsendt') {
+                            actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-approve" data-id="${r.id}">Godkjenn</button>`;
+                            actionButtons += ` <button type="button" class="btn btn-danger btn-small btn-reject-row" data-id="${r.id}">Avvis</button>`;
+                        } else if (statusVal === 'godkjent') {
+                            actionButtons += ` <button type="button" class="btn btn-success btn-small btn-pay" data-id="${r.id}">Utbetalt</button>`;
+                        }
+
+                        if (['godkjent', 'utbetalt', 'avvist'].includes(statusVal)) {
+                            actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-undo" data-id="${r.id}">Angre</button>`;
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${date}</td>
+                            <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
+                            <td>${escapeHTML(empName)}</td>
+                            <td>Kr ${grandTotalStr}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionButtons}</td>
+                        `;
+
+                        const btnView = tr.querySelector('.btn-view');
+                        if (btnView) {
+                            btnView.onclick = () => showReportModal(r);
+                        }
+
+                        const btnApprove = tr.querySelector('.btn-approve');
+                        if (btnApprove) {
+                            btnApprove.onclick = () => updateReportStatus(r.id, 'godkjent');
+                        }
+                        const btnReject = tr.querySelector('.btn-reject-row');
+                        if (btnReject) {
+                            btnReject.onclick = () => rejectReport(r.id);
+                        }
+                        const btnPay = tr.querySelector('.btn-pay');
+                        if (btnPay) {
+                            btnPay.onclick = () => updateReportStatus(r.id, 'utbetalt');
+                        }
+                        const btnUndo = tr.querySelector('.btn-undo');
+                        if (btnUndo) {
+                            btnUndo.onclick = () => updateReportStatus(r.id, 'innsendt');
+                        }
+
+                        reportsBody.appendChild(tr);
+                    });
                 });
             }
         }

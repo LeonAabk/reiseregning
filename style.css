@@ -357,3 +357,37 @@ td input:focus { background: white; }
 
 .btn-hideable { transition: all 0.3s ease-in-out; overflow: hidden; }
 .btn-hideable.hidden { max-width: 0; padding-left: 0; padding-right: 0; opacity: 0; margin-left: 0; margin-right: 0; border: none; }
+
+/* Admin Toolbar & Filters */
+.admin-toolbar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Group Headers in Admin Table */
+.employee-group-header td {
+    background-color: #f8fafc;
+    border-top: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    color: var(--primary-color);
+}
+
+/* Status Legend */
+.status-legend {
+    background-color: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: #475569;
+    border: 1px dashed var(--border-color);
+}
+
+/* Highlighted Stat Card */
+.stat-card-highlight {
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
