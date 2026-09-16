@@ -363,7 +363,7 @@ async function renderDashboard() {
                 <div class="data-section">
                     <h3>Dine innsendte reiseregninger</h3>
                     <div class="status-legend">
-                        <strong>Statusforklaring:</strong> Innsendt (Venter på godkjenning) &rarr; Godkjent (Venter på utbetaling) &rarr; Utbetalt (Ferdig behandlet)
+                        <strong>Statusforklaring:</strong> Innsendt (Venter på godkjenning) &rarr; Godkjent (Venter på utbetaling) &rarr; Utbetalt (Ferdig behandlet)<br><span style="font-size: 0.85rem; color: #64748b;">Trukket tilbake (Kansellert av ansatt)</span>
                     </div>
                     <div class="data-table-container">
                         <table class="data-table">
@@ -455,6 +455,7 @@ async function renderDashboard() {
                                     <option value="utbetalt">Utbetalt</option>
                                     <option value="avvist">Avvist</option>
                                     <option value="utkast">Utkast</option>
+                                    <option value="kansellert">Kansellert</option>
                                 </select>
                             </div>
                         </div>
@@ -632,7 +633,14 @@ async function fetchEmployeeReports() {
                 const infoDiv = document.getElementById('emp-firma-info');
                 if (infoSection && infoDiv) {
                     infoSection.style.display = 'block';
-                    let adminList = admins.map(a => escapeHTML(a.user_email || 'Ukjent')).join(', ');
+                    let adminList = admins.map(a => {
+                        let email = a.user_email;
+                        if (!email) {
+                            console.warn("Mangler user_email for admin", a);
+                        }
+                        return escapeHTML(email || 'Ukjent');
+                    }).filter(a => a !== 'Ukjent').join(', ');
+                    if (adminList === '') adminList = 'Ukjent';
                     infoDiv.innerHTML = `<p><strong>Firma:</strong> ${escapeHTML(currentCompany.company_name)}</p>
                                          <p><strong>Administratorer:</strong> ${adminList}</p>`;
                 }
@@ -658,6 +666,14 @@ async function fetchEmployeeReports() {
             else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
             else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
                     else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
+            else if (statusVal === 'kansellert') statusBadge = '<span class="status-badge badge-cancelled">Kansellert</span>';
+
+            let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
+            if (statusVal === 'innsendt') {
+                actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-withdraw-report" data-id="${r.id}">Trekk tilbake</button>`;
+            } else if (statusVal === 'kansellert' || statusVal === 'avvist') {
+                actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-edit-draft" data-id="${r.id}">Gjør endringer</button>`;
+            }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -665,13 +681,19 @@ async function fetchEmployeeReports() {
                 <td>${escapeHTML(r.trip_name || 'Uten navn')}</td>
                 <td>Kr ${grandTotal}</td>
                 <td>${statusBadge}</td>
-                <td>
-                    <button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>
-                </td>
+                <td>${actionButtons}</td>
             `;
             const btnView = tr.querySelector('.btn-view');
             if (btnView) {
                 btnView.onclick = () => showReportModal(r);
+            }
+            const btnWithdraw = tr.querySelector('.btn-withdraw-report');
+            if (btnWithdraw) {
+                btnWithdraw.onclick = () => handleWithdrawReport(r.id);
+            }
+            const btnEditDraft = tr.querySelector('.btn-edit-draft');
+            if (btnEditDraft) {
+                btnEditDraft.onclick = () => handleEditDraft(r.id);
             }
             tbody.appendChild(tr);
         });
@@ -823,6 +845,7 @@ async function fetchAdminDashboardData() {
                         else if (statusVal === 'godkjent') statusBadge = '<span class="status-badge badge-approved">Godkjent</span>';
                         else if (statusVal === 'utbetalt') statusBadge = '<span class="status-badge badge-paid">Utbetalt</span>';
                         else if (statusVal === 'avvist') statusBadge = '<span class="status-badge badge-rejected">Avvist</span>';
+            else if (statusVal === 'kansellert') statusBadge = '<span class="status-badge badge-cancelled">Kansellert</span>';
 
                         let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
                         if (statusVal === 'innsendt') {
@@ -974,5 +997,57 @@ async function rejectReport(reportId) {
     } catch (e) {
         console.error("Feil ved avvisning:", e);
         showToast(`Feil ved avvisning: ${e.message}`, "error");
+    }
+}
+
+async function handleWithdrawReport(reportId) {
+    if (!confirm("Er du sikker på at du vil trekke tilbake denne reiseregningen?")) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('expense_reports')
+            .update({ status: 'kansellert' })
+            .eq('id', reportId);
+
+        if (error) throw error;
+        showToast("Reiseregningen er trukket tilbake.", "success");
+        await fetchEmployeeReports();
+    } catch (e) {
+        console.error("Feil ved tilbaketrekking:", e);
+        showToast("Kunne ikke trekke tilbake reiseregningen.", "error");
+    }
+}
+
+async function handleEditDraft(reportId) {
+    try {
+        // Fetch the report data to put it into localStorage
+        const { data: reportData, error: fetchError } = await supabaseClient
+            .from('expense_reports')
+            .select('report_data')
+            .eq('id', reportId)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!reportData || !reportData.report_data) {
+            throw new Error("Kunne ikke hente reiseregningens data.");
+        }
+
+        const { error: updateError } = await supabaseClient
+            .from('expense_reports')
+            .update({ status: 'utkast' })
+            .eq('id', reportId);
+
+        if (updateError) throw updateError;
+
+        // Ensure id is stored in report_data so it knows which db record to update when resubmitting
+        const dataToSave = reportData.report_data;
+        dataToSave.dbId = reportId; // Assuming script.js checks for dbId or something?
+
+        localStorage.setItem('tempLoadTrip', JSON.stringify(dataToSave));
+
+        window.location.href = `index.html?load=true`;
+    } catch (e) {
+        console.error("Feil ved endring av status til utkast:", e);
+        showToast("Kunne ikke endre status for redigering.", "error");
     }
 }

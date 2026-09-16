@@ -336,6 +336,7 @@ td input:focus { background: white; }
 }
 
 .badge-rejected { background: #fee2e2; color: #b91c1c; }
+.badge-cancelled { background: #f3f4f6; color: #4b5563; }
 .alert-danger { background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb; }
 
 /* Profile og Workspace */
