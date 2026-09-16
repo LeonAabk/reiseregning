@@ -582,7 +582,7 @@ async function fetchEmployeeReports() {
     try {
         const { data: reports, error } = await supabaseClient
             .from('expense_reports')
-            .select('created_at, trip_name, report_data, status, admin_comment')
+            .select('id, created_at, trip_name, report_data, status, admin_comment')
             .eq('user_id', currentUser.id)
             .eq('company_id', currentCompany.company_id)
             .order('created_at', { ascending: false });
@@ -638,9 +638,9 @@ async function fetchEmployeeReports() {
                         if (!email) {
                             console.warn("Mangler user_email for admin", a);
                         }
-                        return escapeHTML(email || 'Ukjent');
-                    }).filter(a => a !== 'Ukjent').join(', ');
-                    if (adminList === '') adminList = 'Ukjent';
+                        return escapeHTML(email || 'Selskapets administrator');
+                    }).join(', ');
+                    if (adminList === '') adminList = 'Selskapets administrator';
                     infoDiv.innerHTML = `<p><strong>Firma:</strong> ${escapeHTML(currentCompany.company_name)}</p>
                                          <p><strong>Administratorer:</strong> ${adminList}</p>`;
                 }
@@ -670,7 +670,7 @@ async function fetchEmployeeReports() {
 
             let actionButtons = `<button type="button" class="btn btn-outline btn-small btn-view">Se detaljer</button>`;
             if (statusVal === 'innsendt') {
-                actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-withdraw-report" data-id="${r.id}">Trekk tilbake</button>`;
+                actionButtons += ` <button type="button" class="btn btn-warning btn-small btn-withdraw-report" data-id="${r.id}" onclick="handleWithdrawReport('${r.id}')">Trekk tilbake</button>`;
             } else if (statusVal === 'kansellert' || statusVal === 'avvist') {
                 actionButtons += ` <button type="button" class="btn btn-primary btn-small btn-edit-draft" data-id="${r.id}">Gjør endringer</button>`;
             }
@@ -686,10 +686,6 @@ async function fetchEmployeeReports() {
             const btnView = tr.querySelector('.btn-view');
             if (btnView) {
                 btnView.onclick = () => showReportModal(r);
-            }
-            const btnWithdraw = tr.querySelector('.btn-withdraw-report');
-            if (btnWithdraw) {
-                btnWithdraw.onclick = () => handleWithdrawReport(r.id);
             }
             const btnEditDraft = tr.querySelector('.btn-edit-draft');
             if (btnEditDraft) {
@@ -1000,7 +996,7 @@ async function rejectReport(reportId) {
     }
 }
 
-async function handleWithdrawReport(reportId) {
+window.handleWithdrawReport = async function(reportId) {
     if (!confirm("Er du sikker på at du vil trekke tilbake denne reiseregningen?")) return;
 
     try {
