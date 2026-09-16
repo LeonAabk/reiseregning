@@ -778,9 +778,20 @@ async function saveExpenseReport(status = 'utkast') {
             payload.company_id = currentCompany.company_id;
         }
 
-        const { data, error } = await supabaseClient
-            .from('expense_reports')
-            .insert([payload]);
+        // Check if we are updating an existing report
+        let reportId = fullData.dbId;
+        let response;
+        if (reportId) {
+            response = await supabaseClient
+                .from('expense_reports')
+                .update(payload)
+                .eq('id', reportId);
+        } else {
+            response = await supabaseClient
+                .from('expense_reports')
+                .insert([payload]);
+        }
+        const { data, error } = response;
 
         if (error) {
             console.error("Feil fra Supabase ved insert:", error);
