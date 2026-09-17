@@ -1,7 +1,0 @@
-Implement Employee "Withdraw & Edit" flow and fix admin fetching bug
-
-- Fixed bug in dashboard.js where admin emails were sometimes skipped, resulting in "Administratorer: Ukjent".
-- Added a "Trekk tilbake" button for employees on submitted expense reports, updating status to "kansellert".
-- Implemented an edit flow where cancelled or rejected reports can be reset to "utkast" and loaded into index.html.
-- Handled the newly added report data loading mechanism in script.js to perform an update instead of an insert if dbId is provided.
-- Added status styling and filters for the "kansellert" status.
