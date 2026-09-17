@@ -643,6 +643,9 @@ async function fetchEmployeeReports() {
                     if (adminList === '') adminList = 'Selskapets administrator';
                     infoDiv.innerHTML = `<p><strong>Firma:</strong> ${escapeHTML(currentCompany.company_name)}</p>
                                          <p><strong>Administratorer:</strong> ${adminList}</p>`;
+                    if (currentCompany && currentCompany.role === 'ansatt') {
+                        infoDiv.innerHTML += `<button type="button" class="btn btn-danger btn-small" style="margin-top: 10px;" onclick="leaveCompany()">Forlat firma</button>`;
+                    }
                 }
             }
         } catch (adminE) {
@@ -995,6 +998,28 @@ async function rejectReport(reportId) {
         showToast(`Feil ved avvisning: ${e.message}`, "error");
     }
 }
+
+window.leaveCompany = async function() {
+    if (!confirm("Er du sikker på at du vil forlate firmaet? Du vil miste tilgangen til bedriftsportalen.")) {
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('company_members')
+            .delete()
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        currentCompany = null;
+        currentCompanyMembers = [];
+        window.location.href = 'index.html';
+    } catch (e) {
+        console.error("Feil ved forlatelse av firma:", e);
+        showToast("Feil ved utmelding av firma: " + e.message, "error");
+    }
+};
 
 window.handleWithdrawReport = async function(reportId) {
     if (!confirm("Er du sikker på at du vil trekke tilbake denne reiseregningen?")) return;
