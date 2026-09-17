@@ -643,8 +643,8 @@ async function fetchEmployeeReports() {
                     if (adminList === '') adminList = 'Selskapets administrator';
                     infoDiv.innerHTML = `<p><strong>Firma:</strong> ${escapeHTML(currentCompany.company_name)}</p>
                                          <p><strong>Administratorer:</strong> ${adminList}</p>`;
-                    if (currentCompany && currentCompany.role === 'ansatt') {
-                        infoDiv.innerHTML += `<button type="button" class="btn btn-danger btn-small" style="margin-top: 10px;" onclick="leaveCompany()">Forlat firma</button>`;
+                    if (currentCompany && currentCompany.role.toLowerCase() === 'ansatt') {
+                        infoDiv.innerHTML += `<button onclick="leaveCompany()" class="btn-danger" style="margin-top: 1rem; border: 1px solid red; color: red; background: transparent; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Forlat firma</button>`;
                     }
                 }
             }
@@ -999,7 +999,7 @@ async function rejectReport(reportId) {
     }
 }
 
-window.leaveCompany = async function() {
+window.leaveCompany = async () => {
     if (!confirm("Er du sikker på at du vil forlate firmaet? Du vil miste tilgangen til bedriftsportalen.")) {
         return;
     }

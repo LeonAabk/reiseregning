@@ -36,7 +36,7 @@ global.window = { location: { href: '' } };
 
 const code = fs.readFileSync('dashboard.js', 'utf8');
 
-const funcMatch = code.match(/window\.leaveCompany = async function\(\) {[\s\S]*?};/);
+const funcMatch = code.match(/window\.leaveCompany = async \(\) => {[\s\S]*?};/);
 if (funcMatch) {
     eval(funcMatch[0]);
 } else {
