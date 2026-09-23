@@ -419,7 +419,7 @@ function handleSignatureUpload(event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            document.getElementById('sig-preview-container').innerHTML = `<img src="${escapeHTML(e.target.result)}" style="max-height:100px;">`;
+            document.getElementById('sig-preview-container').innerHTML = `<img src="${escapeHTML(e.target.result)}" style="max-width: 100%; max-height: 80px; object-fit: contain;">`;
         };
         reader.readAsDataURL(file);
     } else {
@@ -516,9 +516,9 @@ function previewExpenseReport() {
     const uploadedSig = document.querySelector('#sig-preview-container img');
     
     if (uploadedSig) {
-        sigImg = `<img src="${escapeHTML(uploadedSig.src)}" style="max-height:80px;">`;
+        sigImg = `<img src="${escapeHTML(uploadedSig.src)}" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">`;
     } else if (data.signatureContent) {
-        sigImg = `<img src="${escapeHTML(data.signatureContent)}" style="max-height:80px;">`;
+        sigImg = `<img src="${escapeHTML(data.signatureContent)}" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">`;
     }
 
     const isPrivate = typeof currentWorkspaceMode !== 'undefined' && currentWorkspaceMode === 'privatperson';
