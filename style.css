@@ -113,7 +113,7 @@ td input:focus { background: white; }
 .expense-table th { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 0.85rem; padding: 12px; }
 .expense-table td { border: 1px solid #cbd5e1; padding: 12px; font-size: 0.95rem; }
 .summary-row { margin-top: 20px; font-size: 1.2rem; border-top: 2px solid black; padding-top: 10px; display: flex; justify-content: space-between; }
-.sig-box { height: 80px; border-bottom: 1px solid black; margin: 10px 0; width: 250px; }
+.sig-box { height: 80px; border-bottom: 1px solid black; margin: 10px 0; width: 250px; overflow: hidden; }
 
 /* --- INTEGRERT KREDITT I STICKY SUMMARY --- */
 .sticky-credit {
