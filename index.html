@@ -18,7 +18,7 @@
             <h1>Reiseregning 2026</h1>
             <div class="header-actions">
                 <div class="action-group">
-                    <button type="button" id="btn-submit-expense" class="btn btn-primary btn-hideable" onclick="submitExpenseReport()">Send inn til godkjenning</button>
+                    <button type="button" id="btn-submit-expense" class="btn btn-primary btn-hideable" onclick="submitExpenseReport()" style="display: none !important;">Send inn til godkjenning</button>
                     <button type="button" id="btn-save-expense" class="btn btn-outline" onclick="saveExpenseReport()">Lagre Reise</button>
                 </div>
                 <div class="action-group">
@@ -72,8 +72,9 @@
                         <button type="button" id="tab-private" class="workspace-tab" onclick="setWorkspaceMode('privatperson')">
                             Bruk som: Privatperson
                         </button>
-                        <button type="button" id="tab-company" class="workspace-tab" onclick="setWorkspaceMode('bedrift')">
+                        <button type="button" id="tab-company" class="workspace-tab disabled-tab" onclick="setWorkspaceMode('bedrift')">
                             Bruk som: Ansatt i bedrift
+                            <span class="dev-badge">I utvikling</span>
                         </button>
                     </div>
                     <p id="workspace-description" style="font-size: 0.85rem; color: #64748b; margin-top: 10px; min-height: 20px;">

@@ -24,11 +24,12 @@ const currencyFormatter = new Intl.NumberFormat('no-NO', {
 });
 
 
-let currentWorkspaceMode = localStorage.getItem('workspaceMode') || 'bedrift';
+let currentWorkspaceMode = 'privatperson';
 
 function setWorkspaceMode(mode) {
-    currentWorkspaceMode = mode;
-    localStorage.setItem('workspaceMode', mode);
+    // Force privatperson mode as bedrift mode is currently in development
+    currentWorkspaceMode = 'privatperson';
+    localStorage.setItem('workspaceMode', 'privatperson');
     updateWorkspaceUI();
 }
 
