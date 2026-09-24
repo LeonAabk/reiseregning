@@ -45,15 +45,14 @@ function updateWorkspaceUI() {
     if (currentWorkspaceMode === 'privatperson') {
         const tab = document.getElementById('tab-private');
         if (tab) tab.classList.add('active');
-        if (desc) desc.textContent = "Du bruker appen som privatperson. Selskap-spesifikke felt og knapper er skjult. Du kan eksportere og skrive ut reiseregningen som vanlig.";
-        if (container) container.classList.add('hidden');
+        if (desc) desc.textContent = "Du bruker appen som privatperson. Du kan fylle ut selskap-spesifikke felt som vanlig for PDF/eksport, men portal-funksjonalitet er skjult.";
+        // We no longer hide 'workspace-fields' (container)
         if (submitBtn) submitBtn.classList.add('hidden');
         if (portalBtn) portalBtn.style.display = 'none';
     } else {
         const tab = document.getElementById('tab-company');
         if (tab) tab.classList.add('active');
         if (desc) desc.textContent = "Du bruker appen som ansatt. Bedriftsportal for admin og innsending av reiseregninger er aktivert.";
-        if (container) container.classList.remove('hidden');
         if (submitBtn) submitBtn.classList.remove('hidden');
         if (portalBtn && currentUser) portalBtn.style.display = 'block'; // Only show if logged in
     }
@@ -522,9 +521,8 @@ function previewExpenseReport() {
         sigImg = `<img src="${escapeHTML(data.signatureContent)}" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">`;
     }
 
-    const isPrivate = typeof currentWorkspaceMode !== 'undefined' && currentWorkspaceMode === 'privatperson';
-    const companyHeader = isPrivate ? '' : `<div style="text-align:right"><strong>${escapeHTML(data.personalInfo.company) || 'Ikke oppgitt firma'}</strong><p>Ref: ${escapeHTML(data.personalInfo.id) || '-'}</p></div>`;
-    const employeeDept = isPrivate ? '' : ` | <strong>Avdeling:</strong> ${escapeHTML(data.personalInfo.department)}`;
+    const companyHeader = `<div style="text-align:right"><strong>${escapeHTML(data.personalInfo.company) || 'Ikke oppgitt firma'}</strong><p>Ref: ${escapeHTML(data.personalInfo.id) || '-'}</p></div>`;
+    const employeeDept = ` | <strong>Avdeling:</strong> ${escapeHTML(data.personalInfo.department)}`;
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay preview-modal-overlay';
