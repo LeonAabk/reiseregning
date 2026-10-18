@@ -278,108 +278,110 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#334155] p-3 sm:p-5 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header navigation & actions */}
-        <Header
-          onSaveExpense={() => handleSaveExpenseReport('utkast')}
-          onSubmitExpense={handleSubmitExpenseReport}
-          onPreviewPDF={handlePreviewPDF}
-          onExportCSV={handleExportCSV}
-          onShowSaved={() => setShowSavedModal(true)}
-          onShowHelp={() => setShowHelpModal(true)}
-          onTogglePortal={() => setInPortalView(prev => !prev)}
-          inPortalView={inPortalView}
-          isSaving={isSaving}
-          isSubmitting={isSubmitting}
-        />
-
-        {inPortalView ? (
-          <CompanyDashboard
-            onBackToExpenseForm={() => setInPortalView(false)}
-            onEditReportInForm={handleEditReportInForm}
+    <>
+      <div className="no-print min-h-screen bg-[#f8fafc] text-[#334155] p-3 sm:p-5 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header navigation & actions */}
+          <Header
+            onSaveExpense={() => handleSaveExpenseReport('utkast')}
+            onSubmitExpense={handleSubmitExpenseReport}
+            onPreviewPDF={handlePreviewPDF}
+            onExportCSV={handleExportCSV}
+            onShowSaved={() => setShowSavedModal(true)}
+            onShowHelp={() => setShowHelpModal(true)}
+            onTogglePortal={() => setInPortalView(prev => !prev)}
+            inPortalView={inPortalView}
+            isSaving={isSaving}
+            isSubmitting={isSubmitting}
           />
-        ) : (
-          <main>
-            {/* Account & Profile */}
-            <AuthSection
-              onSavePersonalInfo={handleSavePersonalInfo}
-              onOpenPortal={() => setInPortalView(true)}
+
+          {inPortalView ? (
+            <CompanyDashboard
+              onBackToExpenseForm={() => setInPortalView(false)}
+              onEditReportInForm={handleEditReportInForm}
             />
-
-            {/* Travel Form */}
-            <form onSubmit={e => e.preventDefault()}>
-              <PersonalInfoSection
-                personalInfo={personalInfo}
-                onChange={setPersonalInfo}
+          ) : (
+            <main>
+              {/* Account & Profile */}
+              <AuthSection
+                onSavePersonalInfo={handleSavePersonalInfo}
+                onOpenPortal={() => setInPortalView(true)}
               />
 
-              <TravelInfoSection
-                travelInfo={travelInfo}
-                mealDeductions={mealDeductions}
-                onTravelInfoChange={setTravelInfo}
-                onMealDeductionsChange={setMealDeductions}
+              {/* Travel Form */}
+              <form onSubmit={e => e.preventDefault()}>
+                <PersonalInfoSection
+                  personalInfo={personalInfo}
+                  onChange={setPersonalInfo}
+                />
+
+                <TravelInfoSection
+                  travelInfo={travelInfo}
+                  mealDeductions={mealDeductions}
+                  onTravelInfoChange={setTravelInfo}
+                  onMealDeductionsChange={setMealDeductions}
+                />
+
+                <MileageSection
+                  mileage={mileage}
+                  onChange={setMileage}
+                />
+
+                <ExpensesSection
+                  expenses={expenses}
+                  onChange={setExpenses}
+                />
+
+                <ReceiptsSection
+                  receipts={receipts}
+                  onChange={setReceipts}
+                />
+
+                <SignatureSection
+                  signatureContent={signatureContent}
+                  datePlace={datePlace}
+                  onSignatureChange={setSignatureContent}
+                  onDatePlaceChange={setDatePlace}
+                />
+              </form>
+
+              {/* Vipps Support Card */}
+              <VippsSection />
+
+              {/* Sticky summary bar at bottom */}
+              <StickySummary
+                mileageTotal={mileageTotal}
+                dietTotal={dietTotal}
+                expensesTotal={expensesTotal}
+                grandTotal={grandTotal}
+                onPreviewPDF={handlePreviewPDF}
+                onSaveExpense={() => handleSaveExpenseReport('utkast')}
+                isSaving={isSaving}
               />
+            </main>
+          )}
 
-              <MileageSection
-                mileage={mileage}
-                onChange={setMileage}
-              />
-
-              <ExpensesSection
-                expenses={expenses}
-                onChange={setExpenses}
-              />
-
-              <ReceiptsSection
-                receipts={receipts}
-                onChange={setReceipts}
-              />
-
-              <SignatureSection
-                signatureContent={signatureContent}
-                datePlace={datePlace}
-                onSignatureChange={setSignatureContent}
-                onDatePlaceChange={setDatePlace}
-              />
-            </form>
-
-            {/* Vipps Support Card */}
-            <VippsSection />
-
-            {/* Sticky summary bar at bottom */}
-            <StickySummary
-              mileageTotal={mileageTotal}
-              dietTotal={dietTotal}
-              expensesTotal={expensesTotal}
-              grandTotal={grandTotal}
-              onPreviewPDF={handlePreviewPDF}
-              onSaveExpense={() => handleSaveExpenseReport('utkast')}
-              isSaving={isSaving}
+          {showSavedModal && (
+            <SavedReportsModal
+              onLoadReport={handleLoadSavedRecord}
+              onClose={() => setShowSavedModal(false)}
             />
-          </main>
-        )}
+          )}
 
-        {/* Modals */}
-        {showPreviewModal && (
-          <PreviewModal
-            data={buildReportData()}
-            datePlace={datePlace}
-            onClose={() => setShowPreviewModal(false)}
-          />
-        )}
-
-        {showSavedModal && (
-          <SavedReportsModal
-            onLoadReport={handleLoadSavedRecord}
-            onClose={() => setShowSavedModal(false)}
-          />
-        )}
-
-        {showHelpModal && (
-          <HelpModal onClose={() => setShowHelpModal(false)} />
-        )}
+          {showHelpModal && (
+            <HelpModal onClose={() => setShowHelpModal(false)} />
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Preview Modal for PDF / Print - Isolated from normal page DOM */}
+      {showPreviewModal && (
+        <PreviewModal
+          data={buildReportData()}
+          datePlace={datePlace}
+          onClose={() => setShowPreviewModal(false)}
+        />
+      )}
+    </>
   );
 };

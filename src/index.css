@@ -36,7 +36,7 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 12mm 8mm 12mm;
+    margin: 8mm 10mm 8mm 10mm;
   }
 
   * {
@@ -44,18 +44,22 @@ body {
     print-color-adjust: exact !important;
   }
 
-  body {
-    background: white !important;
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: black !important;
+    color: #0f172a !important;
   }
 
-  #root > div > header,
-  #root > div > nav,
-  #root > div > main,
-  #root > div > footer,
+  /* Completely hide normal app and non-printable elements */
   .no-print,
+  .no-print *,
+  header,
+  nav,
+  main,
+  footer,
+  form,
   .sticky-summary,
   button,
   .btn {
@@ -65,7 +69,7 @@ body {
   .preview-modal-overlay {
     position: static !important;
     display: block !important;
-    background: transparent !important;
+    background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -80,14 +84,15 @@ body {
     position: static !important;
     display: block !important;
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     height: auto !important;
     max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    background: transparent !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
     overflow: visible !important;
   }
 
@@ -96,32 +101,27 @@ body {
     font-size: 10px !important;
     line-height: 1.35 !important;
     width: 100% !important;
-    color: #000 !important;
-    background: transparent !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
     padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 
-  /* Single-page A4 container: forces entire report to stay on page 1 */
+  /* Single-page A4 container: flows naturally without stretching */
   .expense-report-page {
+    box-sizing: border-box !important;
+    width: 100% !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     page-break-after: auto !important;
     break-after: auto !important;
-    max-height: 278mm !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-  }
-
-  .expense-report-document * {
-    color: #000 !important;
-    background: transparent !important;
   }
 
   .expense-report-document h1 {
-    font-size: 17pt !important;
+    font-size: 18pt !important;
     margin-bottom: 2px !important;
-    color: #000 !important;
+    color: #0f172a !important;
   }
 
   .expense-report-document h3 {
@@ -135,6 +135,24 @@ body {
 
   .expense-report-document p {
     margin: 2px 0 !important;
+  }
+
+  /* Always keep Ansattinformasjon and Om reisen side-by-side in print */
+  .employee-travel-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .employee-section,
+  .travel-section {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .expense-table {
@@ -157,13 +175,13 @@ body {
   .expense-table td {
     padding: 3px 6px !important;
     border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
   }
 
-  .employee-section,
-  .travel-section {
+  .diet-section > div {
     background-color: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
-    border-radius: 4px !important;
+    border-left: 4px solid #2563eb !important;
     padding: 6px 10px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -179,24 +197,24 @@ body {
   }
 
   .signature-section {
-    margin-top: 6px !important;
-    padding-top: 4px !important;
+    margin-top: 8px !important;
+    padding-top: 6px !important;
     border-top: 1px solid #cbd5e1 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .document-header {
-    border-bottom: 2px solid #000 !important;
+    border-bottom: 2px solid #0f172a !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .expense-table tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  .document-header,
-  .diet-section,
   .sig-box {
     page-break-inside: avoid !important;
     break-inside: avoid !important;

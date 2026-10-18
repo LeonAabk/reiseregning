@@ -78,12 +78,12 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
         </div>
 
         {/* Modal content body (printable) */}
-        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-white expense-report-document">
+        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-white expense-report-document print:p-0">
           {/* First A4 Page: Complete Expense Report */}
-          <div className="expense-report-page flex flex-col justify-between">
+          <div className="expense-report-page">
             <div>
               {/* Document Header */}
-              <div className="document-header flex justify-between items-start border-b-2 border-slate-900 pb-2 mb-3">
+              <div className="document-header flex justify-between items-start border-b-2 border-slate-900 pb-1.5 mb-2.5">
                 <div>
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">REISEREGNING</h1>
                   <p className="text-xs text-slate-600 font-medium">År: 2026</p>
@@ -94,39 +94,39 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
                 </div>
               </div>
 
-              {/* Employee & Travel details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                <div className="employee-section bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-200 text-xs">
-                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1.5 border-b border-blue-200 pb-0.5">
+              {/* Employee & Travel details (Always 2 columns side-by-side) */}
+              <div className="employee-travel-grid grid grid-cols-2 gap-2.5 mb-2.5">
+                <div className="employee-section bg-slate-50 p-2 sm:p-2.5 rounded-lg border border-slate-200 text-xs">
+                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1 border-b border-blue-200 pb-0.5">
                     Ansattinformasjon
                   </h3>
-                  <p className="leading-relaxed">
+                  <p className="leading-snug">
                     <strong>Navn:</strong> {data.personalInfo.name}
                     {data.personalInfo.department && (
                       <span> | <strong>Avdeling:</strong> {data.personalInfo.department}</span>
                     )}
                   </p>
-                  <p className="mt-0.5 leading-relaxed">
+                  <p className="mt-0.5 leading-snug">
                     <strong>Adresse:</strong> {data.personalInfo.address || 'Ikke oppgitt'}
                   </p>
                 </div>
 
-                <div className="travel-section bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-200 text-xs">
-                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1.5 border-b border-blue-200 pb-0.5">
+                <div className="travel-section bg-slate-50 p-2 sm:p-2.5 rounded-lg border border-slate-200 text-xs">
+                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1 border-b border-blue-200 pb-0.5">
                     Om reisen
                   </h3>
-                  <p className="leading-relaxed">
+                  <p className="leading-snug">
                     <strong>Formål:</strong> {data.travelInfo.purpose}
                   </p>
                   {data.travelInfo.event && (
-                    <p className="mt-0.5 leading-relaxed">
+                    <p className="mt-0.5 leading-snug">
                       <strong>Arrangement:</strong> {data.travelInfo.event}
                     </p>
                   )}
-                  <p className="mt-0.5 leading-relaxed">
+                  <p className="mt-0.5 leading-snug">
                     <strong>Periode:</strong> {data.travelInfo.departure || '-'} til {data.travelInfo.return || '-'}
                   </p>
-                  <p className="mt-0.5 leading-relaxed">
+                  <p className="mt-0.5 leading-snug">
                     <strong>Overnattingssted:</strong> {data.travelInfo.accommodationName || (data.travelInfo.accommodation === 'none' ? 'Ingen' : 'Privat')}
                   </p>
                 </div>
