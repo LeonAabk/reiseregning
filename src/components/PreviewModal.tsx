@@ -78,179 +78,180 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
         </div>
 
         {/* Modal content body (printable) */}
-        <div className="p-6 sm:p-10 overflow-y-auto flex-1 bg-white expense-report-document">
-          {/* Document Header */}
-          <div className="document-header flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-6">
+        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-white expense-report-document">
+          {/* First A4 Page: Complete Expense Report */}
+          <div className="expense-report-page flex flex-col justify-between">
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">REISEREGNING</h1>
-              <p className="text-sm text-slate-600 font-medium">År: 2026</p>
-            </div>
-            <div className="text-right text-sm">
-              <strong className="text-base text-slate-900">{data.personalInfo.company || 'Ikke oppgitt firma'}</strong>
-              <p className="text-slate-600">Ref: {data.personalInfo.id || '-'}</p>
-            </div>
-          </div>
-
-          {/* Employee & Travel details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="employee-section bg-slate-50 p-4 rounded-lg border border-slate-200">
-              <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-2 border-b border-blue-200 pb-1">
-                Ansattinformasjon
-              </h3>
-              <p className="text-sm">
-                <strong>Navn:</strong> {data.personalInfo.name}
-                {data.personalInfo.department && (
-                  <span> | <strong>Avdeling:</strong> {data.personalInfo.department}</span>
-                )}
-              </p>
-              <p className="text-sm mt-1">
-                <strong>Adresse:</strong> {data.personalInfo.address || 'Ikke oppgitt'}
-              </p>
-            </div>
-
-            <div className="travel-section bg-slate-50 p-4 rounded-lg border border-slate-200">
-              <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-2 border-b border-blue-200 pb-1">
-                Om reisen
-              </h3>
-              <p className="text-sm">
-                <strong>Formål:</strong> {data.travelInfo.purpose}
-              </p>
-              {data.travelInfo.event && (
-                <p className="text-sm mt-1">
-                  <strong>Arrangement:</strong> {data.travelInfo.event}
-                </p>
-              )}
-              <p className="text-sm mt-1">
-                <strong>Periode:</strong> {data.travelInfo.departure || '-'} til {data.travelInfo.return || '-'}
-              </p>
-              <p className="text-sm mt-1">
-                <strong>Overnattingssted:</strong> {data.travelInfo.accommodationName || (data.travelInfo.accommodation === 'none' ? 'Ingen' : 'Privat')}
-              </p>
-            </div>
-          </div>
-
-          {/* Mileage table */}
-          {data.mileage.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-base font-bold text-blue-900 border-b border-blue-200 pb-1 mb-2">
-                Kjøring
-              </h3>
-              <table className="expense-table w-full text-left text-sm border-collapse border border-slate-300">
-                <thead>
-                  <tr className="bg-slate-100">
-                    <th className="border border-slate-300 p-2">Dato</th>
-                    <th className="border border-slate-300 p-2">Fra - Til</th>
-                    <th className="border border-slate-300 p-2">Km</th>
-                    <th className="border border-slate-300 p-2">Passasjer</th>
-                    <th className="border border-slate-300 p-2">Bompenger</th>
-                    <th className="border border-slate-300 p-2 text-right">Sum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.mileage.map(i => {
-                    const hasPassenger = (i.passenger || '').trim().length > 0;
-                    const routeSum = ((Number(i.km) || 0) * (hasPassenger ? RATES.km + RATES.passenger : RATES.km)) + (Number(i.toll) || 0);
-                    return (
-                      <tr key={i.id}>
-                        <td className="border border-slate-300 p-2">{i.date}</td>
-                        <td className="border border-slate-300 p-2">{i.from} - {i.to}</td>
-                        <td className="border border-slate-300 p-2">{i.km}</td>
-                        <td className="border border-slate-300 p-2">{i.passenger || '-'}</td>
-                        <td className="border border-slate-300 p-2">{formatNOK(Number(i.toll) || 0)}</td>
-                        <td className="border border-slate-300 p-2 text-right font-medium">{formatNOK(routeSum)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Expenses table */}
-          {data.expenses.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-base font-bold text-blue-900 border-b border-blue-200 pb-1 mb-2">
-                Utlegg
-              </h3>
-              <table className="expense-table w-full text-left text-sm border-collapse border border-slate-300">
-                <thead>
-                  <tr className="bg-slate-100">
-                    <th className="border border-slate-300 p-2">Dato</th>
-                    <th className="border border-slate-300 p-2">Beskrivelse</th>
-                    <th className="border border-slate-300 p-2 text-center">Bilag</th>
-                    <th className="border border-slate-300 p-2 text-right">Sum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.expenses.map(i => (
-                    <tr key={i.id}>
-                      <td className="border border-slate-300 p-2">{i.date}</td>
-                      <td className="border border-slate-300 p-2">{i.description}</td>
-                      <td className="border border-slate-300 p-2 text-center">{i.receipt ? 'Ja' : 'Nei'}</td>
-                      <td className="border border-slate-300 p-2 text-right font-medium">{formatNOK(Number(i.amount) || 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Diet Section */}
-          <div className="diet-section mb-6">
-            <h3 className="text-base font-bold text-blue-900 border-b border-blue-200 pb-1 mb-2">
-              Diettgodtgjørelse
-            </h3>
-            <div className="p-3 bg-slate-50 border-l-4 border-blue-600 rounded border border-slate-200 text-sm">
-              <p><strong>Sammendrag:</strong> {diet.text}</p>
-              <p className="mt-1 font-semibold text-slate-800">
-                Sum diett: {formatNOK(diet.amount)}
-              </p>
-            </div>
-          </div>
-
-          {/* Grand Total */}
-          <div className="summary-row mt-6 p-4 bg-slate-100 border-2 border-slate-800 rounded-lg flex justify-between items-center text-lg font-bold">
-            <span>TOTALT Å UTBETALE:</span>
-            <span className="text-xl text-blue-900">{formatNOK(grandTotal)}</span>
-          </div>
-
-          {/* Signature */}
-          <div className="signature-section mt-10 pt-4 border-t border-slate-300 flex justify-between items-end">
-            <div>
-              <p className="text-sm text-slate-600 mb-2">Sted og dato: {datePlace || '____________________'}</p>
-              <div className="sig-box h-20 w-64 border-b border-slate-800 flex items-center justify-center overflow-hidden">
-                {data.signatureContent ? (
-                  <img
-                    src={data.signatureContent}
-                    alt="Signatur"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                ) : (
-                  <span className="text-xs text-slate-400 italic">Ingen signatur tegnet/lastet opp</span>
-                )}
+              {/* Document Header */}
+              <div className="document-header flex justify-between items-start border-b-2 border-slate-900 pb-2 mb-3">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">REISEREGNING</h1>
+                  <p className="text-xs text-slate-600 font-medium">År: 2026</p>
+                </div>
+                <div className="text-right text-xs sm:text-sm">
+                  <strong className="text-sm sm:text-base text-slate-900">{data.personalInfo.company || 'Eksempelfirma'}</strong>
+                  <p className="text-slate-600">Ref: {data.personalInfo.id || '-'}</p>
+                </div>
               </div>
-              <p className="text-sm font-semibold text-slate-800 mt-2">{data.personalInfo.name}</p>
+
+              {/* Employee & Travel details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="employee-section bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-200 text-xs">
+                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1.5 border-b border-blue-200 pb-0.5">
+                    Ansattinformasjon
+                  </h3>
+                  <p className="leading-relaxed">
+                    <strong>Navn:</strong> {data.personalInfo.name}
+                    {data.personalInfo.department && (
+                      <span> | <strong>Avdeling:</strong> {data.personalInfo.department}</span>
+                    )}
+                  </p>
+                  <p className="mt-0.5 leading-relaxed">
+                    <strong>Adresse:</strong> {data.personalInfo.address || 'Ikke oppgitt'}
+                  </p>
+                </div>
+
+                <div className="travel-section bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-200 text-xs">
+                  <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1.5 border-b border-blue-200 pb-0.5">
+                    Om reisen
+                  </h3>
+                  <p className="leading-relaxed">
+                    <strong>Formål:</strong> {data.travelInfo.purpose}
+                  </p>
+                  {data.travelInfo.event && (
+                    <p className="mt-0.5 leading-relaxed">
+                      <strong>Arrangement:</strong> {data.travelInfo.event}
+                    </p>
+                  )}
+                  <p className="mt-0.5 leading-relaxed">
+                    <strong>Periode:</strong> {data.travelInfo.departure || '-'} til {data.travelInfo.return || '-'}
+                  </p>
+                  <p className="mt-0.5 leading-relaxed">
+                    <strong>Overnattingssted:</strong> {data.travelInfo.accommodationName || (data.travelInfo.accommodation === 'none' ? 'Ingen' : 'Privat')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Mileage table */}
+              {data.mileage.length > 0 && (
+                <div className="mb-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-blue-900 border-b border-blue-200 pb-0.5 mb-1.5">
+                    Kjøring
+                  </h3>
+                  <table className="expense-table w-full text-left text-xs border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="border border-slate-300 p-1.5">Dato</th>
+                        <th className="border border-slate-300 p-1.5">Fra - Til</th>
+                        <th className="border border-slate-300 p-1.5">Km</th>
+                        <th className="border border-slate-300 p-1.5">Passasjer</th>
+                        <th className="border border-slate-300 p-1.5">Bompenger</th>
+                        <th className="border border-slate-300 p-1.5 text-right">Sum</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.mileage.map(i => {
+                        const hasPassenger = (i.passenger || '').trim().length > 0;
+                        const routeSum = ((Number(i.km) || 0) * (hasPassenger ? RATES.km + RATES.passenger : RATES.km)) + (Number(i.toll) || 0);
+                        return (
+                          <tr key={i.id}>
+                            <td className="border border-slate-300 p-1.5">{i.date}</td>
+                            <td className="border border-slate-300 p-1.5">{i.from} - {i.to}</td>
+                            <td className="border border-slate-300 p-1.5">{i.km}</td>
+                            <td className="border border-slate-300 p-1.5">{i.passenger || '-'}</td>
+                            <td className="border border-slate-300 p-1.5">{formatNOK(Number(i.toll) || 0)}</td>
+                            <td className="border border-slate-300 p-1.5 text-right font-medium">{formatNOK(routeSum)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Expenses table */}
+              {data.expenses.length > 0 && (
+                <div className="mb-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-blue-900 border-b border-blue-200 pb-0.5 mb-1.5">
+                    Utlegg
+                  </h3>
+                  <table className="expense-table w-full text-left text-xs border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="border border-slate-300 p-1.5">Dato</th>
+                        <th className="border border-slate-300 p-1.5">Beskrivelse</th>
+                        <th className="border border-slate-300 p-1.5 text-center">Bilag</th>
+                        <th className="border border-slate-300 p-1.5 text-right">Sum</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.expenses.map(i => (
+                        <tr key={i.id}>
+                          <td className="border border-slate-300 p-1.5">{i.date}</td>
+                          <td className="border border-slate-300 p-1.5">{i.description}</td>
+                          <td className="border border-slate-300 p-1.5 text-center">{i.receipt ? 'Ja' : 'Nei'}</td>
+                          <td className="border border-slate-300 p-1.5 text-right font-medium">{formatNOK(Number(i.amount) || 0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Diet Section */}
+              <div className="diet-section mb-3">
+                <h3 className="text-xs sm:text-sm font-bold text-blue-900 border-b border-blue-200 pb-0.5 mb-1.5">
+                  Diettgodtgjørelse
+                </h3>
+                <div className="p-2 sm:p-2.5 bg-slate-50 border-l-4 border-blue-600 rounded border border-slate-200 text-xs">
+                  <p><strong>Sammendrag:</strong> {diet.text}</p>
+                  <p className="mt-0.5 font-semibold text-slate-800">
+                    Sum diett: {formatNOK(diet.amount)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Grand Total */}
+              <div className="summary-row mt-3 p-2.5 sm:p-3 bg-slate-100 border-2 border-slate-800 rounded-lg flex justify-between items-center text-sm sm:text-base font-bold">
+                <span>TOTALT Å UTBETALE:</span>
+                <span className="text-base sm:text-lg text-blue-900">{formatNOK(grandTotal)}</span>
+              </div>
             </div>
 
-            <div className="text-right">
-              <p className="text-sm text-slate-600 mb-2">Godkjent av leder:</p>
-              <div className="h-20 w-64 border-b border-slate-400"></div>
-              <p className="text-xs text-slate-500 mt-2">Dato og signatur leder</p>
+            {/* Signature & Approval Line (Matching single-page layout) */}
+            <div className="signature-section mt-4 pt-3 border-t border-slate-300 flex justify-between items-end text-xs text-slate-700">
+              <div>
+                <p className="mb-1">Sted og dato: {datePlace || '____________________'}</p>
+                {data.signatureContent ? (
+                  <div className="sig-box h-8 w-44 my-0.5 flex items-center">
+                    <img
+                      src={data.signatureContent}
+                      alt="Signatur"
+                      className="max-h-8 max-w-full object-contain"
+                    />
+                  </div>
+                ) : null}
+                <p className="font-semibold text-slate-800">{data.personalInfo.name}</p>
+              </div>
+
+              <div className="text-right">
+                <p>Godkjent av leder: ____________________</p>
+              </div>
             </div>
           </div>
 
-          {/* Attached Receipts on Print */}
+          {/* Attached Receipts on Subsequent Pages */}
           {data.receipts.length > 0 && (
-            <div className="receipts-section mt-12 pt-6 border-t-2 border-slate-300">
-              <h2 className="text-xl font-bold text-slate-900 mb-6 text-center">Vedlegg / Kvitteringer</h2>
-              <div className="space-y-8">
+            <div className="receipts-section mt-8 pt-4">
+              <h2 className="text-lg font-bold text-slate-900 mb-4 text-center">Vedlegg / Kvitteringer</h2>
+              <div className="space-y-6">
                 {data.receipts.map((src, i) => (
                   <div key={i} className="receipt-item text-center p-2 border border-slate-200 rounded">
-                    <p className="text-xs text-slate-500 mb-2 font-medium">Bilag #{i + 1}</p>
+                    <p className="text-xs text-slate-500 mb-1.5 font-medium">Bilag #{i + 1}</p>
                     <img
                       src={src}
                       alt={`Kvittering ${i + 1}`}
-                      className="receipt-image max-h-[750px] max-w-full mx-auto object-contain shadow-sm border border-slate-200"
+                      className="receipt-image max-h-[700px] max-w-full mx-auto object-contain shadow-sm border border-slate-200"
                     />
                   </div>
                 ))}
