@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  --primary-color: #1e293b;
+  --accent-color: #3b82f6;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --bg-color: #f8fafc;
+  --border-color: #e2e8f0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: #334155;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out forwards;
+}
+
+/* Print Styles matching original application */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm 20mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: black !important;
+  }
+
+  .no-print,
+  .sticky-summary,
+  header,
+  nav,
+  button,
+  .btn {
+    display: none !important;
+  }
+
+  .print-only-modal {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .expense-report-document {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    width: 100% !important;
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  .expense-report-document * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  .expense-report-document h1 {
+    font-size: 20pt !important;
+    margin-bottom: 8px !important;
+    color: #000 !important;
+  }
+
+  .expense-report-document h3 {
+    font-size: 12pt !important;
+    margin-bottom: 8px !important;
+    margin-top: 10px !important;
+    border-bottom: 1px solid #000 !important;
+    padding-bottom: 3px !important;
+    color: #000 !important;
+  }
+
+  .expense-report-document p {
+    margin: 4px 0 !important;
+  }
+
+  .expense-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 10px 0 !important;
+    page-break-inside: avoid !important;
+  }
+
+  .expense-table th {
+    background-color: transparent !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    padding: 4px 6px !important;
+    border: 1px solid #000 !important;
+  }
+
+  .expense-table td {
+    padding: 4px 6px !important;
+    border: 1px solid #000 !important;
+  }
+
+  .signature-section {
+    margin-top: 15px !important;
+  }
+
+  .document-header {
+    border-bottom: 2px solid #000 !important;
+  }
+
+  .expense-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .document-header,
+  .employee-section,
+  .travel-section,
+  .diet-section,
+  .signature-section,
+  .sig-box,
+  .receipts-section {
+    page-break-inside: avoid !important;
+  }
+
+  .sig-box img {
+    max-height: 2cm !important;
+    width: auto !important;
+  }
+}

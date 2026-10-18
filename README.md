@@ -1,53 +1,34 @@
-﻿# Reiseregning Kalkulator
+# Reiseregning 2026 - Statens Satser (React + TypeScript)
 
-En moderne, brukervennlig webapplikasjon for å beregne reiseregninger basert på norske statens satser (2026).
+En moderne, produksjonsklar webapplikasjon i React og TypeScript for utfylling, beregning, godkjenning og eksport av reiseregninger basert på Statens satser for 2026.
 
 ## Funksjoner
 
-- **Automatiske beregninger**: Kjøregodtgjørelse, diettgodtgjørelse og utlegg
-- **Diettberegning**: Automatisk beregning basert på reisetid og overnattingstype
-- **Måltidstrekk**: Mulighet for å trekke fra dekket måltider
-- **Signatur**: Tegn signatur digitalt eller last opp bilde
-- **Lagring**: Lagre reiseregninger lokalt i nettleseren
-- **PDF-utskrift**: Skriv ut som PDF for arkivering
-- **Responsiv design**: Fungerer på desktop, nettbrett og mobil
+- **Statens satser 2026**:
+  - Kjøregodtgjørelse: 5,30 kr/km (+ 1,00 kr/km passasjertillegg) og bompenger
+  - Døgn- og dagsats diett med automatisk timesberegning (>6t og >12t)
+  - Valg mellom Statens satser og Trekkfrie satser
+  - Overnattingstyper: Ingen, Hotell, Kokemuligheter, Uten kokemuligheter
+  - Måltidstrekk: Frokost (20%), Lunsj (30%), Middag (50%)
+- **Utlegg og kvitteringer**:
+  - Ubegrenset antall utleggsrader med dato, beskrivelse, beløp og bilagsindikator
+  - Bildeopplasting av kvitteringer med forhåndsvisning og automatisk vedlegg i PDF
+- **Digital signatur**:
+  - Tegn med finger/mus på interaktivt lerret eller last opp signaturbilde
+- **Eksport og forhåndsvisning**:
+  - A4-tilpasset forhåndsvisning og PDF-utskrift (`window.print`)
+  - Semikolon-separert CSV-eksport formatert for norske regnskapssystemer (Excel/UTF-8 BOM)
+- **Konto og Bedriftsportal (Admin & Ansatt)**:
+  - Bruk som privatperson eller som ansatt i bedrift
+  - Opprett firma med unik 6-sifret invitasjonskode eller bli med med kode
+  - Ansattvisning: Statusoppfølging (Utkast, Innsendt, Godkjent, Utbetalt, Avvist, Kansellert), trekke tilbake innsendt reiseregning, redigere avviste/kansellerte reiser
+  - Leder-/Adminvisning: Nøkkeltall, oversikt over ansatte, godkjenning, avvisning med begrunnelse, utbetalingsmarkering og angre-funksjon
+- **Resilient datalagring**:
+  - Støtter skybasert Supabase-synkronisering med sømløs offline- og lokal fallback.
 
-## Teknologier
+## Teknologistakk
 
-- HTML5
-- CSS3 (med moderne layout og responsive design)
-- Vanilla JavaScript (ingen rammeverk)
-- localStorage for lagring
-- Canvas API for digital signatur
-
-## Installasjon
-
-1. Last ned filene
-2. Åpne `index.html` i en moderne nettleser
-3. Applikasjonen kjører lokalt uten behov for server
-
-## Bruk
-
-1. Fyll inn personopplysninger
-2. Angi reiseinformasjon (datoer, formål, overnatting)
-3. Legg til kjøregodtgjørelse og utlegg
-4. Kryss av for måltidstrekk hvis relevant
-5. Tegn signatur eller last opp bilde
-6. Lagre eller skriv ut som PDF
-
-## Validering
-
-Applikasjonen inkluderer validering av:
-- Obligatoriske felt
-- Gyldige datoer
-- Numeriske verdier
-- Logiske forhold (f.eks. hjemkomst etter avreise)
-
-## Lagring
-
-Reiseregninger lagres automatisk i nettleserens localStorage. Du kan:
-- Lagre nye reiseregninger
-- Laste tidligere reiseregninger
-- Slette gamle reiseregninger
-
-
+- **Rammeverk**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **Ikoner**: Lucide React
+- **Autentisering & Database**: Supabase & LocalStorage resilient fallback

@@ -1,8 +1,0 @@
-127.0.0.1 - - [14/Sep/2026 06:41:49] "GET /dashboard.html HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:41:49] "GET /style.css HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:41:49] "GET /ui-utils.js HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:41:49] "GET /dashboard.js HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:45:31] "GET /dashboard.html HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:45:32] "GET /style.css HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:45:32] "GET /dashboard.js HTTP/1.1" 200 -
-127.0.0.1 - - [14/Sep/2026 06:45:32] "GET /ui-utils.js HTTP/1.1" 200 -
