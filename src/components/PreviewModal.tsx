@@ -28,11 +28,21 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
   const grandTotal = mileageTotal + diet.amount + expensesTotal;
 
   const handlePrint = () => {
+    const oldTitle = document.title;
+    const safeName = (data.personalInfo.name || 'reiseregning')
+      .replace(/[^a-zA-Z0-9æøåÆØÅ\-_ ]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
+    const safeDate = (data.travelInfo.departure || new Date().toISOString()).split('T')[0];
+    document.title = `Reiseregning_${safeName || 'uten_navn'}_${safeDate}`;
     window.print();
+    setTimeout(() => {
+      document.title = oldTitle;
+    }, 1000);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[1000] flex justify-center items-center p-3 sm:p-5 overflow-y-auto">
+    <div className="preview-modal-overlay fixed inset-0 bg-black/70 z-[1000] flex justify-center items-center p-3 sm:p-5 overflow-y-auto">
       <div className="bg-white w-full max-w-4xl max-h-[95vh] rounded-xl flex flex-col shadow-2xl overflow-hidden print-only-modal">
         {/* Header toolbar (hidden on print) */}
         <div className="p-4 sm:px-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between no-print">
@@ -231,16 +241,16 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
 
           {/* Attached Receipts on Print */}
           {data.receipts.length > 0 && (
-            <div className="receipts-section mt-12 pt-6 border-t-2 border-slate-300" style={{ pageBreakBefore: 'always' }}>
+            <div className="receipts-section mt-12 pt-6 border-t-2 border-slate-300">
               <h2 className="text-xl font-bold text-slate-900 mb-6 text-center">Vedlegg / Kvitteringer</h2>
               <div className="space-y-8">
                 {data.receipts.map((src, i) => (
-                  <div key={i} className="text-center p-2 border border-slate-200 rounded">
-                    <p className="text-xs text-slate-500 mb-2">Bilag #{i + 1}</p>
+                  <div key={i} className="receipt-item text-center p-2 border border-slate-200 rounded">
+                    <p className="text-xs text-slate-500 mb-2 font-medium">Bilag #{i + 1}</p>
                     <img
                       src={src}
                       alt={`Kvittering ${i + 1}`}
-                      className="max-h-[800px] max-w-full mx-auto object-contain shadow-sm border border-slate-200"
+                      className="receipt-image max-h-[750px] max-w-full mx-auto object-contain shadow-sm border border-slate-200"
                     />
                   </div>
                 ))}

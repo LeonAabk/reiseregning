@@ -51,24 +51,44 @@ body {
     color: black !important;
   }
 
+  #root > div > header,
+  #root > div > nav,
+  #root > div > main,
+  #root > div > footer,
   .no-print,
   .sticky-summary,
-  header,
-  nav,
   button,
   .btn {
     display: none !important;
+  }
+
+  .preview-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    inset: auto !important;
+    z-index: auto !important;
   }
 
   .print-only-modal {
     position: static !important;
     display: block !important;
     width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
+    overflow: visible !important;
   }
 
   .expense-report-document {
@@ -142,13 +162,33 @@ body {
   .travel-section,
   .diet-section,
   .signature-section,
-  .sig-box,
-  .receipts-section {
+  .sig-box {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .sig-box img {
-    max-height: 2cm !important;
+    max-height: 2.2cm !important;
     width: auto !important;
+  }
+
+  /* Receipts on separate subsequent pages */
+  .receipts-section {
+    page-break-before: always !important;
+    break-before: page !important;
+    padding-top: 10mm !important;
+    border-top: none !important;
+  }
+
+  .receipt-item {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 15mm !important;
+  }
+
+  .receipt-image {
+    max-height: 220mm !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
   }
 }
