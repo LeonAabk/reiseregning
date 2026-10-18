@@ -12,7 +12,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
+      input: {
+        main: './src/main.tsx',
+      },
       output: {
         entryFileNames: 'assets/index.js',
         chunkFileNames: 'assets/[name].js',

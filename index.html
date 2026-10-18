@@ -13,17 +13,6 @@
 <body class="bg-[#f8fafc] text-[#334155] min-h-screen">
     <div id="root"></div>
 
-    <script type="module" src="/src/main.tsx"></script>
-
-    <script type="module">
-      // GitHub Pages static deployment fallback:
-      // When deployed directly from root on GitHub Pages without a server-side build step,
-      // load the pre-compiled bundle in ./assets/index.js.
-      if (!window.__vite_plugin_react_preamble_installed__) {
-        import('./assets/index.js').catch(err => {
-          console.warn('Could not load static bundle:', err);
-        });
-      }
-    </script>
+    <script type="module" crossorigin src="./assets/index.js"></script>
 </body>
 </html>
