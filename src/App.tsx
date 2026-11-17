@@ -8,7 +8,7 @@ import {
   PersonalInfo,
   TravelInfo
 } from './types';
-import { calculateDiet, exportToCSV, RATES } from './constants/rates';
+import { calculateDiet, calculateMileageTotals, exportToCSV } from './constants/rates';
 import { useAuth } from './context/AuthContext';
 import { useUI } from './context/UIContext';
 import { dataService } from './lib/supabase';
@@ -30,7 +30,7 @@ import { HelpModal } from './components/HelpModal';
 import { CompanyDashboard } from './components/CompanyDashboard';
 
 export const App: React.FC = () => {
-  const { currentUser, currentCompany, workspaceMode } = useAuth();
+  const { currentUser, currentCompany } = useAuth();
   const { showToast, confirm, prompt } = useUI();
 
   // Mode: form or portal
@@ -60,7 +60,7 @@ export const App: React.FC = () => {
     return: '',
     accommodation: 'none',
     accommodationName: '',
-    dietMode: 'state'
+    dietMode: 'taxfree'
   });
 
   const [mealDeductions, setMealDeductions] = useState<MealDeductions>({
@@ -130,13 +130,12 @@ export const App: React.FC = () => {
   }, []);
 
   // Calculate live financial totals
-  const mileageTotal = mileage.reduce((sum, row) => {
-    const hasPassenger = (row.passenger || '').trim().length > 0;
-    const rate = hasPassenger ? RATES.km + RATES.passenger : RATES.km;
-    return sum + ((Number(row.km) || 0) * rate) + (Number(row.toll) || 0);
-  }, 0);
+  const mileageCalc = calculateMileageTotals(mileage, travelInfo.dietMode);
+  const mileageTotal = mileageCalc.totalAmount;
 
-  const expensesTotal = expenses.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const expensesTotal = Math.round(
+    expenses.reduce((sum, row) => sum + (Number(row.amount) || 0), 0) * 100
+  ) / 100;
 
   const dietResult = calculateDiet(
     travelInfo.departure,
@@ -147,7 +146,9 @@ export const App: React.FC = () => {
   );
   const dietTotal = dietResult.amount;
 
-  const grandTotal = mileageTotal + expensesTotal + dietTotal;
+  const grandTotal = Math.round((mileageTotal + expensesTotal + dietTotal) * 100) / 100;
+  const taxfreeTotal = Math.round((mileageCalc.taxfreeAmount + expensesTotal + dietResult.taxfreeAmount) * 100) / 100;
+  const taxableTotal = Math.round((mileageCalc.taxableAmount + dietResult.taxableAmount) * 100) / 100;
 
   // Build the complete report data payload
   const buildReportData = (): ExpenseReportData => {
@@ -159,8 +160,17 @@ export const App: React.FC = () => {
       expenses,
       receipts,
       signatureContent,
-      totals: { grandTotal },
-      dietSummary: { amount: dietTotal, text: dietResult.text },
+      totals: {
+        grandTotal,
+        taxfreeTotal,
+        taxableTotal
+      },
+      dietSummary: {
+        amount: dietTotal,
+        text: dietResult.text,
+        taxfreeAmount: dietResult.taxfreeAmount,
+        taxableAmount: dietResult.taxableAmount
+      },
       dbId: activeReportDbId
     };
   };
@@ -324,6 +334,7 @@ export const App: React.FC = () => {
 
                 <MileageSection
                   mileage={mileage}
+                  dietMode={travelInfo.dietMode}
                   onChange={setMileage}
                 />
 

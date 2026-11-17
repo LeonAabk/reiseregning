@@ -1,6 +1,13 @@
 import React from 'react';
 import { ExpenseReportData } from '../types';
-import { calculateDiet, exportToCSV, formatNOK, RATES } from '../constants/rates';
+import {
+  calculateDiet,
+  calculateMileageRow,
+  calculateMileageTotals,
+  exportToCSV,
+  formatNOK,
+  getAccommodationLabel
+} from '../constants/rates';
 import { Printer, Download, X } from 'lucide-react';
 
 interface PreviewModalProps {
@@ -10,22 +17,24 @@ interface PreviewModalProps {
 }
 
 export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onClose }) => {
+  const dietMode = data.travelInfo.dietMode || 'state';
   const diet = calculateDiet(
     data.travelInfo.departure,
     data.travelInfo.return,
     data.travelInfo.accommodation,
-    data.travelInfo.dietMode,
+    dietMode,
     data.mealDeductions
   );
 
-  const mileageTotal = data.mileage.reduce((sum, i) => {
-    const hasPassenger = (i.passenger || '').trim().length > 0;
-    const rate = hasPassenger ? RATES.km + RATES.passenger : RATES.km;
-    return sum + ((Number(i.km) || 0) * rate) + (Number(i.toll) || 0);
-  }, 0);
+  const mileageCalc = calculateMileageTotals(data.mileage, dietMode);
+  const mileageTotal = mileageCalc.totalAmount;
 
-  const expensesTotal = data.expenses.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-  const grandTotal = mileageTotal + diet.amount + expensesTotal;
+  const expensesTotal =
+    Math.round(data.expenses.reduce((sum, i) => sum + (Number(i.amount) || 0), 0) * 100) / 100;
+  const grandTotal = Math.round((mileageTotal + diet.amount + expensesTotal) * 100) / 100;
+  const taxfreeTotal =
+    Math.round((mileageCalc.taxfreeAmount + diet.taxfreeAmount + expensesTotal) * 100) / 100;
+  const taxableTotal = Math.round((mileageCalc.taxableAmount + diet.taxableAmount) * 100) / 100;
 
   const handlePrint = () => {
     const oldTitle = document.title;
@@ -86,7 +95,9 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
               <div className="document-header flex justify-between items-start border-b-2 border-slate-900 pb-1.5 mb-2.5">
                 <div>
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">REISEREGNING</h1>
-                  <p className="text-xs text-slate-600 font-medium">År: 2026</p>
+                  <p className="text-xs text-slate-600 font-medium">
+                    År: 2026 • {dietMode === 'taxfree' ? 'Trekkfri sats (Skatteetaten)' : 'Statens satser'}
+                  </p>
                 </div>
                 <div className="text-right text-xs sm:text-sm">
                   <strong className="text-sm sm:text-base text-slate-900">{data.personalInfo.company || 'Eksempelfirma'}</strong>
@@ -127,7 +138,8 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
                     <strong>Periode:</strong> {data.travelInfo.departure || '-'} til {data.travelInfo.return || '-'}
                   </p>
                   <p className="mt-0.5 leading-snug">
-                    <strong>Overnattingssted:</strong> {data.travelInfo.accommodationName || (data.travelInfo.accommodation === 'none' ? 'Ingen' : 'Privat')}
+                    <strong>Overnatting:</strong>{' '}
+                    {getAccommodationLabel(data.travelInfo.accommodation, data.travelInfo.accommodationName)}
                   </p>
                 </div>
               </div>
@@ -151,8 +163,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
                     </thead>
                     <tbody>
                       {data.mileage.map(i => {
-                        const hasPassenger = (i.passenger || '').trim().length > 0;
-                        const routeSum = ((Number(i.km) || 0) * (hasPassenger ? RATES.km + RATES.passenger : RATES.km)) + (Number(i.toll) || 0);
+                        const rowCalc = calculateMileageRow(i, dietMode);
                         return (
                           <tr key={i.id}>
                             <td className="border border-slate-300 p-1.5">{i.date}</td>
@@ -160,7 +171,9 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
                             <td className="border border-slate-300 p-1.5">{i.km}</td>
                             <td className="border border-slate-300 p-1.5">{i.passenger || '-'}</td>
                             <td className="border border-slate-300 p-1.5">{formatNOK(Number(i.toll) || 0)}</td>
-                            <td className="border border-slate-300 p-1.5 text-right font-medium">{formatNOK(routeSum)}</td>
+                            <td className="border border-slate-300 p-1.5 text-right font-medium">
+                              {formatNOK(rowCalc.totalAmount)}
+                            </td>
                           </tr>
                         );
                       })}
@@ -212,9 +225,17 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ data, datePlace, onC
               </div>
 
               {/* Grand Total */}
-              <div className="summary-row mt-3 p-2.5 sm:p-3 bg-slate-100 border-2 border-slate-800 rounded-lg flex justify-between items-center text-sm sm:text-base font-bold">
-                <span>TOTALT Å UTBETALE:</span>
-                <span className="text-base sm:text-lg text-blue-900">{formatNOK(grandTotal)}</span>
+              <div className="summary-row mt-3 p-2.5 sm:p-3 bg-slate-100 border-2 border-slate-800 rounded-lg">
+                <div className="flex justify-between items-center text-sm sm:text-base font-bold">
+                  <span>TOTALT Å UTBETALE:</span>
+                  <span className="text-base sm:text-lg text-blue-900">{formatNOK(grandTotal)}</span>
+                </div>
+                {taxableTotal > 0 && (
+                  <div className="mt-1 pt-1 border-t border-slate-300 flex justify-between text-[11px] text-slate-600">
+                    <span>Herav trekkfritt: <strong>{formatNOK(taxfreeTotal)}</strong></span>
+                    <span>Herav trekkpliktig (lønn): <strong>{formatNOK(taxableTotal)}</strong></span>
+                  </div>
+                )}
               </div>
             </div>
 

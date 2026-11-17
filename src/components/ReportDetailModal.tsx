@@ -1,6 +1,12 @@
 import React from 'react';
 import { ExpenseReportRecord } from '../types';
-import { formatNOK, RATES } from '../constants/rates';
+import {
+  calculateDiet,
+  calculateMileageRow,
+  calculateMileageTotals,
+  formatNOK,
+  getAccommodationLabel
+} from '../constants/rates';
 import { X, CheckCircle, AlertTriangle, CreditCard, Edit3 } from 'lucide-react';
 
 interface ReportDetailModalProps {
@@ -26,6 +32,29 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
 }) => {
   const data = report.report_data;
   const dateStr = new Date(report.created_at).toLocaleDateString('no-NO');
+  const dietMode = data?.travelInfo?.dietMode || 'state';
+
+  const recomputedDiet = data?.travelInfo
+    ? calculateDiet(
+        data.travelInfo.departure,
+        data.travelInfo.return,
+        data.travelInfo.accommodation,
+        dietMode,
+        data.mealDeductions || { breakfast: false, lunch: false, dinner: false }
+      )
+    : null;
+
+  const mileageCalc = calculateMileageTotals(data?.mileage || [], dietMode);
+  const expensesTotal =
+    Math.round(
+      (data?.expenses || []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0) * 100
+    ) / 100;
+  const dietAmount = recomputedDiet ? recomputedDiet.amount : data?.dietSummary?.amount || 0;
+  const dietText = recomputedDiet ? recomputedDiet.text : data?.dietSummary?.text || '';
+  const grandTotal =
+    Math.round((mileageCalc.totalAmount + expensesTotal + dietAmount) * 100) / 100 ||
+    data?.totals?.grandTotal ||
+    0;
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[1200] flex justify-center items-center p-3 sm:p-5 overflow-y-auto">
@@ -93,19 +122,22 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <p><strong>Formål:</strong> {data.travelInfo.purpose}</p>
                 <p><strong>Arrangement:</strong> {data.travelInfo.event || 'Ikke oppgitt'}</p>
                 <p><strong>Periode:</strong> {data.travelInfo.departure || '-'} til {data.travelInfo.return || '-'}</p>
-                <p><strong>Overnatting:</strong> {data.travelInfo.accommodationName || (data.travelInfo.accommodation === 'none' ? 'Ingen' : 'Privat')}</p>
+                <p>
+                  <strong>Overnatting:</strong>{' '}
+                  {getAccommodationLabel(data.travelInfo.accommodation, data.travelInfo.accommodationName)}
+                </p>
               </div>
             </div>
           )}
 
           {/* Diet summary */}
-          {data?.dietSummary && (
+          {(recomputedDiet || data?.dietSummary) && (
             <div>
               <h3 className="text-sm font-bold text-slate-800 mb-2">Diettgodtgjørelse</h3>
               <div className="p-3 bg-slate-50 border-l-4 border-blue-600 rounded text-xs">
-                <p><strong>Sammendrag:</strong> {data.dietSummary.text}</p>
+                <p><strong>Sammendrag:</strong> {dietText}</p>
                 <p className="mt-1 font-semibold text-slate-800">
-                  Sum diett: {formatNOK(data.dietSummary.amount)}
+                  Sum diett: {formatNOK(dietAmount)}
                 </p>
               </div>
             </div>
@@ -128,9 +160,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 </thead>
                 <tbody>
                   {data.mileage.map(m => {
-                    const hasPass = (m.passenger || '').trim().length > 0;
-                    const rate = hasPass ? RATES.km + RATES.passenger : RATES.km;
-                    const sum = ((Number(m.km) || 0) * rate) + (Number(m.toll) || 0);
+                    const rowCalc = calculateMileageRow(m, dietMode);
                     return (
                       <tr key={m.id} className="border-b border-slate-100">
                         <td className="p-2 border border-slate-200">{m.date}</td>
@@ -138,7 +168,9 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                         <td className="p-2 border border-slate-200">{m.km}</td>
                         <td className="p-2 border border-slate-200">{m.passenger || '-'}</td>
                         <td className="p-2 border border-slate-200">{formatNOK(Number(m.toll) || 0)}</td>
-                        <td className="p-2 border border-slate-200 text-right font-medium">{formatNOK(sum)}</td>
+                        <td className="p-2 border border-slate-200 text-right font-medium">
+                          {formatNOK(rowCalc.totalAmount)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -177,7 +209,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
           {/* Grand Total */}
           <div className="p-4 bg-slate-100 border border-slate-300 rounded-lg flex justify-between items-center font-bold">
             <span className="text-sm text-slate-700">Total sum til utbetaling:</span>
-            <span className="text-lg text-blue-900">{formatNOK(data?.totals?.grandTotal || 0)}</span>
+            <span className="text-lg text-blue-900">{formatNOK(grandTotal)}</span>
           </div>
 
           {/* Signatures */}

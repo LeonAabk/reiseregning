@@ -31,6 +31,35 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
     mealDeductions
   );
 
+  const isTaxfree = travelInfo.dietMode === 'taxfree';
+  const hotelRateLabel = isTaxfree ? RATES.diet.taxfreeHotel : RATES.diet.stateDognite;
+  const noCookingRateLabel = isTaxfree ? RATES.diet.taxfreeNoCooking : RATES.diet.stateDognite;
+  const withCookingRateLabel = isTaxfree ? RATES.diet.taxfreeWithCooking : RATES.diet.stateDognite;
+
+  const activeDays = Math.max(1, dietResult.days || 1);
+
+  const toggleMeal = (
+    mealKey: 'breakfast' | 'lunch' | 'dinner',
+    countKey: 'breakfastCount' | 'lunchCount' | 'dinnerCount',
+    checked: boolean
+  ) => {
+    onMealDeductionsChange({
+      ...mealDeductions,
+      [mealKey]: checked,
+      [countKey]: checked ? activeDays : undefined
+    });
+  };
+
+  const updateMealCount = (
+    countKey: 'breakfastCount' | 'lunchCount' | 'dinnerCount',
+    countVal: number
+  ) => {
+    onMealDeductionsChange({
+      ...mealDeductions,
+      [countKey]: Math.min(activeDays, Math.max(1, countVal))
+    });
+  };
+
   // Quick date presets
   const setTodayPreset = () => {
     const today = new Date();
@@ -66,6 +95,16 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
     });
   };
 
+  const resolvedBreakfastCount = mealDeductions.breakfastCount
+    ? Math.min(activeDays, Math.max(1, mealDeductions.breakfastCount))
+    : activeDays;
+  const resolvedLunchCount = mealDeductions.lunchCount
+    ? Math.min(activeDays, Math.max(1, mealDeductions.lunchCount))
+    : activeDays;
+  const resolvedDinnerCount = mealDeductions.dinnerCount
+    ? Math.min(activeDays, Math.max(1, mealDeductions.dinnerCount))
+    : activeDays;
+
   return (
     <section className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
@@ -98,6 +137,13 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
             className="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded text-[11px] font-medium transition cursor-pointer border border-slate-200"
           >
             1 døgn (hotell)
+          </button>
+          <button
+            type="button"
+            onClick={() => setOvernightPreset(2)}
+            className="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded text-[11px] font-medium transition cursor-pointer border border-slate-200"
+          >
+            2 døgn (hotell)
           </button>
         </div>
       </div>
@@ -169,23 +215,23 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="none">Ingen overnatting (dagsreise)</option>
-            <option value="hotel">Hotell (døgndiett {RATES.diet.stateDognite} kr)</option>
-            <option value="boarding">Annen overnatting med kokemuligheter</option>
-            <option value="private">Annen overnatting uten kokemuligheter</option>
+            <option value="hotel">Hotell ({hotelRateLabel} kr/døgn)</option>
+            <option value="private">Pensjonat / brakke uten kokemuligheter ({noCookingRateLabel} kr/døgn)</option>
+            <option value="boarding">Med kokemuligheter / privat ({withCookingRateLabel} kr/døgn)</option>
           </select>
         </div>
 
         <div>
           <label className="block text-xs font-semibold uppercase text-slate-500 mb-1">
-            Diettmodus
+            Satsvalg (Diett & Km)
           </label>
           <select
             value={travelInfo.dietMode}
             onChange={e => updateTravelField('dietMode', e.target.value as DietMode)}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+            <option value="taxfree">Trekkfri sats (Skatteetaten – anbefalt for AS)</option>
             <option value="state">Statens satser (2026)</option>
-            <option value="taxfree">Trekkfri sats (Skatteetaten)</option>
           </select>
         </div>
       </div>
@@ -207,7 +253,7 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
       <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex items-start gap-2.5 text-sm text-slate-700 mb-4">
         <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div className="flex-1">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="font-semibold text-slate-800">
               Diettgodtgjørelse:
             </span>
@@ -215,9 +261,23 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
               {formatNOK(dietResult.amount)}
             </span>
           </div>
-          <div className="text-slate-600 text-xs mt-1">
+          <div className="text-slate-600 text-xs mt-1 leading-relaxed">
             {dietResult.text}
           </div>
+          {!isTaxfree && dietResult.taxableAmount > 0 && (
+            <div className="mt-2 pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium">
+                Trekkfri del: <strong>{formatNOK(dietResult.taxfreeAmount)}</strong> • Trekkpliktig del (lønn): <strong>{formatNOK(dietResult.taxableAmount)}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => updateTravelField('dietMode', 'taxfree')}
+                className="text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
+              >
+                Bytt til 100 % trekkfri sats ({formatNOK(dietResult.taxfreeAmount)})
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -227,50 +287,122 @@ export const TravelInfoSection: React.FC<TravelInfoSectionProps> = ({
           Måltidstrekk (Kryss av hvis måltid var inkludert i hotellrom, dekket av arrangør eller spandert):
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label className={`flex items-center gap-2.5 p-2.5 border rounded-lg cursor-pointer transition select-none ${
-            mealDeductions.breakfast ? 'bg-blue-50/50 border-blue-400' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-          }`}>
-            <input
-              type="checkbox"
-              checked={mealDeductions.breakfast}
-              onChange={e => onMealDeductionsChange({ ...mealDeductions, breakfast: e.target.checked })}
-              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-            />
-            <div className="text-xs">
-              <span className="font-semibold block text-slate-800">Frokost</span>
-              <span className="text-slate-500">20% fratrekk</span>
-            </div>
-          </label>
+          {/* Frokost */}
+          <div
+            className={`flex items-center justify-between gap-2 p-2.5 border rounded-lg transition select-none ${
+              mealDeductions.breakfast
+                ? 'bg-blue-50/50 border-blue-400'
+                : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <label className="flex items-center gap-2.5 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                checked={mealDeductions.breakfast}
+                onChange={e => toggleMeal('breakfast', 'breakfastCount', e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <div className="text-xs">
+                <span className="font-semibold block text-slate-800">Frokost</span>
+                <span className="text-slate-500">20% fratrekk per døgn</span>
+              </div>
+            </label>
+            {mealDeductions.breakfast && activeDays > 1 && (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-slate-500 text-[11px]">Antall:</span>
+                <select
+                  value={resolvedBreakfastCount}
+                  onChange={e => updateMealCount('breakfastCount', parseInt(e.target.value, 10))}
+                  className="px-1.5 py-0.5 bg-white border border-blue-300 rounded text-xs font-semibold text-blue-900 focus:outline-none"
+                  title="Antall frokoster dekket i løpet av reisen"
+                >
+                  {Array.from({ length: activeDays }, (_, idx) => idx + 1).map(n => (
+                    <option key={n} value={n}>
+                      {n} av {activeDays}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
-          <label className={`flex items-center gap-2.5 p-2.5 border rounded-lg cursor-pointer transition select-none ${
-            mealDeductions.lunch ? 'bg-blue-50/50 border-blue-400' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-          }`}>
-            <input
-              type="checkbox"
-              checked={mealDeductions.lunch}
-              onChange={e => onMealDeductionsChange({ ...mealDeductions, lunch: e.target.checked })}
-              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-            />
-            <div className="text-xs">
-              <span className="font-semibold block text-slate-800">Lunsj</span>
-              <span className="text-slate-500">30% fratrekk</span>
-            </div>
-          </label>
+          {/* Lunsj */}
+          <div
+            className={`flex items-center justify-between gap-2 p-2.5 border rounded-lg transition select-none ${
+              mealDeductions.lunch
+                ? 'bg-blue-50/50 border-blue-400'
+                : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <label className="flex items-center gap-2.5 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                checked={mealDeductions.lunch}
+                onChange={e => toggleMeal('lunch', 'lunchCount', e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <div className="text-xs">
+                <span className="font-semibold block text-slate-800">Lunsj</span>
+                <span className="text-slate-500">30% fratrekk per døgn</span>
+              </div>
+            </label>
+            {mealDeductions.lunch && activeDays > 1 && (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-slate-500 text-[11px]">Antall:</span>
+                <select
+                  value={resolvedLunchCount}
+                  onChange={e => updateMealCount('lunchCount', parseInt(e.target.value, 10))}
+                  className="px-1.5 py-0.5 bg-white border border-blue-300 rounded text-xs font-semibold text-blue-900 focus:outline-none"
+                  title="Antall lunsjer dekket i løpet av reisen"
+                >
+                  {Array.from({ length: activeDays }, (_, idx) => idx + 1).map(n => (
+                    <option key={n} value={n}>
+                      {n} av {activeDays}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
-          <label className={`flex items-center gap-2.5 p-2.5 border rounded-lg cursor-pointer transition select-none ${
-            mealDeductions.dinner ? 'bg-blue-50/50 border-blue-400' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-          }`}>
-            <input
-              type="checkbox"
-              checked={mealDeductions.dinner}
-              onChange={e => onMealDeductionsChange({ ...mealDeductions, dinner: e.target.checked })}
-              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-            />
-            <div className="text-xs">
-              <span className="font-semibold block text-slate-800">Middag</span>
-              <span className="text-slate-500">50% fratrekk</span>
-            </div>
-          </label>
+          {/* Middag */}
+          <div
+            className={`flex items-center justify-between gap-2 p-2.5 border rounded-lg transition select-none ${
+              mealDeductions.dinner
+                ? 'bg-blue-50/50 border-blue-400'
+                : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <label className="flex items-center gap-2.5 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                checked={mealDeductions.dinner}
+                onChange={e => toggleMeal('dinner', 'dinnerCount', e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <div className="text-xs">
+                <span className="font-semibold block text-slate-800">Middag</span>
+                <span className="text-slate-500">50% fratrekk per døgn</span>
+              </div>
+            </label>
+            {mealDeductions.dinner && activeDays > 1 && (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-slate-500 text-[11px]">Antall:</span>
+                <select
+                  value={resolvedDinnerCount}
+                  onChange={e => updateMealCount('dinnerCount', parseInt(e.target.value, 10))}
+                  className="px-1.5 py-0.5 bg-white border border-blue-300 rounded text-xs font-semibold text-blue-900 focus:outline-none"
+                  title="Antall middager dekket i løpet av reisen"
+                >
+                  {Array.from({ length: activeDays }, (_, idx) => idx + 1).map(n => (
+                    <option key={n} value={n}>
+                      {n} av {activeDays}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

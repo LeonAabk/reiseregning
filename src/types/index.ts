@@ -24,6 +24,9 @@ export interface MealDeductions {
   breakfast: boolean;
   lunch: boolean;
   dinner: boolean;
+  breakfastCount?: number;
+  lunchCount?: number;
+  dinnerCount?: number;
 }
 
 export interface MileageRow {
@@ -47,6 +50,8 @@ export interface ExpenseRow {
 export interface DietSummary {
   amount: number;
   text: string;
+  taxfreeAmount?: number;
+  taxableAmount?: number;
 }
 
 export interface ExpenseReportData {
@@ -59,6 +64,8 @@ export interface ExpenseReportData {
   signatureContent: string | null;
   totals?: {
     grandTotal: number;
+    taxfreeTotal?: number;
+    taxableTotal?: number;
   };
   dietSummary?: DietSummary;
   dbId?: string;

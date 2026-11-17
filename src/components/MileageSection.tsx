@@ -1,14 +1,25 @@
 import React from 'react';
-import { MileageRow } from '../types';
-import { RATES, formatNOK } from '../constants/rates';
-import { Car, Plus, Trash2, Users } from 'lucide-react';
+import { DietMode, MileageRow } from '../types';
+import {
+  RATES,
+  formatNOK,
+  formatNum,
+  calculateMileageRow,
+  calculateMileageTotals
+} from '../constants/rates';
+import { Car, Plus, Trash2 } from 'lucide-react';
 
 interface MileageSectionProps {
   mileage: MileageRow[];
+  dietMode?: DietMode;
   onChange: (rows: MileageRow[]) => void;
 }
 
-export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChange }) => {
+export const MileageSection: React.FC<MileageSectionProps> = ({
+  mileage,
+  dietMode = 'taxfree',
+  onChange
+}) => {
   const addRow = () => {
     const todayStr = new Date().toISOString().substring(0, 16);
     const newRow: MileageRow = {
@@ -38,12 +49,8 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
     );
   };
 
-  const totalKm = mileage.reduce((sum, r) => sum + (Number(r.km) || 0), 0);
-  const totalMileageSum = mileage.reduce((sum, r) => {
-    const hasPassenger = (r.passenger || '').trim().length > 0;
-    const kmRate = hasPassenger ? RATES.km + RATES.passenger : RATES.km;
-    return sum + ((Number(r.km) || 0) * kmRate) + (Number(r.toll) || 0);
-  }, 0);
+  const totals = calculateMileageTotals(mileage, dietMode);
+  const isTaxfree = dietMode === 'taxfree';
 
   return (
     <section className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
@@ -54,17 +61,19 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
             3. Kjøregodtgjørelse
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Statens satser: {RATES.km.toFixed(2)} kr/km + {RATES.passenger.toFixed(2)} kr/km passasjertillegg
+            {isTaxfree
+              ? `Trekkfri sats (Skatteetaten): ${formatNum(RATES.kmTaxfree)} kr/km + ${formatNum(RATES.passenger)} kr/km per passasjer`
+              : `Statens sats: ${formatNum(RATES.kmState)} kr/km (${formatNum(RATES.kmTaxfree)} kr trekkfritt + 1,80 kr trekkpliktig) + ${formatNum(RATES.passenger)} kr/km per passasjer`}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right text-xs">
             <span className="text-slate-500 block">
-              Totalt <strong className="tabular-nums font-mono text-slate-700">{totalKm} km</strong>
+              Totalt <strong className="tabular-nums font-mono text-slate-700">{totals.totalKm} km</strong>
             </span>
             <span className="text-slate-500">
-              Delsum kjøring: <strong className="text-slate-900 tabular-nums font-mono text-sm">{formatNOK(totalMileageSum)}</strong>
+              Delsum kjøring: <strong className="text-slate-900 tabular-nums font-mono text-sm">{formatNOK(totals.totalAmount)}</strong>
             </span>
           </div>
           <button
@@ -86,7 +95,7 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
               <th className="py-2 px-3">Fra</th>
               <th className="py-2 px-3">Til / Omkjøring</th>
               <th className="py-2 px-3 w-20 text-right">Km</th>
-              <th className="py-2 px-3 w-40">Passasjer</th>
+              <th className="py-2 px-3 w-44">Passasjer(er)</th>
               <th className="py-2 px-3 w-24 text-right">Bom (kr)</th>
               <th className="py-2 px-3 w-28 text-right">Sum</th>
               <th className="py-2 px-2 w-10 text-center no-print"></th>
@@ -101,9 +110,8 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
               </tr>
             ) : (
               mileage.map(r => {
-                const hasPassenger = (r.passenger || '').trim().length > 0;
-                const kmRate = hasPassenger ? RATES.km + RATES.passenger : RATES.km;
-                const rowSum = (Number(r.km) || 0) * kmRate + (Number(r.toll) || 0);
+                const rowCalc = calculateMileageRow(r, dietMode);
+                const hasPassenger = rowCalc.passengerCount > 0;
 
                 return (
                   <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
@@ -149,7 +157,7 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
                         <input
                           type="text"
                           value={r.passenger}
-                          placeholder="Navn på passasjer"
+                          placeholder="Navn (kommaseparer flere)"
                           onChange={e => updateRow(r.id, 'passenger', e.target.value)}
                           className={`w-full px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-blue-500 ${
                             hasPassenger ? 'border-blue-300 bg-blue-50/40 text-blue-900' : 'border-slate-200'
@@ -157,7 +165,7 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
                         />
                         {hasPassenger && (
                           <span className="absolute -top-1.5 -right-1 text-[9px] bg-blue-600 text-white rounded px-1 font-bold">
-                            +1 kr
+                            +{rowCalc.passengerCount} kr/km
                           </span>
                         )}
                       </div>
@@ -174,7 +182,7 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
                       />
                     </td>
                     <td className="py-2 px-3 text-right font-mono font-semibold text-slate-800 tabular-nums whitespace-nowrap">
-                      {formatNOK(rowSum)}
+                      {formatNOK(rowCalc.totalAmount)}
                     </td>
                     <td className="py-2 px-2 text-center no-print">
                       <button
@@ -193,6 +201,16 @@ export const MileageSection: React.FC<MileageSectionProps> = ({ mileage, onChang
           </tbody>
         </table>
       </div>
+
+      {!isTaxfree && totals.taxableAmount > 0 && (
+        <div className="mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
+          <span>
+            Fordeling kjøregodtgjørelse (Statens sats):{' '}
+            <strong className="text-emerald-700">Trekkfritt: {formatNOK(totals.taxfreeAmount)}</strong> •{' '}
+            <strong className="text-amber-700">Trekkpliktig: {formatNOK(totals.taxableAmount)}</strong>
+          </span>
+        </div>
+      )}
     </section>
   );
 };
